@@ -1,1 +1,269 @@
-# mcp
+# Testomatio MCP Server
+
+A Model Context Protocol (MCP) server for Testomatio API integration with AI assistants like Cursor.
+
+## Installation
+
+### Prerequisites
+
+- Node.js 18 or higher (with built-in fetch support)
+- npm or yarn package manager
+- Testomatio account with API access
+
+### Install via npm
+
+```bash
+npm install -g @testomatio/mcp
+```
+
+### Or run directly with npx
+
+```bash
+npx @testomatio/mcp --token <your-token> --project <project-id>
+```
+
+## Usage
+
+### Command Line Options
+
+The MCP server can be started using command line arguments or environment variables:
+
+#### Using Command Line Arguments
+
+```bash
+# Using short flags
+npx @testomatio/mcp -t testomat_YOUR_TOKEN_HERE -p your-project-id
+
+# Using long flags
+npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id
+
+# If installed globally
+testomatio-mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id
+
+# With custom base URL
+npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id --base-url https://your-instance.testomat.io
+```
+
+#### Using Environment Variables
+
+```bash
+# Set environment variables
+export TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE
+export TESTOMATIO_BASE_URL=https://app.testomat.io  # Optional, defaults to https://app.testomat.io
+
+# Run with project ID
+npx @testomatio/mcp --project your-project-id
+
+# Or run directly with environment variables
+TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE npx @testomatio/mcp --project your-project-id
+```
+
+### Getting Your API Token
+
+1. Go to [Testomatio](https://app.testomat.io)
+2. Navigate to user tokens https://app.testomat.io/account/access_tokens
+3. Create and copy **General API token** (starts with `testomat_`)
+
+### Getting Your Project ID
+
+Your project ID can be found in the URL when you're viewing your project:
+```
+https://app.testomat.io/projects/YOUR_PROJECT_ID
+```
+
+## Integration with Cursor
+
+To use this MCP server with Cursor, add the following configuration to your Cursor settings:
+
+### Option 1: Using npx (Recommended)
+
+Add this to your Cursor MCP settings (`cursor-settings.json` or through the Cursor settings UI):
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "command": "npx",
+      "args": ["@testomatio/mcp", "--token", "testomat_YOUR_TOKEN_HERE", "--project", "YOUR_PROJECT_ID"]
+    }
+  }
+}
+```
+
+### Option 2: Using Environment Variables
+
+First, set your environment variables in your shell profile (`.bashrc`, `.zshrc`, etc.):
+
+```bash
+export TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE
+```
+
+Then add this to your Cursor MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "command": "npx",
+      "args": ["@testomatio/mcp", "--project", "YOUR_PROJECT_ID"],
+      "env": {
+        "TESTOMATIO_API_TOKEN": "testomat_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+### Option 3: Global Installation
+
+If you've installed the package globally:
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "command": "testomatio-mcp",
+      "args": ["--token", "testomat_YOUR_TOKEN_HERE", "--project", "YOUR_PROJECT_ID"]
+    }
+  }
+}
+```
+
+## Available Tools
+
+Once configured, the following tools will be available in your AI assistant:
+
+### Test Management
+- **get_tests** - Retrieve all tests with optional filtering by plan, query, state, suite, tags, or labels
+- **get_testruns** - Get test execution history for a specific test with optional date filtering
+
+### Suite Management
+- **get_root_suites** - Get all root-level test suites
+- **get_suite** - Get a specific suite with its child suites and tests
+
+### Run Management
+- **get_runs** - Get all test runs for the project
+- **get_run** - Get detailed information about a specific test run
+
+### Plan Management
+- **get_plans** - Get all test plans with optional filtering
+- **get_plan** - Get detailed information about a specific test plan
+
+## Example Usage in Cursor
+
+Once configured, you can ask your AI assistant questions like:
+
+- "Show me all the tests in the project"
+- "Get the test runs for test ID abc123"
+- "What are the root suites in this project?"
+- "Show me details for test run xyz789"
+- "List all automated tests with the @smoke tag"
+- "Get all test plans for this project"
+
+## Data Format
+
+The MCP server returns data in a structured XML format optimized for LLM processing:
+
+### Test Format
+```xml
+<test>
+  <id>test-id</id>
+  <title>Test Title</title>
+  <description>Test Description</description>
+  <code>Test Code</code>
+  <priority>normal</priority>
+  <state>manual</state>
+  <suite_id>parent-suite-id</suite_id>
+  <tags>
+    <tag>@smoke</tag>
+    <tag>@regression</tag>
+  </tags>
+  <file>path/to/test/file.js</file>
+</test>
+```
+
+### Suite Format
+```xml
+<suite>
+  <id>suite-id</id>
+  <title>Suite Title</title>
+  <description>Suite Description</description>
+  <test_count>5</test_count>
+  <is_root>true</is_root>
+  <file_type>suite</file_type>
+</suite>
+```
+
+### Run Format
+```xml
+<run>
+  <id>run-id</id>
+  <status>passed</status>
+  <title>Run Title</title>
+  <tests_count>10</tests_count>
+  <automated>true</automated>
+  <duration>120</duration>
+  <passed>8</passed>
+  <failed>2</failed>
+  <skipped>0</skipped>
+  <created_at>2024-01-01T10:00:00Z</created_at>
+  <finished_at>2024-01-01T10:02:00Z</finished_at>
+</run>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"API token is required" error**
+   - Make sure your token starts with `testomat_`
+   - Verify the token is correct in your Testomatio project settings
+
+2. **"Project ID is required" error**
+   - Check that you're passing the correct project ID
+   - Verify the project ID exists and you have access to it
+
+3. **Connection errors**
+   - Ensure you have internet connectivity
+   - Check if your firewall allows connections to `app.testomat.io`
+   - Verify your API token has the necessary permissions
+
+4. **MCP server not starting in Cursor**
+   - Check Cursor's MCP logs for error messages
+   - Ensure Node.js 18+ is installed and accessible
+   - Try running the command manually first to test
+
+### Debug Mode
+
+To see detailed logs when running the server:
+
+```bash
+DEBUG=* npx @testomatio/mcp --token <token> --project <project-id>
+```
+
+## API Reference
+
+For detailed information about the underlying Testomatio API, refer to the [Testomatio API Documentation](https://docs.testomat.io/reference/api/).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please:
+1. Check the [Testomatio Documentation](https://docs.testomat.io)
+2. Open an issue on GitHub
+3. Contact Testomatio support
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- Support for all major Testomatio API endpoints
+- MCP-compatible tool interface
+- Semantic XML formatting for LLM processing
