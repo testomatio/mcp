@@ -95,6 +95,79 @@ class TestomatioMCPServer {
             },
           },
           {
+            name: 'search_tests',
+            description: 'Search tests by keywords, tags, labels, TQL queries, and other filters',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'Search by keywords, tags (@smoke), or Jira issues (JIRA-123)',
+                },
+                tql: {
+                  type: 'string',
+                  description: 'Test Query Language for advanced filtering (e.g., "tag == \'smoke\' and state == \'manual\'")',
+                },
+                labels: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Filter by labels (e.g., ["ui", "critical"])',
+                },
+                state: {
+                  type: 'string',
+                  enum: ['manual', 'automated'],
+                  description: 'Filter by test state',
+                },
+                priority: {
+                  type: 'string',
+                  enum: ['low', 'normal', 'high', 'critical'],
+                  description: 'Filter by priority level',
+                },
+                filter: {
+                  type: 'object',
+                  description: 'Advanced filter hash (e.g., {state: "manual", priority: "high"})',
+                  additionalProperties: true,
+                },
+                page: {
+                  type: 'number',
+                  description: 'Page number for pagination',
+                },
+              },
+            },
+          },
+          {
+            name: 'search_suites',
+            description: 'Search suites and their tests by keywords, tags, labels, and other filters',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'Search by keywords, tags (@smoke), or Jira issues (JIRA-123)',
+                },
+                labels: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Filter by labels (e.g., ["ui", "critical"])',
+                },
+                state: {
+                  type: 'string',
+                  enum: ['manual', 'automated'],
+                  description: 'Filter by test state',
+                },
+                priority: {
+                  type: 'string',
+                  enum: ['low', 'normal', 'high', 'critical'],
+                  description: 'Filter by priority level',
+                },
+                page: {
+                  type: 'number',
+                  description: 'Page number for pagination',
+                },
+              },
+            },
+          },
+          {
             name: 'get_root_suites',
             description: 'Get all root-level suites for the project',
             inputSchema: {
@@ -207,6 +280,10 @@ class TestomatioMCPServer {
         switch (name) {
           case 'get_tests':
             return await this.getTests(args);
+          case 'search_tests':
+            return await this.searchTests(args);
+          case 'search_suites':
+            return await this.searchSuites(args);
           case 'get_root_suites':
             return await this.getRootSuites();
           case 'get_suite':
@@ -243,11 +320,12 @@ class TestomatioMCPServer {
 
     const url = new URL(`${this.config.baseUrl}/api/${this.config.projectId}${path}`);
 
-    // Add query parameters
+    // Add query parameters with proper array handling
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach(v => url.searchParams.append(`${key}[]`, v));
+          // Handle arrays (e.g., labels[])
+          value.forEach(v => url.searchParams.append(key, v));
         } else {
           url.searchParams.append(key, String(value));
         }
@@ -370,7 +448,8 @@ class TestomatioMCPServer {
   }
 
   async getTests(filters = {}) {
-    const data = await this.makeRequest('/tests', filters);
+    const params = this.buildSearchParams(filters);
+    const data = await this.makeRequest('/tests', params);
     const formattedTests = data.data.map(test =>
       this.formatModel(test, 'test', [
         'title', 'description', 'code', 'priority',
@@ -386,6 +465,91 @@ class TestomatioMCPServer {
         },
       ],
     };
+  }
+
+  async searchTests(filters = {}) {
+    const params = this.buildSearchParams(filters);
+    const data = await this.makeRequest('/tests', params);
+
+    const formattedTests = data.data.map(test =>
+      this.formatModel(test, 'test', [
+        'title', 'description', 'code', 'priority',
+        'state', 'suite-id', 'tags', 'file'
+      ])
+    ).join('\n\n');
+
+    const searchDescription = this.buildSearchDescription(filters);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Search results for tests${searchDescription}:\n\n${formattedTests || 'No tests found matching the criteria.'}`,
+        },
+      ],
+    };
+  }
+
+  async searchSuites(filters = {}) {
+    // Add filter=true for suites search to include tests
+    const params = this.buildSearchParams({ ...filters, filter: true });
+    const data = await this.makeRequest('/suites', params);
+
+    const formattedSuites = data.data.map(suite =>
+      this.formatModel(suite, 'suite', [
+        'title', 'description', 'test-count', 'is-root', 'file-type'
+      ])
+    ).join('\n\n');
+
+    const searchDescription = this.buildSearchDescription(filters);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Search results for suites${searchDescription}:\n\n${formattedSuites || 'No suites found matching the criteria.'}`,
+        },
+      ],
+    };
+  }
+
+  buildSearchDescription(filters) {
+    const descriptions = [];
+
+    if (filters.query) {
+      if (filters.query.startsWith('@')) {
+        descriptions.push(`tagged with "${filters.query}"`);
+      } else if (filters.query.match(/^[A-Z]+-\d+$/)) {
+        descriptions.push(`linked to Jira issue "${filters.query}"`);
+      } else {
+        descriptions.push(`containing "${filters.query}"`);
+      }
+    }
+
+    if (filters.tql) {
+      descriptions.push(`matching TQL: "${filters.tql}"`);
+    }
+
+    if (filters.labels && filters.labels.length > 0) {
+      descriptions.push(`with labels: ${filters.labels.join(', ')}`);
+    }
+
+    if (filters.state) {
+      descriptions.push(`state: ${filters.state}`);
+    }
+
+    if (filters.priority) {
+      descriptions.push(`priority: ${filters.priority}`);
+    }
+
+    if (filters.filter && typeof filters.filter === 'object') {
+      const filterDesc = Object.entries(filters.filter)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
+      descriptions.push(`filtered by: ${filterDesc}`);
+    }
+
+    return descriptions.length > 0 ? ` (${descriptions.join(', ')})` : '';
   }
 
   async getRootSuites() {

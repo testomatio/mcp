@@ -129,26 +129,6 @@ If you've installed the package globally:
 }
 ```
 
-## Available Tools
-
-Once configured, the following tools will be available in your AI assistant:
-
-### Test Management
-- **get_tests** - Retrieve all tests with optional filtering by plan, query, state, suite, tags, or labels
-- **get_testruns** - Get test execution history for a specific test with optional date filtering
-
-### Suite Management
-- **get_root_suites** - Get all root-level test suites
-- **get_suite** - Get a specific suite with its child suites and tests
-
-### Run Management
-- **get_runs** - Get all test runs for the project
-- **get_run** - Get detailed information about a specific test run
-
-### Plan Management
-- **get_plans** - Get all test plans with optional filtering
-- **get_plan** - Get detailed information about a specific test plan
-
 ## Example Usage in Cursor
 
 Once configured, you can ask your AI assistant questions like:
@@ -159,57 +139,6 @@ Once configured, you can ask your AI assistant questions like:
 - "Show me details for test run xyz789"
 - "List all automated tests with the @smoke tag"
 - "Get all test plans for this project"
-
-## Data Format
-
-The MCP server returns data in a structured XML format optimized for LLM processing:
-
-### Test Format
-```xml
-<test>
-  <id>test-id</id>
-  <title>Test Title</title>
-  <description>Test Description</description>
-  <code>Test Code</code>
-  <priority>normal</priority>
-  <state>manual</state>
-  <suite_id>parent-suite-id</suite_id>
-  <tags>
-    <tag>@smoke</tag>
-    <tag>@regression</tag>
-  </tags>
-  <file>path/to/test/file.js</file>
-</test>
-```
-
-### Suite Format
-```xml
-<suite>
-  <id>suite-id</id>
-  <title>Suite Title</title>
-  <description>Suite Description</description>
-  <test_count>5</test_count>
-  <is_root>true</is_root>
-  <file_type>suite</file_type>
-</suite>
-```
-
-### Run Format
-```xml
-<run>
-  <id>run-id</id>
-  <status>passed</status>
-  <title>Run Title</title>
-  <tests_count>10</tests_count>
-  <automated>true</automated>
-  <duration>120</duration>
-  <passed>8</passed>
-  <failed>2</failed>
-  <skipped>0</skipped>
-  <created_at>2024-01-01T10:00:00Z</created_at>
-  <finished_at>2024-01-01T10:02:00Z</finished_at>
-</run>
-```
 
 ## Troubleshooting
 
@@ -243,7 +172,7 @@ DEBUG=* npx @testomatio/mcp --token <token> --project <project-id>
 
 ## API Reference
 
-For detailed information about the underlying Testomatio API, refer to the [Testomatio API Documentation](https://docs.testomat.io/reference/api/).
+For detailed information about the underlying Testomatio API, refer to the [Testomatio API Documentation](https://app.testomat.io/docs/api/).
 
 ## Contributing
 
