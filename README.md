@@ -129,6 +129,28 @@ If you've installed the package globally:
 }
 ```
 
+## Features
+
+### Tools
+
+#### Tests
+* `get_tests` – Get all tests for the project with optional filtering  
+* `search_tests` – Search tests by keywords, tags, labels, TQL queries, and other filters  
+
+#### Test Suites
+* `search_suites` – Search suites and their tests by keywords, tags, labels, and other filters  
+* `get_root_suites` – Get all root-level suites for the project  
+* `get_suite` – Get a specific suite with its child suites and tests  
+
+#### Test Runs
+* `get_runs` – Get all test runs for the project  
+* `get_run` – Get a specific test run with detailed information  
+* `get_testruns` – Get test runs for a specific test with optional date filtering  
+
+#### Test Plans
+* `get_plans` – Get all test plans for the project  
+* `get_plan` – Get a specific test plan with attached items 
+
 ## Example Usage in Cursor
 
 Once configured, you can ask your AI assistant questions like:
@@ -139,6 +161,9 @@ Once configured, you can ask your AI assistant questions like:
 - "Show me details for test run xyz789"
 - "List all automated tests with the @smoke tag"
 - "Get all test plans for this project"
+
+ 
+
 
 ## Troubleshooting
 
