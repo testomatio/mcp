@@ -1,6 +1,6 @@
-# Testomatio MCP Server
+# Testomat.io MCP Server
 
-A Model Context Protocol (MCP) server for Testomatio API integration with AI assistants like Cursor.
+A Model Context Protocol (MCP) server for Testomat.io API integration with AI assistants like Cursor.
 
 ## Installation
 
@@ -8,7 +8,7 @@ A Model Context Protocol (MCP) server for Testomatio API integration with AI ass
 
 - Node.js 18 or higher (with built-in fetch support)
 - npm or yarn package manager
-- Testomatio account with API access
+- Testomat.io account with API access
 
 ### Install via npm
 
@@ -60,7 +60,7 @@ TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE npx @testomatio/mcp --project your
 
 ### Getting Your API Token
 
-1. Go to [Testomatio](https://app.testomat.io)
+1. Go to [Testomat.io](https://app.testomat.io)
 2. Navigate to user tokens https://app.testomat.io/account/access_tokens
 3. Create and copy **General API token** (starts with `testomat_`)
 
@@ -146,7 +146,7 @@ Once configured, you can ask your AI assistant questions like:
 
 1. **"API token is required" error**
    - Make sure your token starts with `testomat_`
-   - Verify the token is correct in your Testomatio project settings
+   - Verify the token is correct in your Testomat.io project settings
 
 2. **"Project ID is required" error**
    - Check that you're passing the correct project ID
@@ -172,7 +172,7 @@ DEBUG=* npx @testomatio/mcp --token <token> --project <project-id>
 
 ## API Reference
 
-For detailed information about the underlying Testomatio API, refer to the [Testomatio API Documentation](https://app.testomat.io/docs/api/).
+For detailed information about the underlying Testomat.io API, refer to the [Testomat.io API Documentation](https://app.testomat.io/docs/api/).
 
 ## Contributing
 
@@ -185,14 +185,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, please:
-1. Check the [Testomatio Documentation](https://docs.testomat.io)
+1. Check the [Testomat,io Documentation](https://docs.testomat.io)
 2. Open an issue on GitHub
-3. Contact Testomatio support
+3. Contact Testomat.io support
 
 ## Changelog
 
 ### v1.0.0
 - Initial release
-- Support for all major Testomatio API endpoints
+- Support for all major Testomat.io API endpoints
 - MCP-compatible tool interface
 - Semantic XML formatting for LLM processing
