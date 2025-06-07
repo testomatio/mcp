@@ -185,7 +185,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, please:
-1. Check the [Testomat,io Documentation](https://docs.testomat.io)
+1. Check the [Testomat.io Documentation](https://docs.testomat.io)
 2. Open an issue on GitHub
 3. Contact Testomat.io support
 
