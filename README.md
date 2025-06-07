@@ -134,22 +134,22 @@ If you've installed the package globally:
 ### Tools
 
 #### Tests
-* `get_tests` – Get all tests for the project with optional filtering  
-* `search_tests` – Search tests by keywords, tags, labels, TQL queries, and other filters  
+* `get_tests` – Get all tests (params: `plan`, `query`, `state`, `suite_id`, `tag`, `labels`) — api: GET `/tests`
+* `search_tests` – Search tests (params: `query`, `tql`, `labels`, `state`, `priority`, `filter`, `page`) — api: GET `/tests`
 
 #### Test Suites
-* `search_suites` – Search suites and their tests by keywords, tags, labels, and other filters  
-* `get_root_suites` – Get all root-level suites for the project  
-* `get_suite` – Get a specific suite with its child suites and tests  
+* `search_suites` – Search suites (params: `query`, `labels`, `state`, `priority`, `page`) — api: GET `/suites`
+* `get_root_suites` – List root-level suites (no params) — api: GET `/suites`
+* `get_suite` – Get one suite (params: `suite_id`) — api: GET `/suites/{suite_id}`
 
 #### Test Runs
-* `get_runs` – Get all test runs for the project  
-* `get_run` – Get a specific test run with detailed information  
-* `get_testruns` – Get test runs for a specific test with optional date filtering  
+* `get_runs` – List all runs (no params) — api: GET `/runs`
+* `get_run` – Get one run (params: `run_id`, `tree`) — api: GET `/runs/{run_id}`
+* `get_testruns` – Runs for a test (params: `test_id`, `finished_at_date_range`) — api: GET `/testruns`
 
 #### Test Plans
-* `get_plans` – Get all test plans for the project  
-* `get_plan` – Get a specific test plan with attached items 
+* `get_plans` – List all plans (params: `detail`, `labels`, `page`) — api: GET `/plans`
+* `get_plan` – Get one plan (params: `plan_id`) — api: GET `/plans/{plan_id}`
 
 ## Example Usage in Cursor
 
@@ -162,8 +162,64 @@ Once configured, you can ask your AI assistant questions like:
 - "List all automated tests with the @smoke tag"
 - "Get all test plans for this project"
 
- 
+## Query Patterns
 
+### Basic Information Queries
+
+These queries retrieve general information without specific filtering:
+
+- **"Show me all the tests in the project"** → `get_tests` tool
+- **"What are the root suites in this project?"** → `get_root_suites` tool  
+- **"Get all test runs"** → `get_runs` tool
+- **"Get all test plans for this project"** → `get_plans` tool
+
+### Specific Item Queries
+
+These queries target specific entities by ID:
+
+- **"Get test runs for test ID abc123"** → `get_testruns` tool with `test_id: "abc123"`
+- **"Show me details for test run xyz789"** → `get_run` tool with `run_id: "xyz789"`
+- **"Get suite details for suite-456"** → `get_suite` tool with `suite_id: "suite-456"`
+
+### Search and Filter Queries
+
+These queries use advanced filtering capabilities:
+
+- **"List all automated tests with the @smoke tag"** → `search_tests` tool with `query: "@smoke"`, `state: "automated"`
+- **"Find tests with priority high"** → `search_tests` tool with `priority: "high"`
+- **"Search for tests containing 'login'"** → `search_tests` tool with `query: "login"`
+- **"List tests tagged @critical or labelled 'ux' with high priority"** → `search_tests` tool with `tql: "tag == 'critical' or label == 'ux' and priority == 'high'"`
+- **"Find tests linked to JIRA-123"** → `search_tests` tool with `tql: jira == 'BDCP-2'`
+
+### Advanced Query Syntax
+
+#### Test Query Language (TQL)
+
+The `search_tests` tool supports TQL for complex filtering:
+
+```
+"tag == 'smoke' and state == 'manual'"
+"priority == 'high' or label == 'ux'"
+```
+
+#### Tag-Based Searches
+
+Tags can be searched using the `@` prefix:
+
+```
+@smoke        # Tests tagged with 'smoke'
+@regression   # Tests tagged with 'regression'
+@critical     # Tests tagged with 'critical'
+```
+
+#### Jira Integration
+
+Tests linked to Jira issues can be found using issue keys:
+
+```
+JIRA-123      # Tests linked to JIRA-123
+PROJ-456      # Tests linked to PROJ-456
+```
 
 ## Troubleshooting
 
