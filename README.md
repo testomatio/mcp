@@ -10,13 +10,7 @@ A Model Context Protocol (MCP) server for Testomatio API integration with AI ass
 - npm or yarn package manager
 - Testomatio account with API access
 
-### Install via npm
-
-```bash
-npm install -g @testomatio/mcp
-```
-
-### Or run directly with npx
+### Run directly with npx
 
 ```bash
 npx @testomatio/mcp --token <your-token> --project <project-id>
@@ -36,9 +30,6 @@ npx @testomatio/mcp -t testomat_YOUR_TOKEN_HERE -p your-project-id
 
 # Using long flags
 npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id
-
-# If installed globally
-testomatio-mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id
 
 # With custom base URL
 npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id --base-url https://your-instance.testomat.io
@@ -84,7 +75,7 @@ Add this to your Cursor MCP settings (`cursor-settings.json` or through the Curs
   "mcpServers": {
     "testomatio": {
       "command": "npx",
-      "args": ["@testomatio/mcp", "--token", "testomat_YOUR_TOKEN_HERE", "--project", "YOUR_PROJECT_ID"]
+      "args": ["-y", "@testomatio/mcp@latest", "--token", "testomat_YOUR_TOKEN_HERE", "--project", "YOUR_PROJECT_ID"]
     }
   }
 }
@@ -105,25 +96,10 @@ Then add this to your Cursor MCP settings:
   "mcpServers": {
     "testomatio": {
       "command": "npx",
-      "args": ["@testomatio/mcp", "--project", "YOUR_PROJECT_ID"],
+      "args": ["-y", "@testomatio/mcp@latest", "--project", "YOUR_PROJECT_ID"],
       "env": {
         "TESTOMATIO_API_TOKEN": "testomat_YOUR_TOKEN_HERE"
       }
-    }
-  }
-}
-```
-
-### Option 3: Global Installation
-
-If you've installed the package globally:
-
-```json
-{
-  "mcpServers": {
-    "testomatio": {
-      "command": "testomatio-mcp",
-      "args": ["--token", "testomat_YOUR_TOKEN_HERE", "--project", "YOUR_PROJECT_ID"]
     }
   }
 }

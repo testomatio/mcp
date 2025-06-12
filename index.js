@@ -45,13 +45,13 @@ class TestomatioMCPServer {
     }
 
     const data = await response.json();
-
+    
     if (!data.jwt) {
       throw new Error('Authentication failed: No JWT token received in response');
     }
 
     this.jwtToken = data.jwt;
-
+    
     return this.jwtToken;
   }
 
@@ -317,9 +317,9 @@ class TestomatioMCPServer {
   async makeRequest(path, params = {}) {
     // Ensure we have a valid JWT token
     const jwt = await this.authenticate();
-
+    
     const url = new URL(`${this.config.baseUrl}/api/${this.config.projectId}${path}`);
-
+    
     // Add query parameters with proper array handling
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -415,10 +415,10 @@ class TestomatioMCPServer {
   formatModel(model, tagName, fields) {
     const attributes = model.attributes || {};
     const lines = [`<${tagName}>`];
-
+    
     // Always include ID from root level
     lines.push(`  <id>${model.id || ''}</id>`);
-
+    
     // Process specified fields
     fields.forEach(field => {
       let value;
@@ -434,7 +434,7 @@ class TestomatioMCPServer {
       }
 
       const formattedValue = this.formatValue(value, field);
-
+      
       if (field === 'test' && typeof value === 'object') {
         // Special case for nested test objects
         lines.push(`  <test>${formattedValue}\n  </test>`);
@@ -442,7 +442,7 @@ class TestomatioMCPServer {
         lines.push(`  <${xmlFieldName}>${formattedValue}</${xmlFieldName}>`);
       }
     });
-
+    
     lines.push(`</${tagName}>`);
     return lines.join('\n');
   }
@@ -450,13 +450,13 @@ class TestomatioMCPServer {
   async getTests(filters = {}) {
     const params = this.buildSearchParams(filters);
     const data = await this.makeRequest('/tests', params);
-    const formattedTests = data.data.map(test =>
+    const formattedTests = data.data.map(test => 
       this.formatModel(test, 'test', [
-        'title', 'description', 'code', 'priority',
+        'title', 'description', 'code', 'priority', 
         'state', 'suite-id', 'tags', 'file'
       ])
     ).join('\n\n');
-
+    
     return {
       content: [
         {
@@ -467,19 +467,64 @@ class TestomatioMCPServer {
     };
   }
 
+  buildSearchParams(filters = {}) {
+    const params = {};
+    
+    // Handle basic filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'labels' && Array.isArray(value)) {
+          // Labels need special array handling
+          value.forEach(label => {
+            if (!params['labels[]']) {
+              params['labels[]'] = [];
+            }
+            if (Array.isArray(params['labels[]'])) {
+              params['labels[]'].push(label);
+            } else {
+              params['labels[]'] = [params['labels[]'], label];
+            }
+          });
+        } else if (key === 'filter' && typeof value === 'object') {
+          // Handle filter hash (e.g., filter[state]=manual)
+          Object.entries(value).forEach(([filterKey, filterValue]) => {
+            params[`filter[${filterKey}]`] = filterValue;
+          });
+        } else if (Array.isArray(value)) {
+          // Handle other arrays
+          value.forEach(v => {
+            const paramKey = `${key}[]`;
+            if (!params[paramKey]) {
+              params[paramKey] = [];
+            }
+            if (Array.isArray(params[paramKey])) {
+              params[paramKey].push(v);
+            } else {
+              params[paramKey] = [params[paramKey], v];
+            }
+          });
+        } else {
+          params[key] = String(value);
+        }
+      }
+    });
+
+    return params;
+  }
+
   async searchTests(filters = {}) {
     const params = this.buildSearchParams(filters);
     const data = await this.makeRequest('/tests', params);
-
-    const formattedTests = data.data.map(test =>
+    
+    const formattedTests = data.data.map(test => 
       this.formatModel(test, 'test', [
-        'title', 'description', 'code', 'priority',
+        'title', 'description', 'code', 'priority', 
         'state', 'suite-id', 'tags', 'file'
       ])
     ).join('\n\n');
-
+    
     const searchDescription = this.buildSearchDescription(filters);
-
+    
     return {
       content: [
         {
@@ -494,15 +539,15 @@ class TestomatioMCPServer {
     // Add filter=true for suites search to include tests
     const params = this.buildSearchParams({ ...filters, filter: true });
     const data = await this.makeRequest('/suites', params);
-
-    const formattedSuites = data.data.map(suite =>
+    
+    const formattedSuites = data.data.map(suite => 
       this.formatModel(suite, 'suite', [
         'title', 'description', 'test-count', 'is-root', 'file-type'
       ])
     ).join('\n\n');
-
+    
     const searchDescription = this.buildSearchDescription(filters);
-
+    
     return {
       content: [
         {
@@ -515,7 +560,7 @@ class TestomatioMCPServer {
 
   buildSearchDescription(filters) {
     const descriptions = [];
-
+    
     if (filters.query) {
       if (filters.query.startsWith('@')) {
         descriptions.push(`tagged with "${filters.query}"`);
@@ -525,41 +570,41 @@ class TestomatioMCPServer {
         descriptions.push(`containing "${filters.query}"`);
       }
     }
-
+    
     if (filters.tql) {
       descriptions.push(`matching TQL: "${filters.tql}"`);
     }
-
+    
     if (filters.labels && filters.labels.length > 0) {
       descriptions.push(`with labels: ${filters.labels.join(', ')}`);
     }
-
+    
     if (filters.state) {
       descriptions.push(`state: ${filters.state}`);
     }
-
+    
     if (filters.priority) {
       descriptions.push(`priority: ${filters.priority}`);
     }
-
+    
     if (filters.filter && typeof filters.filter === 'object') {
       const filterDesc = Object.entries(filters.filter)
         .map(([key, value]) => `${key}: ${value}`)
         .join(', ');
       descriptions.push(`filtered by: ${filterDesc}`);
     }
-
+    
     return descriptions.length > 0 ? ` (${descriptions.join(', ')})` : '';
   }
 
   async getRootSuites() {
     const data = await this.makeRequest('/suites');
-    const formattedSuites = data.data.map(suite =>
+    const formattedSuites = data.data.map(suite => 
       this.formatModel(suite, 'suite', [
         'title', 'description', 'test-count', 'is-root', 'file-type'
       ])
     ).join('\n\n');
-
+    
     return {
       content: [
         {
@@ -575,7 +620,7 @@ class TestomatioMCPServer {
     const formattedSuite = this.formatModel(data.data, 'suite', [
       'title', 'description', 'test-count', 'is-root', 'file-type'
     ]);
-
+    
     // Format child suites and tests if they exist
     let childContent = '';
     if (data.data.relationships?.children?.data) {
@@ -587,18 +632,18 @@ class TestomatioMCPServer {
         childContent += `\n\nChild Suites:\n${childSuites}`;
       }
     }
-
+    
     if (data.data.relationships?.tests?.data) {
       const tests = data.data.relationships.tests.data
         .map(test => this.formatModel(test, 'test', [
-          'title', 'description', 'code', 'priority',
+          'title', 'description', 'code', 'priority', 
           'state', 'suite-id', 'tags', 'file'
         ])).join('\n\n');
       if (tests) {
         childContent += `\n\nTests:\n${tests}`;
       }
     }
-
+    
     return {
       content: [
         {
@@ -611,13 +656,13 @@ class TestomatioMCPServer {
 
   async getRuns() {
     const data = await this.makeRequest('/runs');
-    const formattedRuns = data.data.map(run =>
+    const formattedRuns = data.data.map(run => 
       this.formatModel(run, 'run', [
         'status', 'title', 'tests-count', 'automated', 'duration',
         'passed', 'failed', 'skipped', 'created-at', 'finished-at'
       ])
     ).join('\n\n');
-
+    
     return {
       content: [
         {
@@ -635,7 +680,7 @@ class TestomatioMCPServer {
       'status', 'title', 'tests-count', 'automated', 'duration',
       'passed', 'failed', 'skipped', 'created-at', 'finished-at'
     ]);
-
+    
     return {
       content: [
         {
@@ -651,14 +696,14 @@ class TestomatioMCPServer {
     if (dateRange) {
       params.finished_at_date_range = dateRange;
     }
-
+    
     const data = await this.makeRequest('/testruns', params);
-    const formattedTestruns = data.data.map(testrun =>
+    const formattedTestruns = data.data.map(testrun => 
       this.formatModel(testrun, 'testrun', [
         'status', 'run-time', 'message', 'run-id', 'test'
       ])
     ).join('\n\n');
-
+    
     return {
       content: [
         {
@@ -671,12 +716,12 @@ class TestomatioMCPServer {
 
   async getPlans(filters = {}) {
     const data = await this.makeRequest('/plans', filters);
-    const formattedPlans = data.data.map(plan =>
+    const formattedPlans = data.data.map(plan => 
       this.formatModel(plan, 'plan', [
         'title', 'test-count', 'kind', 'created-at', 'tests-ids', 'labels'
       ])
     ).join('\n\n');
-
+    
     return {
       content: [
         {
@@ -692,7 +737,7 @@ class TestomatioMCPServer {
     const formattedPlan = this.formatModel(data.data, 'plan', [
       'title', 'test-count', 'kind', 'created-at', 'tests-ids', 'labels'
     ]);
-
+    
     return {
       content: [
         {
@@ -731,7 +776,7 @@ function parseArgs() {
     .parse();
 
   const options = program.opts();
-
+  
   const token = options.token || process.env.TESTOMATIO_API_TOKEN;
   const projectId = options.project;
   const baseUrl = options.baseUrl || process.env.TESTOMATIO_BASE_URL || 'https://app.testomat.io';
@@ -761,8 +806,4 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
-}
-
-export { TestomatioMCPServer };
+main().catch(console.error);
