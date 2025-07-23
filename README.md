@@ -112,6 +112,8 @@ Then add this to your Cursor MCP settings:
 #### Tests
 * `get_tests` – Get all tests (params: `plan`, `query`, `state`, `suite_id`, `tag`, `labels`) — api: GET `/tests`
 * `search_tests` – Search tests (params: `query`, `tql`, `labels`, `state`, `priority`, `filter`, `page`) — api: GET `/tests`
+* `create_test` – Create a new test (params: `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`) — api: POST `/tests`
+* `update_test` – Update an existing test (params: `test_id`, `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`) — api: PUT `/tests/{test_id}`
 
 #### Test Suites
 * `search_suites` – Search suites (params: `query`, `labels`, `state`, `priority`, `page`) — api: GET `/suites`
@@ -137,6 +139,8 @@ Once configured, you can ask your AI assistant questions like:
 - "Show me details for test run xyz789"
 - "List all automated tests with the @smoke tag"
 - "Get all test plans for this project"
+- "Create a new test called 'Login validation' in suite suite-123"
+- "Update test test-456 to change its description and add @regression tag"
 
 ## Query Patterns
 
@@ -148,6 +152,14 @@ These queries retrieve general information without specific filtering:
 - **"What are the root suites in this project?"** → `get_root_suites` tool  
 - **"Get all test runs"** → `get_runs` tool
 - **"Get all test plans for this project"** → `get_plans` tool
+
+### Test Management Queries
+
+These queries allow creating and updating tests:
+
+- **"Create a new test called 'Login validation' in suite suite-123"** → `create_test` tool with `title: "Login validation"`, `suite_id: "suite-123"`
+- **"Update test test-456 to change its description"** → `update_test` tool with `test_id: "test-456"`, `description: "new description"`
+- **"Create an automated test with @smoke tag"** → `create_test` tool with `state: "automated"`, `tags: ["smoke"]`
 
 ### Specific Item Queries
 

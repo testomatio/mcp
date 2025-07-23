@@ -269,6 +269,118 @@ class TestomatioMCPServer {
               required: ['plan_id'],
             },
           },
+          {
+            name: 'create_test',
+            description: 'Create a new test in the specified suite',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                suite_id: {
+                  type: 'string',
+                  description: 'Suite ID where the test will be created',
+                },
+                title: {
+                  type: 'string',
+                  description: 'Test title',
+                },
+                description: {
+                  type: 'string',
+                  description: 'Test description',
+                },
+                code: {
+                  type: 'string',
+                  description: 'Source code of an automated test',
+                },
+                file: {
+                  type: 'string',
+                  description: 'File of an automated test',
+                },
+                state: {
+                  type: 'string',
+                  enum: ['manual', 'automated'],
+                  description: 'State of the test',
+                },
+                tags: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of tags for the test',
+                },
+                jira_issues: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of assigned Jira issues',
+                },
+                assigned_to: {
+                  type: 'string',
+                  description: 'User assigned to this test',
+                },
+                labels_ids: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Slugs of labels to assign to the test',
+                },
+              },
+              required: ['suite_id', 'title'],
+            },
+          },
+          {
+            name: 'update_test',
+            description: 'Update an existing test',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                test_id: {
+                  type: 'string',
+                  description: 'ID of the test to update',
+                },
+                suite_id: {
+                  type: 'string',
+                  description: 'Suite ID where the test belongs',
+                },
+                title: {
+                  type: 'string',
+                  description: 'Test title',
+                },
+                description: {
+                  type: 'string',
+                  description: 'Test description',
+                },
+                code: {
+                  type: 'string',
+                  description: 'Source code of an automated test',
+                },
+                file: {
+                  type: 'string',
+                  description: 'File of an automated test',
+                },
+                state: {
+                  type: 'string',
+                  enum: ['manual', 'automated'],
+                  description: 'State of the test',
+                },
+                tags: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of tags for the test',
+                },
+                jira_issues: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of assigned Jira issues',
+                },
+                assigned_to: {
+                  type: 'string',
+                  description: 'User assigned to this test',
+                },
+                labels_ids: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Slugs of labels to assign to the test',
+                },
+              },
+              required: ['test_id'],
+            },
+          },
         ],
       };
     });
@@ -298,6 +410,10 @@ class TestomatioMCPServer {
             return await this.getPlans(args);
           case 'get_plan':
             return await this.getPlan(args.plan_id);
+          case 'create_test':
+            return await this.createTest(args);
+          case 'update_test':
+            return await this.updateTest(args);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -351,6 +467,55 @@ class TestomatioMCPServer {
 
     return await response.json();
   }
+
+  async makePostRequest(path, data) {
+    const jwt = await this.authenticate();
+    const url = `${this.config.baseUrl}/api/${this.config.projectId}${path}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': jwt,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 && this.jwtToken) {
+        this.jwtToken = null;
+        return this.makePostRequest(path, data);
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async makePutRequest(path, data) {
+    const jwt = await this.authenticate();
+    const url = `${this.config.baseUrl}/api/${this.config.projectId}${path}`;
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': jwt,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 && this.jwtToken) {
+        this.jwtToken = null;
+        return this.makePutRequest(path, data);
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
 
   escapeXml(text) {
     if (typeof text !== 'string') return text;
@@ -743,6 +908,54 @@ class TestomatioMCPServer {
         {
           type: 'text',
           text: `Test plan ${planId}:\n\n${formattedPlan}`,
+        },
+      ],
+    };
+  }
+
+  async createTest(args) {
+    const { test_id, labels_ids, ...attributes } = args;
+    const requestData = {
+      type: 'test',
+      attributes: Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+    };
+    if (labels_ids) requestData.labels_ids = labels_ids;
+
+    const data = await this.makePostRequest('/tests', requestData);
+    const formattedTest = this.formatModel(data.data, 'test', [
+      'title', 'description', 'code', 'priority', 
+      'state', 'suite-id', 'tags', 'file'
+    ]);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully created test:\n\n${formattedTest}`,
+        },
+      ],
+    };
+  }
+
+  async updateTest(args) {
+    const { test_id, labels_ids, ...attributes } = args;
+    const requestData = {
+      type: 'test',
+      attributes: Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+    };
+    if (labels_ids) requestData.labels_ids = labels_ids;
+
+    const data = await this.makePutRequest(`/tests/${args.test_id}`, requestData);
+    const formattedTest = this.formatModel(data.data, 'test', [
+      'title', 'description', 'code', 'priority', 
+      'state', 'suite-id', 'tags', 'file'
+    ]);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully updated test:\n\n${formattedTest}`,
         },
       ],
     };
