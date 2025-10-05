@@ -1,0 +1,86 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_all_environments:
+        description: 'Run tests against all environments'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Create .env file for integration tests
+      run: |
+        cat > .env << EOF
+        TESTOMATIO_API_TOKEN=${{ secrets.TESTOMATIO_API_TOKEN }}
+        TESTOMATIO_PROJECT_ID=${{ secrets.TESTOMATIO_PROJECT_ID }}
+        TESTOMATIO_BASE_URL=${{ secrets.TESTOMATIO_BASE_URL }}
+        EOF
+
+    - name: Verify environment variables
+      run: |
+        echo "Checking required environment variables..."
+        if [ -z "$TESTOMATIO_API_TOKEN" ] || [ -z "$TESTOMATIO_PROJECT_ID" ]; then
+          echo "Missing required environment variables"
+          echo "TESTOMATIO_API_TOKEN is set: $([ -n "$TESTOMATIO_API_TOKEN" ] && echo 'YES' || echo 'NO')"
+          echo "TESTOMATIO_PROJECT_ID is set: $([ -n "$TESTOMATIO_PROJECT_ID" ] && echo 'YES' || echo 'NO')"
+          echo "TESTOMATIO_BASE_URL is set: $([ -n "$TESTOMATIO_BASE_URL" ] && echo 'YES' || echo 'NO')"
+          exit 1
+        fi
+        echo "All required environment variables are set"
+      env:
+        TESTOMATIO_API_TOKEN: ${{ secrets.TESTOMATIO_API_TOKEN }}
+        TESTOMATIO_PROJECT_ID: ${{ secrets.TESTOMATIO_PROJECT_ID }}
+        TESTOMATIO_BASE_URL: ${{ secrets.TESTOMATIO_BASE_URL }}
+
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        TESTOMATIO_API_TOKEN: ${{ secrets.TESTOMATIO_API_TOKEN }}
+        TESTOMATIO_PROJECT_ID: ${{ secrets.TESTOMATIO_PROJECT_ID }}
+        TESTOMATIO_BASE_URL: ${{ secrets.TESTOMATIO_BASE_URL }}
+
+    - name: Upload integration test coverage
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: ./coverage/integration/lcov.info
+        flags: integration
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Integration Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Node Version**: ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

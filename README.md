@@ -119,6 +119,11 @@ Then add this to your Cursor MCP settings:
 * `search_suites` – Search suites (params: `query`, `labels`, `state`, `priority`, `page`) — api: GET `/suites`
 * `get_root_suites` – List root-level suites (no params) — api: GET `/suites`
 * `get_suite` – Get one suite (params: `suite_id`) — api: GET `/suites/{suite_id}`
+* `create_suite` – Create a new suite (params: `title`, `description`, `parent_id`) — api: POST `/suites`
+* `create_folder` – Create a new folder (params: `title`, `description`, `parent_id`) — api: POST `/suites`
+
+#### Labels
+* `create_label` – Create a new label with optional custom field (params: `title`, `color`, `scope`, `visibility`, `field`) — api: POST `/labels`
 
 #### Test Runs
 * `get_runs` – List all runs (no params) — api: GET `/runs`
@@ -141,6 +146,9 @@ Once configured, you can ask your AI assistant questions like:
 - "Get all test plans for this project"
 - "Create a new test called 'Login validation' in suite suite-123"
 - "Update test test-456 to change its description and add @regression tag"
+- "Create a new suite called 'Authentication Tests' with description 'All login and signup related tests'"
+- "Create a folder called 'API Tests' to organize API-related test suites"
+- "Create a label called 'Severity' with color '#ffe9ad' and predefined values like 'Blocker', 'Critical', 'Major', 'Minor', 'Normal', 'Trivial'"
 
 ## Query Patterns
 
@@ -161,6 +169,27 @@ These queries allow creating and updating tests:
 - **"Update test test-456 to change its description"** → `update_test` tool with `test_id: "test-456"`, `description: "new description"`
 - **"Create an automated test with @smoke tag"** → `create_test` tool with `state: "automated"`, `tags: ["smoke"]`
 
+### Suite and Folder Management Queries
+
+These queries help organize your test structure:
+
+- **"Create a new suite called 'Authentication Tests'"** → `create_suite` tool with `title: "Authentication Tests"`
+- **"Create a suite for login tests with description"** → `create_suite` tool with `title: "Login Tests"`, `description: "All login related test cases"`
+- **"Create a folder called 'API Tests' under parent suite-123"** → `create_folder` tool with `title: "API Tests"`, `parent_id: "suite-123"`
+- **"Create a test suite for payment features"** → `create_suite` tool with `title: "Payment Features", description: "Tests covering payment processing"`
+- **"Create a folder to organize integration tests"** → `create_folder` tool with `title: "Integration Tests"`
+
+**Note**: Suites can only contain other suites, while folders can contain both suites and folders (but no tests).
+
+### Label Creation Queries
+
+These queries help create custom labels for better test categorization:
+
+- **"Create a label called 'Severity' with red color"** → `create_label` tool with `title: "Severity"`, `color: "#ff6b6b"`
+- **"Create a severity label with predefined values"** → `create_label` tool with `title: "Severity"`, `color: "#ffe9ad"`, `field: { "type": "list", "short": true, "value": "Blocker\nCritical\nMajor\nNormal\nMinor\nTrivial" }`
+- **"Create a simple label for test types"** → `create_label` tool with `title: "Test Type"`, `scope: ["tests", "suites"]`
+- **"Create a label visible in test lists"** → `create_label` tool with `title: "Category"`, `visibility: ["list"]`
+
 ### Specific Item Queries
 
 These queries target specific entities by ID:
@@ -174,9 +203,8 @@ These queries target specific entities by ID:
 These queries use advanced filtering capabilities:
 
 - **"List all automated tests with the @smoke tag"** → `search_tests` tool with `query: "@smoke"`, `state: "automated"`
-- **"Find tests with priority high"** → `search_tests` tool with `priority: "high"`
 - **"Search for tests containing 'login'"** → `search_tests` tool with `query: "login"`
-- **"List tests tagged @critical or labelled 'ux' with high priority"** → `search_tests` tool with `tql: "tag == 'critical' or label == 'ux' and priority == 'high'"`
+- **"List tests tagged @critical or labelled 'ux' with critical severity"** → `search_tests` tool with `tql: "tag == 'critical' or label == 'ux' and severity == 'critical'"`
 - **"Find tests linked to JIRA-123"** → `search_tests` tool with `tql: jira == 'BDCP-2'`
 
 ### Advanced Query Syntax
@@ -187,7 +215,7 @@ The `search_tests` tool supports TQL for complex filtering:
 
 ```
 "tag == 'smoke' and state == 'manual'"
-"priority == 'high' or label == 'ux'"
+"severity == 'critical' or label == 'ux'"
 ```
 
 #### Tag-Based Searches
@@ -246,6 +274,74 @@ For detailed information about the underlying Testomat.io API, refer to the [Tes
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/testomatio/mcp.git
+cd mcp
+
+# Install dependencies
+npm install
+
+# Run unit tests
+npm test
+
+# Run integration tests (requires environment variables)
+npm run test:integration
+
+# Run all tests
+npm run test:all
+```
+
+### Testing
+
+The project includes comprehensive test coverage:
+
+- **Unit Tests**: Fast tests with mocked dependencies
+- **Integration Tests**: Real API tests against Testomat.io
+
+#### Running Tests Locally
+
+```bash
+# Unit tests only
+npm run test:unit
+
+# Integration tests (requires .env file)
+npm run test:integration
+
+# With coverage
+npm run test:coverage
+npm run test:coverage:integration
+```
+
+#### Environment Setup for Integration Tests
+
+Create a `.env` file:
+
+```bash
+TESTOMATIO_API_TOKEN=testomat_your_token_here
+TESTOMATIO_PROJECT_ID=your_project_id
+TESTOMATIO_BASE_URL=https://app.testomat.io  # optional
+```
+
+### CI/CD
+
+This project uses GitHub Actions for continuous integration:
+
+- ✅ **Unit Tests**: Run on every push/PR across Node.js 18, 20, 22
+- ✅ **Integration Tests**: Run daily and on main branch merges
+- ✅ **Coverage Reports**: Automatic upload to Codecov
+- ✅ **Security**: Secrets management for API credentials
+
+
+### Code Quality
+
+- Follow existing code style patterns
+- Add tests for new functionality
+- Update documentation when needed
+- Ensure all tests pass before submitting PRs
 
 ## License
 
