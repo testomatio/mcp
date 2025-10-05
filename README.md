@@ -247,6 +247,75 @@ For detailed information about the underlying Testomat.io API, refer to the [Tes
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/testomatio/mcp.git
+cd mcp
+
+# Install dependencies
+npm install
+
+# Run unit tests
+npm test
+
+# Run integration tests (requires environment variables)
+npm run test:integration
+
+# Run all tests
+npm run test:all
+```
+
+### Testing
+
+The project includes comprehensive test coverage:
+
+- **Unit Tests**: Fast tests with mocked dependencies
+- **Integration Tests**: Real API tests against Testomat.io
+
+#### Running Tests Locally
+
+```bash
+# Unit tests only
+npm run test:unit
+
+# Integration tests (requires .env file)
+npm run test:integration
+
+# With coverage
+npm run test:coverage
+npm run test:coverage:integration
+```
+
+#### Environment Setup for Integration Tests
+
+Create a `.env` file:
+
+```bash
+TESTOMATIO_API_TOKEN=testomat_your_token_here
+TESTOMATIO_PROJECT_ID=your_project_id
+TESTOMATIO_BASE_URL=https://app.testomat.io  # optional
+```
+
+### CI/CD
+
+This project uses GitHub Actions for continuous integration:
+
+- ✅ **Unit Tests**: Run on every push/PR across Node.js 18, 20, 22
+- ✅ **Integration Tests**: Run daily and on main branch merges
+- ✅ **Coverage Reports**: Automatic upload to Codecov
+- ✅ **Security**: Secrets management for API credentials
+
+See [`.github/README.md`](./.github/README.md) for detailed CI/CD setup instructions.
+
+### Code Quality
+
+- Follow existing code style patterns
+- Add tests for new functionality
+- Update documentation when needed
+- Ensure all tests pass before submitting PRs
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

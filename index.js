@@ -41,7 +41,8 @@ class TestomatioMCPServer {
     });
 
     if (!response.ok) {
-      throw new Error(`Authentication failed: HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Authentication failed: HTTP ${response.status}: ${response.statusText}. Response: ${errorText}`);
     }
 
     const data = await response.json();
@@ -358,6 +359,11 @@ class TestomatioMCPServer {
                   enum: ['manual', 'automated'],
                   description: 'State of the test',
                 },
+                priority: {
+                  type: 'string',
+                  enum: ['low', 'normal', 'high', 'critical'],
+                  description: 'Priority level of the test',
+                },
                 tags: {
                   type: 'array',
                   items: { type: 'string' },
@@ -379,6 +385,102 @@ class TestomatioMCPServer {
                 },
               },
               required: ['test_id'],
+            },
+          },
+          {
+            name: 'create_suite',
+            description: 'Create a new suite. Suites can only contain other suites (no tests or folders)',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                title: {
+                  type: 'string',
+                  description: 'Suite title',
+                },
+                description: {
+                  type: 'string',
+                  description: 'Suite description',
+                },
+                parent_id: {
+                  type: 'string',
+                  description: 'Parent suite ID to create this suite under',
+                },
+              },
+              required: ['title'],
+            },
+          },
+          {
+            name: 'create_folder',
+            description: 'Create a new folder. Folders can contain suites and folders (but no tests)',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                title: {
+                  type: 'string',
+                  description: 'Folder title',
+                },
+                description: {
+                  type: 'string',
+                  description: 'Folder description',
+                },
+                parent_id: {
+                  type: 'string',
+                  description: 'Parent folder or suite ID to create this folder under',
+                },
+              },
+              required: ['title'],
+            },
+          },
+          {
+            name: 'create_label',
+            description: 'Create a new label with optional custom field configuration. Labels can be used to tag and categorize tests and suites',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                title: {
+                  type: 'string',
+                  description: 'Label title (e.g., "Severity", "Priority", "Type")',
+                },
+                color: {
+                  type: 'string',
+                  description: 'Label color in hex format (e.g., "#ffe9ad")',
+                },
+                scope: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    enum: ['tests', 'suites']
+                  },
+                  description: 'Where this label can be used (e.g., ["tests", "suites"])',
+                },
+                visibility: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  },
+                  description: 'Where the label is visible (e.g., ["list"])',
+                },
+                field: {
+                  type: 'object',
+                  description: 'Custom field configuration for labels with predefined values',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      description: 'Field type (e.g., "list", "string", "number")',
+                    },
+                    short: {
+                      type: 'boolean',
+                      description: 'Whether to display short version',
+                    },
+                    value: {
+                      type: 'string',
+                      description: 'Predefined values for the field (newline separated for list type)',
+                    },
+                  },
+                  required: ['type'],
+                },
+              },
+              required: ['title'],
             },
           },
         ],
@@ -414,6 +516,12 @@ class TestomatioMCPServer {
             return await this.createTest(args);
           case 'update_test':
             return await this.updateTest(args);
+          case 'create_suite':
+            return await this.createSuite(args);
+          case 'create_folder':
+            return await this.createFolder(args);
+          case 'create_label':
+            return await this.createLabel(args);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -989,6 +1097,122 @@ class TestomatioMCPServer {
     };
   }
 
+  async createSuite(args) {
+    const { parent_id, ...attributes } = args;
+    const requestData = {
+      data: {
+        type: 'suites',
+        attributes: {
+          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          'file-type': 'file'
+        }
+      }
+    };
+
+    if (parent_id) {
+      requestData.data.relationships = {
+        parent: {
+          data: {
+            type: 'suites',
+            id: parent_id
+          }
+        }
+      };
+    }
+
+    const data = await this.makePostRequest('/suites', requestData);
+    const formattedSuite = this.formatModel(data.data, 'suite', [
+      'title', 'description', 'test-count', 'is-root', 'file-type'
+    ]);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully created suite:\n\n${formattedSuite}`,
+        },
+      ],
+    };
+  }
+
+  async createFolder(args) {
+    const { parent_id, ...attributes } = args;
+    const requestData = {
+      data: {
+        type: 'suites',
+        attributes: {
+          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          'file-type': 'folder'
+        }
+      }
+    };
+
+    if (parent_id) {
+      requestData.data.relationships = {
+        parent: {
+          data: {
+            type: 'suites',
+            id: parent_id
+          }
+        }
+      };
+    }
+
+    const data = await this.makePostRequest('/suites', requestData);
+    const formattedSuite = this.formatModel(data.data, 'suite', [
+      'title', 'description', 'test-count', 'is-root', 'file-type'
+    ]);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully created folder:\n\n${formattedSuite}`,
+        },
+      ],
+    };
+  }
+
+  async createLabel(args) {
+    const { title, color, scope, visibility, field, ...otherAttributes } = args;
+
+    const requestData = {
+      data: {
+        type: 'labels',
+        attributes: {
+          ...Object.fromEntries(Object.entries(otherAttributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          title,
+          color,
+          scope,
+          visibility
+        }
+      }
+    };
+
+    // Add field configuration if provided
+    if (field) {
+      requestData.data.attributes.field = {
+        type: field.type,
+        ...(field.short !== undefined && { short: field.short }),
+        ...(field.value && { value: field.value })
+      };
+    }
+
+    const data = await this.makePostRequest('/labels', requestData);
+    const formattedLabel = this.formatModel(data.data, 'label', [
+      'title', 'color', 'scope', 'visibility', 'field'
+    ]);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully created label:\n\n${formattedLabel}`,
+        },
+      ],
+    };
+  }
+
   async run() {
     // Test authentication on startup
     try {
@@ -1005,6 +1229,9 @@ class TestomatioMCPServer {
   }
 }
 
+// Export the class for testing
+export { TestomatioMCPServer };
+
 // Parse command line arguments using commander
 function parseArgs() {
   program
@@ -1019,7 +1246,7 @@ function parseArgs() {
   const options = program.opts();
 
   const token = options.token || process.env.TESTOMATIO_API_TOKEN;
-  const projectId = options.project;
+  const projectId = options.project || process.env.TESTOMATIO_PROJECT_ID;
   const baseUrl = options.baseUrl || process.env.TESTOMATIO_BASE_URL || 'https://app.testomat.io';
 
   if (!token) {
@@ -1028,7 +1255,7 @@ function parseArgs() {
   }
 
   if (!projectId) {
-    console.error('Error: Project ID is required. Use --project <project_id>');
+    console.error('Error: Project ID is required. Use --project <project_id> or set TESTOMATIO_PROJECT_ID environment variable');
     process.exit(1);
   }
 
@@ -1047,4 +1274,7 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+// Only run main() if this file is executed directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}
