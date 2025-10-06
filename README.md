@@ -112,18 +112,79 @@ Then add this to your Cursor MCP settings:
 #### Tests
 * `get_tests` – Get all tests (params: `plan`, `query`, `state`, `suite_id`, `tag`, `labels`) — api: GET `/tests`
 * `search_tests` – Search tests (params: `query`, `tql`, `labels`, `state`, `priority`, `filter`, `page`) — api: GET `/tests`
-* `create_test` – Create a new test (params: `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`) — api: POST `/tests`
-* `update_test` – Update an existing test (params: `test_id`, `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`) — api: PUT `/tests/{test_id}`
+* `create_test` – Create a new test (params: `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`, `fields`) — api: POST `/tests`
+* `update_test` – Update an existing test (params: `test_id`, `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`, `fields`) — api: PUT `/tests/{test_id}`
 
 #### Test Suites
 * `search_suites` – Search suites (params: `query`, `labels`, `state`, `priority`, `page`) — api: GET `/suites`
 * `get_root_suites` – List root-level suites (no params) — api: GET `/suites`
 * `get_suite` – Get one suite (params: `suite_id`) — api: GET `/suites/{suite_id}`
-* `create_suite` – Create a new suite (params: `title`, `description`, `parent_id`) — api: POST `/suites`
-* `create_folder` – Create a new folder (params: `title`, `description`, `parent_id`) — api: POST `/suites`
+* `create_suite` – Create a new suite (params: `title`, `description`, `parent_id`, `fields`) — api: POST `/suites`
+* `create_folder` – Create a new folder (params: `title`, `description`, `parent_id`, `fields`) — api: POST `/suites`
 
 #### Labels
 * `create_label` – Create a new label with optional custom field (params: `title`, `color`, `scope`, `visibility`, `field`) — api: POST `/labels`
+
+### Custom Fields and Labels
+
+The MCP server provides two distinct ways to assign values to tests, suites, and folders:
+
+#### 1. Using `labels_ids` with label:value syntax
+```javascript
+{
+  "labels_ids": ["priority:high", "severity:critical", "type:regression"]
+}
+```
+- Direct label assignment with values using `label:value` format
+- Good for simple label assignments
+- Works with existing Testomatio labels
+
+#### 2. Using `fields` parameter (structured custom fields)
+```javascript
+{
+  "fields": {
+    "priority": "high",
+    "severity": "critical",
+    "risk_score": "8.5",
+    "team": "backend"
+  }
+}
+```
+- Structured way to set custom fields
+- Cleaner syntax for AI assistants
+- Supports any custom field defined in your Testomatio project
+- Maps to Testomatio's custom-fields API
+
+**Available for:**
+- `create_test` and `update_test` - Test custom fields
+- `create_suite` - Suite custom fields
+- `create_folder` - Folder custom fields
+
+#### Example Usage
+```javascript
+// Create a test with custom fields
+{
+  "tool": "create_test",
+  "arguments": {
+    "suite_id": "123",
+    "title": "Login Test",
+    "fields": {
+      "priority": "high",
+      "severity": "critical",
+      "team": "backend"
+    }
+  }
+}
+
+// Update a test with label:value syntax
+{
+  "tool": "update_test",
+  "arguments": {
+    "test_id": "456",
+    "labels_ids": ["priority:high", "severity:critical"]
+  }
+}
+```
 
 #### Test Runs
 * `get_runs` – List all runs (no params) — api: GET `/runs`
@@ -146,8 +207,11 @@ Once configured, you can ask your AI assistant questions like:
 - "Get all test plans for this project"
 - "Create a new test called 'Login validation' in suite suite-123"
 - "Update test test-456 to change its description and add @regression tag"
+- "Create a test with custom fields: priority='high', severity='critical', team='backend'"
+- "Update test test-789 to set custom fields for risk score and assigned team"
 - "Create a new suite called 'Authentication Tests' with description 'All login and signup related tests'"
-- "Create a folder called 'API Tests' to organize API-related test suites"
+- "Create a suite with custom fields for team ownership and priority level"
+- "Create a folder called 'API Tests' to organize API-related test suites with custom fields"
 - "Create a label called 'Severity' with color '#ffe9ad' and predefined values like 'Blocker', 'Critical', 'Major', 'Minor', 'Normal', 'Trivial'"
 
 ## Query Patterns
@@ -168,6 +232,8 @@ These queries allow creating and updating tests:
 - **"Create a new test called 'Login validation' in suite suite-123"** → `create_test` tool with `title: "Login validation"`, `suite_id: "suite-123"`
 - **"Update test test-456 to change its description"** → `update_test` tool with `test_id: "test-456"`, `description: "new description"`
 - **"Create an automated test with @smoke tag"** → `create_test` tool with `state: "automated"`, `tags: ["smoke"]`
+- **"Create a test with custom fields: priority='high', severity='critical'"** → `create_test` tool with `title: "Test Title"`, `suite_id: "suite-123"`, `fields: { "priority": "high", "severity": "critical" }`
+- **"Update test test-789 to set custom fields for risk score and team"** → `update_test` tool with `test_id: "test-789"`, `fields: { "risk_score": "8.5", "team": "backend" }`
 
 ### Suite and Folder Management Queries
 
@@ -175,7 +241,9 @@ These queries help organize your test structure:
 
 - **"Create a new suite called 'Authentication Tests'"** → `create_suite` tool with `title: "Authentication Tests"`
 - **"Create a suite for login tests with description"** → `create_suite` tool with `title: "Login Tests"`, `description: "All login related test cases"`
+- **"Create a suite with custom fields for team ownership and priority level"** → `create_suite` tool with `title: "Backend Tests"`, `fields: { "team": "backend", "priority": "high" }`
 - **"Create a folder called 'API Tests' under parent suite-123"** → `create_folder` tool with `title: "API Tests"`, `parent_id: "suite-123"`
+- **"Create a folder with custom fields for team and project"** → `create_folder` tool with `title: "Integration Tests"`, `fields: { "team": "qa", "project": "mobile-app" }`
 - **"Create a test suite for payment features"** → `create_suite` tool with `title: "Payment Features", description: "Tests covering payment processing"`
 - **"Create a folder to organize integration tests"** → `create_folder` tool with `title: "Integration Tests"`
 

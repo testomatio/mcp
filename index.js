@@ -318,7 +318,14 @@ class TestomatioMCPServer {
                 labels_ids: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Slugs of labels to assign to the test',
+                  description: 'Slugs of labels to assign to the test. Supports label:value format (e.g., ["priority:high", "severity:critical"])',
+                },
+                fields: {
+                  type: 'object',
+                  description: 'Set custom fields for the test. Object with field names as keys and values as properties (e.g., {"priority": "high", "severity": "critical"})',
+                  additionalProperties: {
+                    type: 'string'
+                  },
                 },
               },
               required: ['suite_id', 'title'],
@@ -381,7 +388,14 @@ class TestomatioMCPServer {
                 labels_ids: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Slugs of labels to assign to the test',
+                  description: 'Slugs of labels to assign to the test. Supports label:value format (e.g., ["priority:high", "severity:critical"])',
+                },
+                fields: {
+                  type: 'object',
+                  description: 'Set custom fields for the test. Object with field names as keys and values as properties (e.g., {"priority": "high", "severity": "critical"})',
+                  additionalProperties: {
+                    type: 'string'
+                  },
                 },
               },
               required: ['test_id'],
@@ -405,6 +419,13 @@ class TestomatioMCPServer {
                   type: 'string',
                   description: 'Parent suite ID to create this suite under',
                 },
+                fields: {
+                  type: 'object',
+                  description: 'Set custom fields for the suite. Object with field names as keys and values as properties (e.g., {"priority": "high", "team": "backend"})',
+                  additionalProperties: {
+                    type: 'string'
+                  },
+                },
               },
               required: ['title'],
             },
@@ -426,6 +447,13 @@ class TestomatioMCPServer {
                 parent_id: {
                   type: 'string',
                   description: 'Parent folder or suite ID to create this folder under',
+                },
+                fields: {
+                  type: 'object',
+                  description: 'Set custom fields for the folder. Object with field names as keys and values as properties (e.g., {"priority": "high", "team": "backend"})',
+                  additionalProperties: {
+                    type: 'string'
+                  },
                 },
               },
               required: ['title'],
@@ -1022,14 +1050,19 @@ class TestomatioMCPServer {
   }
 
   async createTest(args) {
-    const { suite_id, labels_ids, ...attributes } = args;
+    const { suite_id, labels_ids, fields, ...attributes } = args;
+
+    // Handle fields parameter for custom fields
     const requestData = {
       data: {
         type: 'tests',
-        attributes: Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v]))
+        attributes: {
+          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          ...(fields && { 'custom-fields': fields })
+        }
       }
     };
-    
+
     if (suite_id) {
       requestData.data.relationships = {
         suite: {
@@ -1040,7 +1073,7 @@ class TestomatioMCPServer {
         }
       };
     }
-    
+
     if (labels_ids) requestData.labels_ids = labels_ids;
 
     const data = await this.makePostRequest('/tests', requestData);
@@ -1060,14 +1093,19 @@ class TestomatioMCPServer {
   }
 
   async updateTest(args) {
-    const { test_id, suite_id, labels_ids, ...attributes } = args;
+    const { test_id, suite_id, labels_ids, fields, ...attributes } = args;
+
+    // Handle fields parameter for custom fields
     const requestData = {
       data: {
         type: 'tests',
-        attributes: Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v]))
+        attributes: {
+          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          ...(fields && { 'custom-fields': fields })
+        }
       }
     };
-    
+
     if (suite_id) {
       requestData.data.relationships = {
         suite: {
@@ -1078,7 +1116,7 @@ class TestomatioMCPServer {
         }
       };
     }
-    
+
     if (labels_ids) requestData.labels_ids = labels_ids;
 
     const data = await this.makePutRequest(`/tests/${test_id}`, requestData);
@@ -1098,13 +1136,14 @@ class TestomatioMCPServer {
   }
 
   async createSuite(args) {
-    const { parent_id, ...attributes } = args;
+    const { parent_id, fields, ...attributes } = args;
     const requestData = {
       data: {
         type: 'suites',
         attributes: {
           ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
-          'file-type': 'file'
+          'file-type': 'file',
+          ...(fields && { 'custom-fields': fields })
         }
       }
     };
@@ -1136,13 +1175,14 @@ class TestomatioMCPServer {
   }
 
   async createFolder(args) {
-    const { parent_id, ...attributes } = args;
+    const { parent_id, fields, ...attributes } = args;
     const requestData = {
       data: {
         type: 'suites',
         attributes: {
           ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
-          'file-type': 'folder'
+          'file-type': 'folder',
+          ...(fields && { 'custom-fields': fields })
         }
       }
     };
