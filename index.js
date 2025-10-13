@@ -7,6 +7,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { program } from 'commander';
+import { fileURLToPath } from 'url';
 
 function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : value;
@@ -1338,7 +1339,15 @@ async function main() {
   }
 }
 
-// Only run main() if this file is executed directly (not imported)
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
+// Run main() when executed directly or as a bin script
+// Don't run when imported as a module for testing
+if (import.meta.url.startsWith('file://') && process.argv[1]) {
+  const modulePath = fileURLToPath(import.meta.url);
+  const isDirectExecution = process.argv[1].includes('index.js') ||
+                           process.argv[1] === modulePath ||
+                           process.argv[1].endsWith('/testomatio-mcp');
+
+  if (isDirectExecution) {
+    main().catch(console.error);
+  }
 }
