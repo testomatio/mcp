@@ -13,11 +13,14 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:unit": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js",
+    "test:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "test:integration:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js --watch",
+    "test:e2e:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
     "test:coverage:integration": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js --coverage",
-    "test:all": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js"
+    "test:coverage:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js --coverage",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },
   "keywords": [
     "testomatio",
