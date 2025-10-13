@@ -31,6 +31,18 @@ describe('TestomatioMCPServer', () => {
       expect(server.server).toBeDefined();
       expect(server.server._serverInfo.name).toBe('testomatio-mcp-server');
     });
+
+    test('should normalize whitespace in config values', () => {
+      const serverWithWhitespace = new TestomatioMCPServer({
+        token: '  testomat_test_token_123  ',
+        projectId: '\n  test-project-id  \n',
+        baseUrl: 'http://\n  localhost:3000',
+      });
+
+      expect(serverWithWhitespace.config.token).toBe('testomat_test_token_123');
+      expect(serverWithWhitespace.config.projectId).toBe('test-project-id');
+      expect(serverWithWhitespace.config.baseUrl).toBe('http://localhost:3000');
+    });
   });
 
   describe('Authentication', () => {

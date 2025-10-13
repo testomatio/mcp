@@ -8,9 +8,29 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { program } from 'commander';
 
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : value;
+}
+
+function normalizeBaseUrl(value) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  // Remove any internal whitespace characters that may appear when the URL
+  // gets broken across lines (e.g. "http://\n  localhost:3000").
+  return trimmed.replace(/\s+/g, '');
+}
+
 class TestomatioMCPServer {
   constructor(config) {
-    this.config = config;
+    this.config = {
+      ...config,
+      token: normalizeString(config.token),
+      projectId: normalizeString(config.projectId),
+      baseUrl: normalizeBaseUrl(config.baseUrl),
+    };
     this.jwtToken = null;
     this.server = new Server(
       {
@@ -1285,9 +1305,13 @@ function parseArgs() {
 
   const options = program.opts();
 
-  const token = options.token || process.env.TESTOMATIO_API_TOKEN;
-  const projectId = options.project || process.env.TESTOMATIO_PROJECT_ID;
-  const baseUrl = options.baseUrl || process.env.TESTOMATIO_BASE_URL || 'https://app.testomat.io';
+  const token = normalizeString(options.token || process.env.TESTOMATIO_API_TOKEN);
+  const projectId = normalizeString(options.project || process.env.TESTOMATIO_PROJECT_ID);
+  const baseUrl = normalizeBaseUrl(
+    options.baseUrl ||
+      process.env.TESTOMATIO_BASE_URL ||
+      'https://app.testomat.io'
+  );
 
   if (!token) {
     console.error('Error: API token is required. Use --token <token> or set TESTOMATIO_API_TOKEN environment variable');
