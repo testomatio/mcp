@@ -13,7 +13,7 @@ A Model Context Protocol (MCP) server for Testomat.io API integration with AI as
 ### Run directly with npx
 
 ```bash
-npx @testomatio/mcp --token <your-token> --project <project-id>
+npx @testomatio/mcp@latest --token <your-token> --project <project-id>
 ```
 
 ## Usage
@@ -26,13 +26,13 @@ The MCP server can be started using command line arguments or environment variab
 
 ```bash
 # Using short flags
-npx @testomatio/mcp -t testomat_YOUR_TOKEN_HERE -p your-project-id
+npx @testomatio/mcp@latest -t testomat_YOUR_TOKEN_HERE -p your-project-id
 
 # Using long flags
-npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id
+npx @testomatio/mcp@latest --token testomat_YOUR_TOKEN_HERE --project your-project-id
 
 # With custom base URL
-npx @testomatio/mcp --token testomat_YOUR_TOKEN_HERE --project your-project-id --base-url https://your-instance.testomat.io
+npx @testomatio/mcp@latest --token testomat_YOUR_TOKEN_HERE --project your-project-id --base-url https://your-instance.testomat.io
 ```
 
 #### Using Environment Variables
@@ -43,10 +43,10 @@ export TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE
 export TESTOMATIO_BASE_URL=https://app.testomat.io  # Optional, defaults to https://app.testomat.io
 
 # Run with project ID
-npx @testomatio/mcp --project your-project-id
+npx @testomatio/mcp@latest --project your-project-id
 
 # Or run directly with environment variables
-TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE npx @testomatio/mcp --project your-project-id
+TESTOMATIO_API_TOKEN=testomat_YOUR_TOKEN_HERE npx @testomatio/mcp@latest --project your-project-id
 ```
 
 ### Getting Your API Token
