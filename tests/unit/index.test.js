@@ -931,6 +931,152 @@ describe('TestomatioMCPServer', () => {
       });
     });
 
+    describe('unlinkLabel functionality', () => {
+      test('should remove label from test without value', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        const unlinkData = {
+          label_id: 'priority',
+          test_id: 'test-123'
+        };
+
+        const result = await server.unlinkLabel(unlinkData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/priority/link?test_id=test-123&event=remove'),
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Authorization': 'test-jwt',
+              'Content-Type': 'application/json'
+            },
+            body: '{}'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully removed label "priority" (all instances) from test "test-123"');
+      });
+
+      test('should remove label from test with specific value', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        const unlinkData = {
+          label_id: 'severity',
+          test_id: 'test-456',
+          value: 'critical'
+        };
+
+        const result = await server.unlinkLabel(unlinkData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/severity/link?test_id=test-456&event=remove&value=critical'),
+          expect.objectContaining({
+            method: 'POST',
+            body: '{}'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully removed label "severity" (value "critical") from test "test-456"');
+      });
+
+      test('should remove label from suite without value', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        const unlinkData = {
+          label_id: 'component',
+          suite_id: 'suite-789'
+        };
+
+        const result = await server.unlinkLabel(unlinkData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/component/link?suite_id=suite-789&event=remove'),
+          expect.objectContaining({
+            method: 'POST',
+            body: '{}'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully removed label "component" (all instances) from suite "suite-789"');
+      });
+
+      test('should remove label from suite with specific value', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        const unlinkData = {
+          label_id: 'team',
+          suite_id: 'suite-101',
+          value: 'backend'
+        };
+
+        const result = await server.unlinkLabel(unlinkData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/team/link?suite_id=suite-101&event=remove&value=backend'),
+          expect.objectContaining({
+            method: 'POST',
+            body: '{}'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully removed label "team" (value "backend") from suite "suite-101"');
+      });
+
+      test('should handle special characters in label values', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        const unlinkData = {
+          label_id: 'status',
+          test_id: 'test-202',
+          value: 'in-progress & testing'
+        };
+
+        const result = await server.unlinkLabel(unlinkData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/status/link?test_id=test-202&event=remove&value=in-progress%20%26%20testing'),
+          expect.objectContaining({
+            method: 'POST'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully removed label "status" (value "in-progress & testing") from test "test-202"');
+      });
+
+      test('should throw error when neither test_id nor suite_id is provided', async () => {
+        const unlinkData = {
+          label_id: 'priority'
+        };
+
+        await expect(server.unlinkLabel(unlinkData)).rejects.toThrow('Either test_id or suite_id must be provided');
+      });
+
+      test('should throw error when both test_id and suite_id are provided', async () => {
+        const unlinkData = {
+          label_id: 'priority',
+          test_id: 'test-123',
+          suite_id: 'suite-456'
+        };
+
+        await expect(server.unlinkLabel(unlinkData)).rejects.toThrow('Cannot specify both test_id and suite_id. Use one or the other.');
+      });
+    });
+
     describe('createLabel with field configuration', () => {
       test('should create label with list field type', async () => {
         const mockResponse = {

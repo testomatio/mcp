@@ -502,6 +502,36 @@ class TestomatioMCPServer {
             },
           },
           {
+            name: 'unlink_label',
+            description: 'Remove a label from a test or suite. Can remove specific label values or all instances of the label',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                label_id: {
+                  type: 'string',
+                  description: 'Label ID to remove (e.g., "priority", "severity")',
+                },
+                test_id: {
+                  type: 'string',
+                  description: 'Test ID to remove label from (use either test_id or suite_id)',
+                },
+                suite_id: {
+                  type: 'string',
+                  description: 'Suite ID to remove label from (use either test_id or suite_id)',
+                },
+                value: {
+                  type: 'string',
+                  description: 'Specific label value to remove (e.g., "high", "critical"). If omitted, all instances are removed',
+                },
+              },
+              required: ['label_id'],
+              oneOf: [
+                { required: ['test_id'] },
+                { required: ['suite_id'] }
+              ],
+            },
+          },
+          {
             name: 'create_label',
             description: 'Create a new label with optional custom field configuration. Labels can be used to tag and categorize tests and suites',
             inputSchema: {
@@ -584,6 +614,8 @@ class TestomatioMCPServer {
             return await this.getPlan(args.plan_id);
           case 'get_labels':
             return await this.getLabels(args);
+          case 'unlink_label':
+            return await this.unlinkLabel(args);
           case 'create_test':
             return await this.createTest(args);
           case 'update_test':
@@ -1196,6 +1228,53 @@ class TestomatioMCPServer {
 
       await this.makePostRequest(url, {});
     }
+  }
+
+  async unlinkLabel(args) {
+    const { label_id, test_id, suite_id, value } = args;
+
+    // Validate that either test_id or suite_id is provided
+    if (!test_id && !suite_id) {
+      throw new Error('Either test_id or suite_id must be provided');
+    }
+
+    if (test_id && suite_id) {
+      throw new Error('Cannot specify both test_id and suite_id. Use one or the other.');
+    }
+
+    // Build URL with base label link endpoint
+    let url = `/labels/${label_id}/link`;
+
+    // Add appropriate query parameters
+    if (test_id) {
+      url += `?test_id=${test_id}`;
+    } else if (suite_id) {
+      url += `?suite_id=${suite_id}`;
+    }
+
+    // Add event=remove parameter
+    url += `&event=remove`;
+
+    // Add value as query parameter if present
+    if (value) {
+      url += `&value=${encodeURIComponent(value)}`;
+    }
+
+    // Make the API request
+    await this.makePostRequest(url, {});
+
+    const itemType = test_id ? 'test' : 'suite';
+    const itemId = test_id || suite_id;
+    const removeDescription = value ? `value "${value}"` : 'all instances';
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Successfully removed label "${label_id}" (${removeDescription}) from ${itemType} "${itemId}"`,
+        },
+      ],
+    };
   }
 
   async updateTest(args) {
