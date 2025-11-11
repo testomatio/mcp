@@ -11,9 +11,10 @@ export default {
   ],
   // Environment variables for tests
   setupFiles: ['<rootDir>/jest.setup.js'],
-  // Ignore patterns for integration tests when running unit tests
+  // Ignore patterns for integration and E2E tests when running unit tests
   testPathIgnorePatterns: [
-    '<rootDir>/tests/integration/'
+    '<rootDir>/tests/integration/',
+    '<rootDir>/tests/e2e/'
   ],
   // Collect coverage from source files only
   collectCoverageFrom: [

@@ -481,6 +481,27 @@ class TestomatioMCPServer {
             },
           },
           {
+            name: 'get_labels',
+            description: 'Get all available labels for the project with their IDs and configurations',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                scope: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    enum: ['tests', 'suites']
+                  },
+                  description: 'Filter labels by scope (e.g., ["tests"], ["suites"], or ["tests", "suites"])',
+                },
+                page: {
+                  type: 'number',
+                  description: 'Page number for pagination',
+                },
+              },
+            },
+          },
+          {
             name: 'create_label',
             description: 'Create a new label with optional custom field configuration. Labels can be used to tag and categorize tests and suites',
             inputSchema: {
@@ -561,6 +582,8 @@ class TestomatioMCPServer {
             return await this.getPlans(args);
           case 'get_plan':
             return await this.getPlan(args.plan_id);
+          case 'get_labels':
+            return await this.getLabels(args);
           case 'create_test':
             return await this.createTest(args);
           case 'update_test':
@@ -643,7 +666,8 @@ class TestomatioMCPServer {
         this.jwtToken = null;
         return this.makePostRequest(path, data);
       }
-      throw new Error(`HTTP ${response.status}: ${response.statusText}; ${await response.text()}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorText}`);
     }
 
     return await response.json();
@@ -667,7 +691,8 @@ class TestomatioMCPServer {
         this.jwtToken = null;
         return this.makePutRequest(path, data);
       }
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorText}`);
     }
 
     return await response.json();
@@ -1070,32 +1095,65 @@ class TestomatioMCPServer {
     };
   }
 
+  async getLabels(filters = {}) {
+    const params = {};
+
+    // Handle scope filter
+    if (filters.scope && Array.isArray(filters.scope)) {
+      if (!params['scope[]']) {
+        params['scope[]'] = [];
+      }
+      filters.scope.forEach(scope => {
+        params['scope[]'].push(scope);
+      });
+    }
+
+    // Handle pagination
+    if (filters.page) {
+      params.page = filters.page;
+    }
+
+    const data = await this.makeRequest('/labels', params);
+    const formattedLabels = data.data.map(label =>
+      this.formatModel(label, 'label', [
+        'title', 'color', 'scope', 'visibility', 'field'
+      ])
+    ).join('\n\n');
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Available labels for project ${this.config.projectId}:\n\n${formattedLabels || 'No labels found matching the criteria.'}`,
+        },
+      ],
+    };
+  }
+
   async createTest(args) {
     const { suite_id, labels_ids, fields, ...attributes } = args;
 
-    // Handle fields parameter for custom fields
+    // Convert attributes to use hyphens instead of underscores for API compatibility
+    const apiAttributes = Object.fromEntries(
+      Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])
+    );
+
+    // Add suite_id to attributes if provided
+    if (suite_id) {
+      apiAttributes['suite_id'] = suite_id;
+    }
+
+    // Build JSON-API request data
     const requestData = {
       data: {
         type: 'tests',
         attributes: {
-          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          ...apiAttributes,
+          ...(labels_ids && { labels_ids: labels_ids }),
           ...(fields && { 'custom-fields': fields })
         }
       }
     };
-
-    if (suite_id) {
-      requestData.data.relationships = {
-        suite: {
-          data: {
-            type: 'suites',
-            id: suite_id
-          }
-        }
-      };
-    }
-
-    if (labels_ids) requestData.labels_ids = labels_ids;
 
     const data = await this.makePostRequest('/tests', requestData);
     const formattedTest = this.formatModel(data.data, 'test', [
@@ -1113,34 +1171,70 @@ class TestomatioMCPServer {
     };
   }
 
+  async linkLabels(testId, labelsIds) {
+    if (!labelsIds || labelsIds.length === 0) {
+      return;
+    }
+
+    // Process each label individually using the label linking API
+    for (const labelId of labelsIds) {
+      // Parse label:value format if present
+      let labelUid = labelId;
+      let value = null;
+
+      if (labelId.includes(':')) {
+        [labelUid, value] = labelId.split(':', 2);
+      }
+
+      // Build URL with test_id query parameter
+      let url = `/labels/${labelUid}/link?test_id=${testId}`;
+
+      // Add value as query parameter if present
+      if (value) {
+        url += `&value=${encodeURIComponent(value)}`;
+      }
+
+      await this.makePostRequest(url, {});
+    }
+  }
+
   async updateTest(args) {
     const { test_id, suite_id, labels_ids, fields, ...attributes } = args;
 
-    // Handle fields parameter for custom fields
+    // Convert attributes to use hyphens instead of underscores for API compatibility
+    const apiAttributes = Object.fromEntries(
+      Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])
+    );
+
+    // Add suite_id to attributes if provided
+    if (suite_id) {
+      apiAttributes['suite_id'] = suite_id;
+    }
+
+    let data;
+
+    // Handle regular test attributes update using JSON-API format
     const requestData = {
       data: {
+        id: test_id,
         type: 'tests',
         attributes: {
-          ...Object.fromEntries(Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])),
+          ...apiAttributes,
           ...(fields && { 'custom-fields': fields })
         }
       }
     };
 
-    if (suite_id) {
-      requestData.data.relationships = {
-        suite: {
-          data: {
-            type: 'suites',
-            id: suite_id
-          }
-        }
-      };
+    data = await this.makePutRequest(`/tests/${test_id}`, requestData);
+
+    // Handle labels_ids using the label linking API
+    if (labels_ids && labels_ids.length > 0) {
+      await this.linkLabels(test_id, labels_ids);
+
+      // After linking labels, fetch the updated test to reflect changes
+      data = await this.makeRequest(`/tests/${test_id}`);
     }
 
-    if (labels_ids) requestData.labels_ids = labels_ids;
-
-    const data = await this.makePutRequest(`/tests/${test_id}`, requestData);
     const formattedTest = this.formatModel(data.data, 'test', [
       'title', 'description', 'code', 'priority',
       'state', 'suite-id', 'tags', 'file'

@@ -230,6 +230,1002 @@ describe('TestomatioMCPServer', () => {
     });
   });
 
+  describe('Label Setting Functionality', () => {
+    beforeEach(async () => {
+      // Authenticate before testing label methods
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ jwt: 'test-jwt' })
+      });
+      await server.authenticate();
+      jest.clearAllMocks();
+    });
+
+    describe('createTest with labels_ids', () => {
+      test('should create test with label:value format labels', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-123',
+            attributes: {
+              title: 'Test with Labels',
+              state: 'automated',
+              priority: 'high'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Labels',
+          labels_ids: ['priority:high', 'severity:critical', 'type:regression']
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Authorization': 'test-jwt',
+              'Content-Type': 'application/json'
+            },
+            body: expect.stringContaining('"data":{"type":"tests","attributes":{')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"labels_ids":["priority:high","severity:critical","type:regression"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+        expect(result.content[0].text).toContain('Test with Labels');
+      });
+
+      test('should create test with simple labels (no values)', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-124',
+            attributes: {
+              title: 'Test with Simple Labels',
+              state: 'manual'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Simple Labels',
+          labels_ids: ['smoke', 'ui', 'api']
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"labels_ids":["smoke","ui","api"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should create test with mixed label formats', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-125',
+            attributes: {
+              title: 'Test with Mixed Labels'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Mixed Labels',
+          labels_ids: ['smoke', 'priority:high', 'team:backend']
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"labels_ids":["smoke","priority:high","team:backend"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+    });
+
+    describe('createTest with fields parameter', () => {
+      test('should create test with custom fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-126',
+            attributes: {
+              title: 'Test with Custom Fields'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Custom Fields',
+          fields: {
+            priority: 'critical',
+            severity: 'high',
+            team: 'frontend',
+            risk_score: '8.5'
+          }
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields":{"priority":"critical","severity":"high","team":"frontend","risk_score":"8.5"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should create test with both labels_ids and fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-127',
+            attributes: {
+              title: 'Test with Both Label Types'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Both Label Types',
+          labels_ids: ['smoke', 'regression'],
+          fields: {
+            priority: 'high',
+            severity: 'critical'
+          }
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"labels_ids":["smoke","regression"]')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields":{"priority":"high","severity":"critical"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+    });
+
+    describe('updateTest with labels_ids', () => {
+      test('should update test with labels using label linking API', async () => {
+        // Mock the PUT request for test update (empty since only labels are being updated)
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            data: {
+              id: 'test-128',
+              attributes: { title: 'Test Title' }
+            }
+          })
+        });
+
+        // Mock the first label link call
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        // Mock the second label link call
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        // Mock the get test call after label update
+        const mockTestResponse = {
+          data: {
+            id: 'test-128',
+            attributes: {
+              title: 'Updated Test with Labels'
+            }
+          }
+        };
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockTestResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-128',
+          labels_ids: ['priority:high', 'severity:critical']
+        };
+
+        const result = await server.updateTest(updateData);
+
+        // Should first update test attributes using JSON-API format (PUT request)
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-128'),
+          expect.objectContaining({
+            method: 'PUT',
+            body: expect.stringContaining('"data":{"id":"test-128","type":"tests","attributes":{')
+          })
+        );
+
+        // Should call label link endpoint for first label with value
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/priority/link?test_id=test-128&value=high'),
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Authorization': 'test-jwt',
+              'Content-Type': 'application/json'
+            },
+            body: '{}'
+          })
+        );
+
+        // Should call label link endpoint for second label with value
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/severity/link?test_id=test-128&value=critical'),
+          expect.objectContaining({
+            method: 'POST',
+            body: '{}'
+          })
+        );
+
+        // Should then fetch the updated test
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-128'),
+          expect.objectContaining({
+            method: 'GET'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+
+      test('should update test with labels without values', async () => {
+        // Mock the PUT request for test update (empty since only labels are being updated)
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            data: {
+              id: 'test-129',
+              attributes: { title: 'Test Title' }
+            }
+          })
+        });
+
+        // Mock the label link call for simple label
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ success: true })
+        });
+
+        // Mock the get test call after label update
+        const mockTestResponse = {
+          data: {
+            id: 'test-129',
+            attributes: {
+              title: 'Updated Test with Simple Label'
+            }
+          }
+        };
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockTestResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-129',
+          labels_ids: ['smoke']
+        };
+
+        const result = await server.updateTest(updateData);
+
+        // Should call label link endpoint for simple label without value
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels/smoke/link?test_id=test-129'),
+          expect.objectContaining({
+            method: 'POST',
+            body: '{}'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+
+      test('should update test with regular attributes and custom fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-129',
+            attributes: {
+              title: 'Updated Test',
+              priority: 'high',
+              description: 'Updated description'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-129',
+          title: 'Updated Test',
+          priority: 'high',
+          fields: {
+            severity: 'critical',
+            team: 'backend'
+          }
+        };
+
+        const result = await server.updateTest(updateData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-129'),
+          expect.objectContaining({
+            method: 'PUT',
+            body: expect.stringContaining('"data":{"id":"test-129","type":"tests","attributes":{')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-129'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields":{"severity":"critical","team":"backend"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+    });
+
+    describe('createSuite with fields parameter', () => {
+      test('should create suite with custom fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'suite-123',
+            attributes: {
+              title: 'Suite with Fields',
+              'file-type': 'file'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const suiteData = {
+          title: 'Suite with Fields',
+          fields: {
+            team: 'frontend',
+            component: 'user-auth',
+            priority: 'high'
+          }
+        };
+
+        const result = await server.createSuite(suiteData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/suites'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"custom-fields":{"team":"frontend","component":"user-auth","priority":"high"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created suite');
+      });
+
+      test('should create suite with parent and fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'suite-124',
+            attributes: {
+              title: 'Child Suite with Fields',
+              'file-type': 'file'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const suiteData = {
+          title: 'Child Suite with Fields',
+          parent_id: 'parent-suite-456',
+          fields: {
+            team: 'backend',
+            module: 'api'
+          }
+        };
+
+        const result = await server.createSuite(suiteData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/suites'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"custom-fields":{"team":"backend","module":"api"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created suite');
+      });
+    });
+
+    describe('createFolder with fields parameter', () => {
+      test('should create folder with custom fields', async () => {
+        const mockResponse = {
+          data: {
+            id: 'folder-123',
+            attributes: {
+              title: 'Folder with Fields',
+              'file-type': 'folder'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const folderData = {
+          title: 'Folder with Fields',
+          fields: {
+            department: 'qa',
+            product: 'mobile-app',
+            environment: 'staging'
+          }
+        };
+
+        const result = await server.createFolder(folderData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/suites'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"file-type":"folder"')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/suites'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields":{"department":"qa","product":"mobile-app","environment":"staging"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created folder');
+      });
+    });
+
+    describe('getLabels functionality', () => {
+      test('should get all labels without filters', async () => {
+        const mockResponse = {
+          data: [
+            {
+              id: 'label-123',
+              attributes: {
+                title: 'Priority',
+                color: '#ff6b6b',
+                scope: ['tests', 'suites'],
+                visibility: ['list']
+              }
+            },
+            {
+              id: 'label-456',
+              attributes: {
+                title: 'Severity',
+                color: '#ffe9ad',
+                scope: ['tests'],
+                visibility: ['list']
+              }
+            }
+          ]
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const result = await server.getLabels();
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            method: 'GET',
+            headers: {
+              'Authorization': 'test-jwt',
+              'Content-Type': 'application/json'
+            }
+          })
+        );
+
+        expect(result.content[0].text).toContain('Available labels for project test-project-id');
+        expect(result.content[0].text).toContain('Priority');
+        expect(result.content[0].text).toContain('Severity');
+        expect(result.content[0].text).toContain('label-123');
+        expect(result.content[0].text).toContain('label-456');
+      });
+
+      test('should get labels with scope filter', async () => {
+        const mockResponse = {
+          data: [
+            {
+              id: 'label-789',
+              attributes: {
+                title: 'Component',
+                color: '#4ecdc4',
+                scope: ['tests'],
+                visibility: ['list']
+              }
+            }
+          ]
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const filters = {
+          scope: ['tests']
+        };
+
+        const result = await server.getLabels(filters);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels?scope%5B%5D=tests'),
+          expect.objectContaining({
+            method: 'GET'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Component');
+        expect(result.content[0].text).toContain('label-789');
+      });
+
+      test('should get labels with multiple scope filter', async () => {
+        const mockResponse = {
+          data: [
+            {
+              id: 'label-101',
+              attributes: {
+                title: 'Team',
+                color: '#95e1d3',
+                scope: ['tests', 'suites'],
+                visibility: ['list']
+              }
+            }
+          ]
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const filters = {
+          scope: ['tests', 'suites']
+        };
+
+        const result = await server.getLabels(filters);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels?scope%5B%5D=tests&scope%5B%5D=suites'),
+          expect.objectContaining({
+            method: 'GET'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Team');
+      });
+
+      test('should get labels with pagination', async () => {
+        const mockResponse = {
+          data: [
+            {
+              id: 'label-202',
+              attributes: {
+                title: 'Environment',
+                color: '#f8b500',
+                scope: ['tests'],
+                visibility: ['list']
+              }
+            }
+          ]
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const filters = {
+          page: 2
+        };
+
+        const result = await server.getLabels(filters);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels?page=2'),
+          expect.objectContaining({
+            method: 'GET'
+          })
+        );
+
+        expect(result.content[0].text).toContain('Environment');
+      });
+
+      test('should handle empty labels response', async () => {
+        const mockResponse = {
+          data: []
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const result = await server.getLabels();
+
+        expect(result.content[0].text).toContain('Available labels for project test-project-id');
+        expect(result.content[0].text).toContain('No labels found matching the criteria');
+      });
+    });
+
+    describe('createLabel with field configuration', () => {
+      test('should create label with list field type', async () => {
+        const mockResponse = {
+          data: {
+            id: 'label-123',
+            attributes: {
+              title: 'Priority',
+              field: {
+                type: 'list',
+                value: 'Low\nNormal\nHigh\nCritical'
+              }
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const labelData = {
+          title: 'Priority',
+          field: {
+            type: 'list',
+            value: 'Low\nNormal\nHigh\nCritical'
+          }
+        };
+
+        const result = await server.createLabel(labelData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"field":{"type":"list","value":"Low\\nNormal\\nHigh\\nCritical"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created label');
+      });
+
+      test('should create label with string field type', async () => {
+        const mockResponse = {
+          data: {
+            id: 'label-124',
+            attributes: {
+              title: 'Assignee',
+              field: {
+                type: 'string'
+              }
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const labelData = {
+          title: 'Assignee',
+          field: {
+            type: 'string'
+          }
+        };
+
+        const result = await server.createLabel(labelData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"field":{"type":"string"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created label');
+      });
+
+      test('should create label with number field type', async () => {
+        const mockResponse = {
+          data: {
+            id: 'label-125',
+            attributes: {
+              title: 'Risk Score',
+              field: {
+                type: 'number',
+                short: false
+              }
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const labelData = {
+          title: 'Risk Score',
+          field: {
+            type: 'number',
+            short: false
+          }
+        };
+
+        const result = await server.createLabel(labelData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"field":{"type":"number","short":false}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created label');
+      });
+
+      test('should create label with complete configuration', async () => {
+        const mockResponse = {
+          data: {
+            id: 'label-126',
+            attributes: {
+              title: 'Component',
+              color: '#ff6b6b',
+              scope: ['tests', 'suites'],
+              visibility: ['list'],
+              field: {
+                type: 'list',
+                short: true,
+                value: 'Frontend\nBackend\nDatabase\nAPI'
+              }
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const labelData = {
+          title: 'Component',
+          color: '#ff6b6b',
+          scope: ['tests', 'suites'],
+          visibility: ['list'],
+          field: {
+            type: 'list',
+            short: true,
+            value: 'Frontend\nBackend\nDatabase\nAPI'
+          }
+        };
+
+        const result = await server.createLabel(labelData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            method: 'POST',
+            body: expect.stringContaining('"title":"Component"')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            body: expect.stringContaining('"color":"#ff6b6b"')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            body: expect.stringContaining('"scope":["tests","suites"]')
+          })
+        );
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/labels'),
+          expect.objectContaining({
+            body: expect.stringContaining('"field":{"type":"list","short":true,"value":"Frontend\\nBackend\\nDatabase\\nAPI"}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created label');
+      });
+    });
+
+    describe('Edge cases and error handling', () => {
+      test('should handle empty labels_ids array', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-130',
+            attributes: {
+              title: 'Test with Empty Labels'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Empty Labels',
+          labels_ids: []
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"labels_ids":[]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should handle empty fields object', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-131',
+            attributes: {
+              title: 'Test with Empty Fields'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Empty Fields',
+          fields: {}
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields":{}')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should handle special characters in field values', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-132',
+            attributes: {
+              title: 'Test with Special Characters'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with Special Characters',
+          fields: {
+            description: 'Test with "quotes" and <tags>',
+            notes: 'Special characters: & <>',
+            regex: '[a-z]+@[0-9]+'
+          }
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"custom-fields"')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+    });
+  });
+
   describe('Tool Methods', () => {
     beforeEach(async () => {
       // Authenticate before testing tool methods
