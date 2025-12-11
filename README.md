@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for Testomat.io API integration with AI assistants like Cursor.
 
+<img width="1920" height="1085" alt="image" src="https://github.com/user-attachments/assets/cf823e8b-1305-4ed2-a7c5-712efec12ceb" />
+
 ## Installation
 
 ### Prerequisites
