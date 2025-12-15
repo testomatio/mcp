@@ -117,6 +117,20 @@ class TestomatioMCPServer {
             },
           },
           {
+            name: 'get_test',
+            description: 'Get a specific test by its ID with all information including labels, tags, and metadata',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                test_id: {
+                  type: 'string',
+                  description: 'The ID of the test to retrieve',
+                },
+              },
+              required: ['test_id'],
+            },
+          },
+          {
             name: 'search_tests',
             description: 'Search tests by keywords, tags, labels, TQL queries, and other filters',
             inputSchema: {
@@ -303,7 +317,7 @@ class TestomatioMCPServer {
                 },
                 title: {
                   type: 'string',
-                  description: 'Test title',
+                  description: 'Test title. @tags in the title (e.g., "@smoke test") will be automatically extracted as tags',
                 },
                 description: {
                   type: 'string',
@@ -325,7 +339,7 @@ class TestomatioMCPServer {
                 tags: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'List of tags for the test',
+                  description: 'List of @tags for the test. Tags are automatically extracted from @ mentions in the title (e.g., @smoke, @regression). Can also be provided as an array of tag names (without @ prefix).',
                 },
                 jira_issues: {
                   type: 'array',
@@ -368,7 +382,7 @@ class TestomatioMCPServer {
                 },
                 title: {
                   type: 'string',
-                  description: 'Test title',
+                  description: 'Test title. @tags in the title (e.g., "@smoke test") will be automatically extracted as tags',
                 },
                 description: {
                   type: 'string',
@@ -395,7 +409,7 @@ class TestomatioMCPServer {
                 tags: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'List of tags for the test',
+                  description: 'List of @tags for the test. Tags are automatically extracted from @ mentions in the title (e.g., @smoke, @regression). Can also be provided as an array of tag names (without @ prefix).',
                 },
                 jira_issues: {
                   type: 'array',
@@ -594,6 +608,8 @@ class TestomatioMCPServer {
         switch (name) {
           case 'get_tests':
             return await this.getTests(args);
+          case 'get_test':
+            return await this.getTest(args.test_id);
           case 'search_tests':
             return await this.searchTests(args);
           case 'search_suites':
@@ -828,11 +844,16 @@ class TestomatioMCPServer {
 
   async getTests(filters = {}) {
     const params = this.buildSearchParams(filters);
+    // Add labels=true and detail=true for comprehensive test information
+    params.labels = 'true';
+    params.detail = 'true';
+
     const data = await this.makeRequest('/tests', params);
     const formattedTests = data.data.map(test =>
       this.formatModel(test, 'test', [
-        'title', 'description', 'code', 'priority',
-        'state', 'suite-id', 'tags', 'file'
+        'title', 'description', 'code', 'priority', 'state',
+        'suite-id', 'tags', 'file', 'jira-issues', 'assigned-to',
+        'created-at', 'updated-at', 'labels'
       ])
     ).join('\n\n');
 
@@ -841,6 +862,25 @@ class TestomatioMCPServer {
         {
           type: 'text',
           text: `Tests for project ${this.config.projectId}:\n\n${formattedTests}`,
+        },
+      ],
+    };
+  }
+
+  async getTest(testId) {
+    // Add labels=true and detail=true for comprehensive test information
+    const data = await this.makeRequest(`/tests/${testId}`, { labels: 'true', detail: 'true' });
+    const formattedTest = this.formatModel(data.data, 'test', [
+      'title', 'description', 'code', 'priority', 'state',
+      'suite-id', 'tags', 'file', 'jira-issues', 'assigned-to',
+      'created-at', 'updated-at', 'labels'
+    ]);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Test ${testId}:\n\n${formattedTest}`,
         },
       ],
     };
@@ -893,12 +933,17 @@ class TestomatioMCPServer {
 
   async searchTests(filters = {}) {
     const params = this.buildSearchParams(filters);
+    // Add labels=true and detail=true for comprehensive test information
+    params.labels = 'true';
+    params.detail = 'true';
+
     const data = await this.makeRequest('/tests', params);
 
     const formattedTests = data.data.map(test =>
       this.formatModel(test, 'test', [
-        'title', 'description', 'code', 'priority',
-        'state', 'suite-id', 'tags', 'file'
+        'title', 'description', 'code', 'priority', 'state',
+        'suite-id', 'tags', 'file', 'jira-issues', 'assigned-to',
+        'created-at', 'updated-at', 'labels'
       ])
     ).join('\n\n');
 
@@ -1162,8 +1207,55 @@ class TestomatioMCPServer {
     };
   }
 
+  extractTagsFromTitle(title) {
+    if (!title) return [];
+
+    // Find all @tags in the title
+    const tagMatches = title.match(/@([a-zA-Z0-9_\-]+)/g);
+
+    if (!tagMatches) return [];
+
+    // Remove @ prefix and deduplicate
+    const tags = tagMatches
+      .map(tag => tag.substring(1)) // Remove @
+      .filter(tag => tag.length > 0); // Filter out empty tags
+
+    return [...new Set(tags)]; // Remove duplicates
+  }
+
+  mergeTags(explicitTags, titleTags) {
+    const allTags = [];
+
+    // Add explicit tags (remove @ prefix if present)
+    if (explicitTags && Array.isArray(explicitTags)) {
+      allTags.push(...explicitTags.map(tag => tag.replace(/^@/, '')));
+    }
+
+    // Add tags extracted from title
+    if (titleTags && Array.isArray(titleTags)) {
+      allTags.push(...titleTags);
+    }
+
+    // Remove duplicates while preserving order
+    const uniqueTags = [];
+    const seen = new Set();
+
+    for (const tag of allTags) {
+      if (!seen.has(tag) && tag.length > 0) {
+        seen.add(tag);
+        uniqueTags.push(tag);
+      }
+    }
+
+    return uniqueTags;
+  }
+
   async createTest(args) {
     const { suite_id, labels_ids, fields, ...attributes } = args;
+
+    // Extract tags from title if provided
+    const titleTags = this.extractTagsFromTitle(attributes.title);
+    const mergedTags = this.mergeTags(attributes.tags, titleTags);
 
     // Convert attributes to use hyphens instead of underscores for API compatibility
     const apiAttributes = Object.fromEntries(
@@ -1181,6 +1273,7 @@ class TestomatioMCPServer {
         type: 'tests',
         attributes: {
           ...apiAttributes,
+          ...(mergedTags.length > 0 && { tags: mergedTags }),
           ...(labels_ids && { labels_ids: labels_ids }),
           ...(fields && { 'custom-fields': fields })
         }
@@ -1280,6 +1373,10 @@ class TestomatioMCPServer {
   async updateTest(args) {
     const { test_id, suite_id, labels_ids, fields, ...attributes } = args;
 
+    // Extract tags from title if provided
+    const titleTags = this.extractTagsFromTitle(attributes.title);
+    const mergedTags = this.mergeTags(attributes.tags, titleTags);
+
     // Convert attributes to use hyphens instead of underscores for API compatibility
     const apiAttributes = Object.fromEntries(
       Object.entries(attributes).map(([k, v]) => [k.replace(/_/g, '-'), v])
@@ -1299,6 +1396,7 @@ class TestomatioMCPServer {
         type: 'tests',
         attributes: {
           ...apiAttributes,
+          ...(mergedTags.length > 0 && { tags: mergedTags }),
           ...(fields && { 'custom-fields': fields })
         }
       }

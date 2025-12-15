@@ -359,6 +359,259 @@ describe('TestomatioMCPServer', () => {
       });
     });
 
+    describe('Tag extraction and merging', () => {
+      test('should extract tags from title with @ symbols', () => {
+        const title = '@smoke @regression test with @critical priority';
+        const tags = server.extractTagsFromTitle(title);
+
+        expect(tags).toEqual(['smoke', 'regression', 'critical']);
+      });
+
+      test('should handle title without tags', () => {
+        const title = 'Simple test title';
+        const tags = server.extractTagsFromTitle(title);
+
+        expect(tags).toEqual([]);
+      });
+
+      test('should handle empty title', () => {
+        const tags = server.extractTagsFromTitle('');
+        expect(tags).toEqual([]);
+      });
+
+      test('should merge tags from explicit and title sources', () => {
+        const explicitTags = ['smoke', 'api'];
+        const titleTags = ['regression', 'smoke']; // smoke appears in both
+        const merged = server.mergeTags(explicitTags, titleTags);
+
+        expect(merged).toEqual(['smoke', 'api', 'regression']);
+      });
+
+      test('should handle tags with @ prefix in explicit array', () => {
+        const explicitTags = ['@frontend', 'backend', '@ui'];
+        const titleTags = ['api'];
+        const merged = server.mergeTags(explicitTags, titleTags);
+
+        expect(merged).toEqual(['frontend', 'backend', 'ui', 'api']);
+      });
+
+      test('should handle duplicate tags from title', () => {
+        const title = '@smoke test with @smoke tag duplicate';
+        const tags = server.extractTagsFromTitle(title);
+
+        expect(tags).toEqual(['smoke']);
+      });
+
+      test('should handle special characters in tags', () => {
+        const title = '@smoke-test @regression_v2 @api-integration';
+        const tags = server.extractTagsFromTitle(title);
+
+        expect(tags).toEqual(['smoke-test', 'regression_v2', 'api-integration']);
+      });
+    });
+
+    describe('createTest with tags', () => {
+      test('should create test with tags from title', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-123',
+            attributes: {
+              title: '@smoke @regression test title',
+              state: 'automated'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: '@smoke @regression test title'
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"tags":["smoke","regression"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should create test with explicit tags', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-124',
+            attributes: {
+              title: 'Test with explicit tags',
+              state: 'manual'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: 'Test with explicit tags',
+          tags: ['smoke', 'api']
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"tags":["smoke","api"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+
+      test('should create test with merged tags from title and explicit', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-125',
+            attributes: {
+              title: '@smoke test with both tag types'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const testData = {
+          suite_id: 'suite-456',
+          title: '@smoke test with both tag types',
+          tags: ['api', 'regression']
+        };
+
+        const result = await server.createTest(testData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests'),
+          expect.objectContaining({
+            body: expect.stringContaining('"tags":["api","regression","smoke"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully created test');
+      });
+    });
+
+    describe('updateTest with tags', () => {
+      test('should update test with tags from title', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-126',
+            attributes: {
+              title: '@critical updated test title'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-126',
+          title: '@critical updated test title'
+        };
+
+        const result = await server.updateTest(updateData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-126'),
+          expect.objectContaining({
+            body: expect.stringContaining('"tags":["critical"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+
+      test('should update test with explicit tags', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-127',
+            attributes: {
+              title: 'Updated test title'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-127',
+          title: 'Updated test title',
+          tags: ['frontend', 'ui']
+        };
+
+        const result = await server.updateTest(updateData);
+
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tests/test-127'),
+          expect.objectContaining({
+            body: expect.stringContaining('"tags":["frontend","ui"]')
+          })
+        );
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+
+      test('should update test without tags when not provided', async () => {
+        const mockResponse = {
+          data: {
+            id: 'test-128',
+            attributes: {
+              title: 'Updated test title without tags'
+            }
+          }
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse)
+        });
+
+        const updateData = {
+          test_id: 'test-128',
+          title: 'Updated test title without tags'
+        };
+
+        const result = await server.updateTest(updateData);
+
+        const callArgs = global.fetch.mock.calls[0];
+        const bodyString = callArgs[1].body;
+
+        expect(callArgs[0]).toContain('/tests/test-128');
+        // Check that 'attributes' doesn't contain 'tags' field
+        const bodyObj = JSON.parse(bodyString);
+        expect(bodyObj.data.attributes).not.toHaveProperty('tags');
+
+        expect(result.content[0].text).toContain('Successfully updated test');
+      });
+    });
+
     describe('createTest with fields parameter', () => {
       test('should create test with custom fields', async () => {
         const mockResponse = {
@@ -1662,6 +1915,160 @@ describe('TestomatioMCPServer', () => {
 
       expect(result.content[0].text).toContain('Successfully updated test');
       expect(result.content[0].text).toContain('<priority>high</priority>');
+    });
+
+    test('getTest should fetch a specific test with all details', async () => {
+      const mockResponse = {
+        data: {
+          id: 'Ta1b2c3d4',
+          attributes: {
+            title: 'Login Test',
+            description: 'Test user login functionality',
+            code: 'test("should login user", () => { ... });',
+            priority: 'high',
+            state: 'automated',
+            'suite-id': 'Sx9y8z7w6',
+            tags: ['smoke', 'authentication'],
+            file: 'tests/login.test.js',
+            'jira-issues': ['PROJ-123', 'PROJ-456'],
+            'assigned-to': 'john.doe@example.com',
+            'created-at': '2024-01-15T10:30:00Z',
+            'updated-at': '2024-01-20T14:45:00Z',
+            labels: [
+              {
+                id: 'priority',
+                attributes: {
+                  title: 'Priority',
+                  value: 'high'
+                }
+              },
+              {
+                id: 'severity',
+                attributes: {
+                  title: 'Severity',
+                  value: 'critical'
+                }
+              }
+            ]
+          }
+        }
+      };
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse)
+      });
+
+      const result = await server.getTest('Ta1b2c3d4');
+
+      // Verify the correct endpoint was called with labels and detail parameters
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/tests/Ta1b2c3d4?labels=true&detail=true'),
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            'Authorization': 'test-jwt',
+            'Content-Type': 'application/json'
+          }
+        })
+      );
+
+      // Verify response structure
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      expect(result.content[0].text).toContain('Test Ta1b2c3d4:');
+
+      // Verify all test details are included in the formatted output
+      expect(result.content[0].text).toContain('<title>Login Test</title>');
+      expect(result.content[0].text).toContain('<description>Test user login functionality</description>');
+      expect(result.content[0].text).toContain('<priority>high</priority>');
+      expect(result.content[0].text).toContain('<state>automated</state>');
+      expect(result.content[0].text).toContain('<suite-id>Sx9y8z7w6</suite-id>');
+      expect(result.content[0].text).toContain('<file>tests/login.test.js</file>');
+      expect(result.content[0].text).toContain('<tag>smoke</tag>');
+      expect(result.content[0].text).toContain('<tag>authentication</tag>');
+      expect(result.content[0].text).toContain('<jira-issues><item>PROJ-123</item><item>PROJ-456</item></jira-issues>');
+      expect(result.content[0].text).toContain('<assigned-to>john.doe@example.com</assigned-to>');
+      expect(result.content[0].text).toContain('<created-at>2024-01-15T10:30:00Z</created-at>');
+      expect(result.content[0].text).toContain('<updated-at>2024-01-20T14:45:00Z</updated-at>');
+    });
+
+    test('getTest should handle test with minimal data', async () => {
+      const mockResponse = {
+        data: {
+          id: 'Tb2c3d4e5',
+          attributes: {
+            title: 'Simple Test',
+            state: 'manual'
+          }
+        }
+      };
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse)
+      });
+
+      const result = await server.getTest('Tb2c3d4e5');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/tests/Tb2c3d4e5?labels=true&detail=true'),
+        expect.objectContaining({
+          method: 'GET'
+        })
+      );
+
+      expect(result.content[0].text).toContain('Test Tb2c3d4e5:');
+      expect(result.content[0].text).toContain('<title>Simple Test</title>');
+      expect(result.content[0].text).toContain('<state>manual</state>');
+    });
+
+    test('getTest should handle empty labels array', async () => {
+      const mockResponse = {
+        data: {
+          id: 'Tc3d4e5f6',
+          attributes: {
+            title: 'Test without labels',
+            state: 'automated',
+            labels: []
+          }
+        }
+      };
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse)
+      });
+
+      const result = await server.getTest('Tc3d4e5f6');
+
+      expect(result.content[0].text).toContain('Test Tc3d4e5f6:');
+      expect(result.content[0].text).toContain('<title>Test without labels</title>');
+      // Should not contain any label elements
+      expect(result.content[0].text).not.toContain('<label>');
+    });
+
+    test('getTest should escape special characters in XML output', async () => {
+      const mockResponse = {
+        data: {
+          id: 'Td4e5f6g7',
+          attributes: {
+            title: 'Test with <special> & "characters"',
+            description: 'Description with > and < symbols & ampersands',
+            state: 'automated'
+          }
+        }
+      };
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse)
+      });
+
+      const result = await server.getTest('Td4e5f6g7');
+
+      expect(result.content[0].text).toContain('Test with &lt;special&gt; &amp; &quot;characters&quot;');
+      expect(result.content[0].text).toContain('Description with &gt; and &lt; symbols &amp; ampersands');
     });
   });
 });

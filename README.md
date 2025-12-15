@@ -62,6 +62,17 @@ Your project ID can be found in the URL when you're viewing your project:
 https://app.testomat.io/projects/YOUR_PROJECT_ID
 ```
 
+### ID Formats
+
+Testomatio uses specific ID formats for different resources:
+
+- **Test IDs**: Start with `T` prefix followed by 7 alphanumeric characters (e.g., `Ta1b2c3d4`)
+- **Suite IDs**: Start with `S` prefix followed by 7 alphanumeric characters (e.g., `Sx9y8z7w6`)
+- **Total length**: 8 characters including the prefix
+- **Format**: `[Prefix][7 alphanumeric characters]`
+
+When working with tools that require specific IDs, ensure you use the correct format with the appropriate prefix.
+
 ## Integration with Cursor
 
 To use this MCP server with Cursor, add the following configuration to your Cursor settings:
@@ -111,6 +122,7 @@ Then add this to your Cursor MCP settings:
 
 #### Tests
 * `get_tests` – Get all tests (params: `plan`, `query`, `state`, `suite_id`, `tag`, `labels`) — api: GET `/tests`
+* `get_test` – Get a specific test by ID with all information including labels, tags, and metadata (params: `test_id`) — api: GET `/tests/{test_id}`
 * `search_tests` – Search tests (params: `query`, `tql`, `labels`, `state`, `priority`, `filter`, `page`) — api: GET `/tests`
 * `create_test` – Create a new test (params: `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`, `fields`) — api: POST `/tests`
 * `update_test` – Update an existing test (params: `test_id`, `suite_id`, `title`, `description`, `code`, `file`, `state`, `tags`, `jira_issues`, `assigned_to`, `labels_ids`, `fields`) — api: PUT `/tests/{test_id}`
@@ -123,7 +135,9 @@ Then add this to your Cursor MCP settings:
 * `create_folder` – Create a new folder (params: `title`, `description`, `parent_id`, `fields`) — api: POST `/suites`
 
 #### Labels
-* `create_label` – Create a new label with optional custom field (params: `title`, `color`, `scope`, `visibility`, `field`) — api: POST `/labels`
+* `get_labels` – Get all available labels with their IDs and configurations
+* `create_label` – Create a new label with optional custom field
+* `unlink_label` – Remove a label from a test or suite
 
 ### Custom Fields and Labels
 
@@ -200,15 +214,16 @@ The MCP server provides two distinct ways to assign values to tests, suites, and
 Once configured, you can ask your AI assistant questions like:
 
 - "Show me all the tests in the project"
-- "Get the test runs for test ID abc123"
+- "Get details for test ID Ta1b2c3d4"
+- "Get the test runs for test ID Ta1b2c3d4"
 - "What are the root suites in this project?"
 - "Show me details for test run xyz789"
 - "List all automated tests with the @smoke tag"
 - "Get all test plans for this project"
-- "Create a new test called 'Login validation' in suite suite-123"
-- "Update test test-456 to change its description and add @regression tag"
+- "Create a new test called 'Login validation' in suite Sx9y8z7w6"
+- "Update test Ta1b2c3d4 to change its description and add @regression tag"
 - "Create a test with custom fields: priority='high', severity='critical', team='backend'"
-- "Update test test-789 to set custom fields for risk score and assigned team"
+- "Update test Tb2c3d4e5 to set custom fields for risk score and assigned team"
 - "Create a new suite called 'Authentication Tests' with description 'All login and signup related tests'"
 - "Create a suite with custom fields for team ownership and priority level"
 - "Create a folder called 'API Tests' to organize API-related test suites with custom fields"
@@ -229,11 +244,11 @@ These queries retrieve general information without specific filtering:
 
 These queries allow creating and updating tests:
 
-- **"Create a new test called 'Login validation' in suite suite-123"** → `create_test` tool with `title: "Login validation"`, `suite_id: "suite-123"`
-- **"Update test test-456 to change its description"** → `update_test` tool with `test_id: "test-456"`, `description: "new description"`
+- **"Create a new test called 'Login validation' in suite Sx9y8z7w6"** → `create_test` tool with `title: "Login validation"`, `suite_id: "Sx9y8z7w6"`
+- **"Update test Ta1b2c3d4 to change its description"** → `update_test` tool with `test_id: "Ta1b2c3d4"`, `description: "new description"`
 - **"Create an automated test with @smoke tag"** → `create_test` tool with `state: "automated"`, `tags: ["smoke"]`
-- **"Create a test with custom fields: priority='high', severity='critical'"** → `create_test` tool with `title: "Test Title"`, `suite_id: "suite-123"`, `fields: { "priority": "high", "severity": "critical" }`
-- **"Update test test-789 to set custom fields for risk score and team"** → `update_test` tool with `test_id: "test-789"`, `fields: { "risk_score": "8.5", "team": "backend" }`
+- **"Create a test with custom fields: priority='high', severity='critical'"** → `create_test` tool with `title: "Test Title"`, `suite_id: "Sx9y8z7w6"`, `fields: { "priority": "high", "severity": "critical" }`
+- **"Update test Tb2c3d4e5 to set custom fields for risk score and team"** → `update_test` tool with `test_id: "Tb2c3d4e5"`, `fields: { "risk_score": "8.5", "team": "backend" }`
 
 ### Suite and Folder Management Queries
 
@@ -242,7 +257,7 @@ These queries help organize your test structure:
 - **"Create a new suite called 'Authentication Tests'"** → `create_suite` tool with `title: "Authentication Tests"`
 - **"Create a suite for login tests with description"** → `create_suite` tool with `title: "Login Tests"`, `description: "All login related test cases"`
 - **"Create a suite with custom fields for team ownership and priority level"** → `create_suite` tool with `title: "Backend Tests"`, `fields: { "team": "backend", "priority": "high" }`
-- **"Create a folder called 'API Tests' under parent suite-123"** → `create_folder` tool with `title: "API Tests"`, `parent_id: "suite-123"`
+- **"Create a folder called 'API Tests' under parent suite Sx9y8z7w6"** → `create_folder` tool with `title: "API Tests"`, `parent_id: "Sx9y8z7w6"`
 - **"Create a folder with custom fields for team and project"** → `create_folder` tool with `title: "Integration Tests"`, `fields: { "team": "qa", "project": "mobile-app" }`
 - **"Create a test suite for payment features"** → `create_suite` tool with `title: "Payment Features", description: "Tests covering payment processing"`
 - **"Create a folder to organize integration tests"** → `create_folder` tool with `title: "Integration Tests"`
@@ -262,9 +277,10 @@ These queries help create custom labels for better test categorization:
 
 These queries target specific entities by ID:
 
-- **"Get test runs for test ID abc123"** → `get_testruns` tool with `test_id: "abc123"`
+- **"Get details for test ID Ta1b2c3d4"** → `get_test` tool with `test_id: "Ta1b2c3d4"`
+- **"Get test runs for test ID Ta1b2c3d4"** → `get_testruns` tool with `test_id: "Ta1b2c3d4"`
 - **"Show me details for test run xyz789"** → `get_run` tool with `run_id: "xyz789"`
-- **"Get suite details for suite-456"** → `get_suite` tool with `suite_id: "suite-456"`
+- **"Get suite details for suite Sx9y8z7w6"** → `get_suite` tool with `suite_id: "Sx9y8z7w6"`
 
 ### Search and Filter Queries
 
