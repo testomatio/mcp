@@ -1987,10 +1987,13 @@ describe('TestomatioMCPServer', () => {
       expect(result.content[0].text).toContain('<file>tests/login.test.js</file>');
       expect(result.content[0].text).toContain('<tag>smoke</tag>');
       expect(result.content[0].text).toContain('<tag>authentication</tag>');
-      expect(result.content[0].text).toContain('<jira-issues><item>PROJ-123</item><item>PROJ-456</item></jira-issues>');
+      expect(result.content[0].text).toContain('<jira-issues><jira-issue>PROJ-123</jira-issue><jira-issue>PROJ-456</jira-issue></jira-issues>');
       expect(result.content[0].text).toContain('<assigned-to>john.doe@example.com</assigned-to>');
       expect(result.content[0].text).toContain('<created-at>2024-01-15T10:30:00Z</created-at>');
       expect(result.content[0].text).toContain('<updated-at>2024-01-20T14:45:00Z</updated-at>');
+      // Check that labels are properly formatted as JSON
+      expect(result.content[0].text).toContain('<label>{"id":"priority","attributes":{"title":"Priority","value":"high"}}</label>');
+      expect(result.content[0].text).toContain('<label>{"id":"severity","attributes":{"title":"Severity","value":"critical"}}</label>');
     });
 
     test('getTest should handle test with minimal data', async () => {
@@ -2044,8 +2047,33 @@ describe('TestomatioMCPServer', () => {
 
       expect(result.content[0].text).toContain('Test Tc3d4e5f6:');
       expect(result.content[0].text).toContain('<title>Test without labels</title>');
-      // Should not contain any label elements
-      expect(result.content[0].text).not.toContain('<label>');
+      expect(result.content[0].text).toContain('<labels></labels>'); // Empty labels element
+    });
+
+    test('getTest should handle simple string labels', async () => {
+      const mockResponse = {
+        data: {
+          id: 'Te5f6g7h8',
+          attributes: {
+            title: 'Test with string labels',
+            state: 'automated',
+            labels: ['priority', 'smoke', 'ui'] // Simple string labels
+          }
+        }
+      };
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse)
+      });
+
+      const result = await server.getTest('Te5f6g7h8');
+
+      expect(result.content[0].text).toContain('Test Te5f6g7h8:');
+      expect(result.content[0].text).toContain('<title>Test with string labels</title>');
+      expect(result.content[0].text).toContain('<label>priority</label>');
+      expect(result.content[0].text).toContain('<label>smoke</label>');
+      expect(result.content[0].text).toContain('<label>ui</label>');
     });
 
     test('getTest should escape special characters in XML output', async () => {

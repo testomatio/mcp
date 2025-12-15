@@ -767,19 +767,22 @@ class TestomatioMCPServer {
       if (fieldName === 'tags') {
         return value.map(tag => `<tag>${this.escapeXml(tag)}</tag>`).join('');
       }
-      if (fieldName === 'labels') {
-        return value.map(label => `<label>${this.escapeXml(label)}</label>`).join('');
-      }
       if (fieldName === 'tests-ids') {
         return value.map(id => `<test_id>${id}</test_id>`).join('');
       }
-      // Default array handling
-      return value.map(item => `<item>${this.escapeXml(item)}</item>`).join('');
+      // Default array handling - use field name as tag (e.g., labels -> <label>)
+      const singularFieldName = fieldName.endsWith('s') ? fieldName.slice(0, -1) : fieldName;
+      return value.map(item => {
+        if (typeof item === 'object' && item !== null) {
+          return `<${singularFieldName}>${JSON.stringify(item)}</${singularFieldName}>`;
+        }
+        return `<${singularFieldName}>${this.escapeXml(item)}</${singularFieldName}>`;
+      }).join('');
     }
 
-    // Handle nested objects
+    // Handle nested objects - stringify them without escaping
     if (typeof value === 'object') {
-      return this.formatNestedObject(value, fieldName);
+      return JSON.stringify(value);
     }
 
     // Handle strings that need escaping
