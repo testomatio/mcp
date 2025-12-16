@@ -539,10 +539,6 @@ class TestomatioMCPServer {
                 },
               },
               required: ['label_id'],
-              oneOf: [
-                { required: ['test_id'] },
-                { required: ['suite_id'] }
-              ],
             },
           },
           {
