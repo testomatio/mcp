@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import Ajv from 'ajv';
 import { TestomatioMCPServer } from '../../index.js';
 
 // Mock fetch globally
@@ -2098,5 +2099,54 @@ describe('TestomatioMCPServer', () => {
       expect(result.content[0].text).toContain('Test with &lt;special&gt; &amp; &quot;characters&quot;');
       expect(result.content[0].text).toContain('Description with &gt; and &lt; symbols &amp; ampersands');
     });
+  });
+});
+
+describe('MCP Tool Schema Validation', () => {
+  let tools;
+  let ajv;
+
+  beforeAll(async () => {
+    // Initialize Ajv with strict mode
+    ajv = new Ajv({ strict: true, allErrors: true });
+
+    // Get tool definitions from the server
+    const mockConfig = {
+      token: 'testomat_test_token',
+      projectId: 'test-project',
+      baseUrl: 'https://test.testomat.io'
+    };
+    const server = new TestomatioMCPServer(mockConfig);
+    const handler = server.server._requestHandlers.get('tools/list');
+    const result = await handler({ method: 'tools/list' });
+    tools = result.tools;
+  });
+
+  test('all tool inputSchemas should be valid JSON Schemas', () => {
+    for (const tool of tools) {
+      const isValid = ajv.validateSchema(tool.inputSchema);
+      if (!isValid) {
+        console.error(`Tool "${tool.name}" has invalid schema:`, ajv.errors);
+      }
+      expect(isValid).toBe(true);
+    }
+  });
+
+  test('should not use oneOf, allOf, or anyOf at top level (Claude API restriction)', () => {
+    for (const tool of tools) {
+      const schema = tool.inputSchema;
+      expect(schema.oneOf).toBeUndefined();
+      expect(schema.allOf).toBeUndefined();
+      expect(schema.anyOf).toBeUndefined();
+    }
+  });
+
+  test('all tools should have required metadata', () => {
+    for (const tool of tools) {
+      expect(tool.name).toBeDefined();
+      expect(tool.description).toBeDefined();
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema.type).toBe('object');
+    }
   });
 });
