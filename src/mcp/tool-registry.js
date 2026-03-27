@@ -3,6 +3,8 @@ import { ApiError, NotImplementedToolError } from '../core/errors.js';
 import { textResponse } from '../helpers/mcp-response.js';
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
 
+const ISSUE_RESOURCE_KEYS = ['test_id', 'suite_id', 'run_id', 'testrun_id', 'plan_id'];
+
 function formatJson(payload) {
   return JSON.stringify(payload, null, 2);
 }
@@ -40,11 +42,26 @@ export class ToolRegistry {
         textResponse(formatJson(await this.apiClient.delete('tests', testId))),
       tests_issues_list: async ({ test_id: testId, page, per_page: perPage, source }) =>
         textResponse(
-          formatJson(await this.listIssuesForResource({ test_id: testId, page, per_page: perPage, source }))
+          formatJson(
+            await this.listIssuesForKey({
+              resourceKey: 'test_id',
+              resourceId: testId,
+              page,
+              per_page: perPage,
+              source,
+            })
+          )
         ),
       tests_issues_link: async ({ test_id: testId, url, jira_id: jiraId }) =>
         textResponse(
-          formatJson(await this.linkIssueToResource({ test_id: testId, url, jira_id: jiraId }))
+          formatJson(
+            await this.linkIssueForKey({
+              resourceKey: 'test_id',
+              resourceId: testId,
+              url,
+              jira_id: jiraId,
+            })
+          )
         ),
       tests_issues_unlink: async ({ issue_id: issueId, type }) =>
         textResponse(formatJson(await this.apiClient.delete('issues', issueId, { type }))),
@@ -65,8 +82,9 @@ export class ToolRegistry {
       suites_issues_list: async ({ suite_id: suiteId, page, per_page: perPage, source }) =>
         textResponse(
           formatJson(
-            await this.listIssuesForResource({
-              suite_id: suiteId,
+            await this.listIssuesForKey({
+              resourceKey: 'suite_id',
+              resourceId: suiteId,
               page,
               per_page: perPage,
               source,
@@ -76,8 +94,9 @@ export class ToolRegistry {
       suites_issues_link: async ({ suite_id: suiteId, url, jira_id: jiraId }) =>
         textResponse(
           formatJson(
-            await this.linkIssueToResource({
-              suite_id: suiteId,
+            await this.linkIssueForKey({
+              resourceKey: 'suite_id',
+              resourceId: suiteId,
               url,
               jira_id: jiraId,
             })
@@ -98,8 +117,9 @@ export class ToolRegistry {
       runs_issues_list: async ({ run_id: runId, page, per_page: perPage, source }) =>
         textResponse(
           formatJson(
-            await this.listIssuesForResource({
-              run_id: runId,
+            await this.listIssuesForKey({
+              resourceKey: 'run_id',
+              resourceId: runId,
               page,
               per_page: perPage,
               source,
@@ -109,8 +129,9 @@ export class ToolRegistry {
       runs_issues_link: async ({ run_id: runId, url, jira_id: jiraId }) =>
         textResponse(
           formatJson(
-            await this.linkIssueToResource({
-              run_id: runId,
+            await this.linkIssueForKey({
+              resourceKey: 'run_id',
+              resourceId: runId,
               url,
               jira_id: jiraId,
             })
@@ -137,8 +158,9 @@ export class ToolRegistry {
       testruns_issues_list: async ({ testrun_id: testrunId, page, per_page: perPage, source }) =>
         textResponse(
           formatJson(
-            await this.listIssuesForResource({
-              testrun_id: testrunId,
+            await this.listIssuesForKey({
+              resourceKey: 'testrun_id',
+              resourceId: testrunId,
               page,
               per_page: perPage,
               source,
@@ -148,8 +170,9 @@ export class ToolRegistry {
       testruns_issues_link: async ({ testrun_id: testrunId, url, jira_id: jiraId }) =>
         textResponse(
           formatJson(
-            await this.linkIssueToResource({
-              testrun_id: testrunId,
+            await this.linkIssueForKey({
+              resourceKey: 'testrun_id',
+              resourceId: testrunId,
               url,
               jira_id: jiraId,
             })
@@ -247,8 +270,9 @@ export class ToolRegistry {
       plans_issues_list: async ({ plan_id: planId, page, per_page: perPage, source }) =>
         textResponse(
           formatJson(
-            await this.listIssuesForResource({
-              plan_id: planId,
+            await this.listIssuesForKey({
+              resourceKey: 'plan_id',
+              resourceId: planId,
               page,
               per_page: perPage,
               source,
@@ -258,8 +282,9 @@ export class ToolRegistry {
       plans_issues_link: async ({ plan_id: planId, url, jira_id: jiraId }) =>
         textResponse(
           formatJson(
-            await this.linkIssueToResource({
-              plan_id: planId,
+            await this.linkIssueForKey({
+              resourceKey: 'plan_id',
+              resourceId: planId,
               url,
               jira_id: jiraId,
             })
@@ -424,17 +449,19 @@ export class ToolRegistry {
     });
   }
 
-  listSnippets({ page, per_page: perPage } = {}) {
+  listSnippets({ page, per_page: perPage, query } = {}) {
     return this.apiClient.list('snippets', {
       page,
       per_page: perPage,
+      query,
     });
   }
 
-  searchSnippets({ page, per_page: perPage } = {}) {
+  searchSnippets({ page, per_page: perPage, query } = {}) {
     return this.listSnippets({
       page,
       per_page: perPage,
+      query,
     });
   }
 
@@ -472,6 +499,7 @@ export class ToolRegistry {
   }
 
   listIssues({ page, per_page: perPage, source, ...resourceQuery } = {}) {
+    this.validateIssueResourceQuery(resourceQuery, { allowEmpty: true, allowMany: false });
     return this.listIssuesForResource({
       ...resourceQuery,
       page,
@@ -485,9 +513,7 @@ export class ToolRegistry {
   }
 
   createIssue({ url, jira_id: jiraId, ...resourceQuery } = {}) {
-    if (!this.hasAtLeastOneIssueResource(resourceQuery)) {
-      throw new Error('Provide at least one resource id: test_id, suite_id, run_id, testrun_id, or plan_id.');
-    }
+    this.validateIssueResourceQuery(resourceQuery, { allowEmpty: false, allowMany: false });
 
     return this.linkIssueToResource({
       ...resourceQuery,
@@ -547,10 +573,30 @@ export class ToolRegistry {
     });
   }
 
+  listIssuesForKey({ resourceKey, resourceId, page, per_page: perPage, source }) {
+    this.assertSupportedIssueResourceKey(resourceKey);
+    return this.listIssuesForResource({
+      [resourceKey]: resourceId,
+      page,
+      per_page: perPage,
+      source,
+    });
+  }
+
+  linkIssueForKey({ resourceKey, resourceId, url, jira_id: jiraId }) {
+    this.assertSupportedIssueResourceKey(resourceKey);
+    return this.linkIssueToResource({
+      [resourceKey]: resourceId,
+      url,
+      jira_id: jiraId,
+    });
+  }
+
   linkIssueToResource({ url, jira_id: jiraId, ...resourceQuery } = {}) {
     if (Boolean(url) === Boolean(jiraId)) {
       throw new Error('Provide exactly one field: "url" or "jira_id".');
     }
+    this.validateIssueResourceQuery(resourceQuery, { allowEmpty: false, allowMany: false });
 
     const payload = {
       url,
@@ -578,12 +624,31 @@ export class ToolRegistry {
     }
   }
 
-  hasAtLeastOneIssueResource(resourceQuery = {}) {
-    const keys = ['test_id', 'suite_id', 'run_id', 'testrun_id', 'plan_id'];
-    return keys.some((key) => {
+  assertSupportedIssueResourceKey(resourceKey) {
+    if (!ISSUE_RESOURCE_KEYS.includes(resourceKey)) {
+      throw new Error(`Unsupported issue resource key: ${resourceKey}`);
+    }
+  }
+
+  validateIssueResourceQuery(resourceQuery = {}, { allowEmpty = false, allowMany = false } = {}) {
+    const provided = ISSUE_RESOURCE_KEYS.filter((key) => {
       const value = resourceQuery[key];
       return value !== undefined && value !== null && value !== '';
     });
+
+    if (!allowEmpty && provided.length === 0) {
+      throw new Error(
+        `Provide one resource id: ${ISSUE_RESOURCE_KEYS.join(', ')}.`
+      );
+    }
+
+    if (!allowMany && provided.length > 1) {
+      throw new Error(
+        `Provide only one resource id at a time: ${ISSUE_RESOURCE_KEYS.join(', ')}.`
+      );
+    }
+
+    return provided;
   }
 
   buildTestPayload({
@@ -697,7 +762,7 @@ export class ToolRegistry {
   }
 
   async createRunWithFallback(args = {}) {
-    const payload = this.buildRunCreatePayload(args?.run && typeof args.run === 'object' ? args.run : args);
+    const payload = this.buildRunCreatePayload(args);
 
     try {
       return await this.apiClient.create('runs', payload);
@@ -711,7 +776,7 @@ export class ToolRegistry {
   }
 
   async updateRunWithFallback(runId, args = {}) {
-    const payload = this.buildRunUpdatePayload(args?.run && typeof args.run === 'object' ? args.run : args);
+    const payload = this.buildRunUpdatePayload(args);
 
     try {
       return await this.apiClient.update('runs', runId, payload);
@@ -778,11 +843,10 @@ export class ToolRegistry {
     };
   }
 
-  buildStepPayload({ title, description, is_snippet: isSnippet, link } = {}) {
+  buildStepPayload({ title, description, link } = {}) {
     return {
       title,
       description,
-      is_snippet: isSnippet,
       link,
     };
   }

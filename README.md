@@ -1,45 +1,46 @@
-# Testomat.io MCP (v2 Rebuild)
+# Testomat.io MCP Server
 
-Clean rewrite baseline for issue `#7238`.
+Model Context Protocol (MCP) server for Testomat.io Public API v2.
 
-This branch starts a new architecture from scratch with focus on:
-- maintainability
-- extensibility
-- clear separation of responsibilities
+## Features
 
-## Current Status
+- Project-token authentication.
+- CRUD coverage for core entities:
+  - tests, suites, plans, runs, testruns, rungroups, steps, snippets, labels
+  - tags (read APIs)
+  - issues (global + scoped resource helpers)
+- Search helpers implemented as list aliases with query/filter forwarding.
+- Issue-link helpers for tests/suites/runs/testruns/plans.
+- API compatibility fallback for body format differences (flat vs wrapped payload).
 
-Scaffold is ready:
-- modular project layout under `src/`
-- centralized config loading and validation
-- reusable HTTP client for API v2
-- MCP server shell with tool registry
-- placeholder tool definitions for CRUD/search domains
+## Project Structure
 
-## Architecture
+- `src/config` - config loading, normalization, defaults
+- `src/core` - errors and logger
+- `src/api` - HTTP client and API resource client
+- `src/mcp` - MCP server, tool definitions, tool registry
+- `src/cli` - CLI bootstrap
 
-- `src/config` - config/constants and CLI/env normalization
-- `src/core` - errors and logging
-- `src/api` - low-level HTTP + Testomatio API v2 client
-- `src/mcp` - MCP transport/server, tool definitions, tool registry
-- `src/cli` - CLI entrypoint
-
-## Running
+## Run
 
 ```bash
 npm install
+npm run start -- --token <PROJECT_TOKEN> --project <PROJECT_ID>
+```
+
+Optional:
+
+```bash
 npm run start -- --token <PROJECT_TOKEN> --project <PROJECT_ID> --base-url https://beta.testomat.io
 ```
 
-Environment variables:
-- `TESTOMATIO_PROJECT_TOKEN`
+## Environment Variables
+
+- `TESTOMATIO_PROJECT_TOKEN` (preferred) or `TESTOMATIO_API_TOKEN`
 - `TESTOMATIO_PROJECT_ID`
-- `TESTOMATIO_BASE_URL` (optional)
+- `TESTOMATIO_BASE_URL` (optional, default `https://app.testomat.io`)
 
-## Next Implementation Steps
+## Notes
 
-1. Implement full CRUD + search for Tests and Suites.
-2. Implement Runs management tools.
-3. Implement Plans management tools.
-4. Add new test strategy for rewritten architecture.
-5. Restore CI pipelines for the new test matrix.
+- Run status transitions are done via `runs_update` with `status_event`.
+- Dedicated API `/search` routes are not required; search uses list endpoints with filters.

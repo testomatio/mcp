@@ -1,3 +1,11 @@
+const ISSUE_RESOURCE_PROPERTIES = {
+  test_id: { type: 'string' },
+  suite_id: { type: 'string' },
+  run_id: { type: 'string' },
+  testrun_id: { type: 'integer' },
+  plan_id: { type: 'string' },
+};
+
 export const TOOL_DEFINITIONS = [
   {
     name: 'system_ping',
@@ -422,42 +430,6 @@ export const TOOL_DEFINITIONS = [
       type: 'object',
       properties: {
         run_id: { type: 'string' },
-        run: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-            description: { type: 'string' },
-            plan_id: { type: 'string' },
-            kind: { type: 'string', enum: ['manual', 'automated', 'mixed'] },
-            rungroup_id: { type: 'string' },
-            env: { type: 'string' },
-            status_event: {
-              type: 'string',
-              enum: ['finish', 'finish_manual', 'launch', 'rerun', 'scheduled', 'terminate'],
-            },
-            assigned_to: { type: 'string' },
-            assign_strategy: { type: 'string', enum: ['test', 'random', 'none'] },
-            test_ids: { type: 'array', items: { type: 'string' } },
-            configuration: { type: 'object' },
-            link: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  action: { type: 'string', enum: ['add', 'remove'] },
-                  type: {
-                    type: 'string',
-                    enum: ['label', 'custom_field', 'tag', 'issue', 'jira'],
-                  },
-                  value: { type: 'string' },
-                },
-                required: ['action', 'type', 'value'],
-                additionalProperties: false,
-              },
-            },
-          },
-          additionalProperties: false,
-        },
         title: { type: 'string' },
         description: { type: 'string' },
         plan_id: { type: 'string' },
@@ -815,7 +787,6 @@ export const TOOL_DEFINITIONS = [
       properties: {
         title: { type: 'string' },
         description: { type: 'string' },
-        is_snippet: { type: 'boolean' },
         link: {
           type: 'array',
           items: {
@@ -846,7 +817,6 @@ export const TOOL_DEFINITIONS = [
         step_id: { type: 'integer' },
         title: { type: 'string' },
         description: { type: 'string' },
-        is_snippet: { type: 'boolean' },
         link: {
           type: 'array',
           items: {
@@ -1138,11 +1108,7 @@ export const TOOL_DEFINITIONS = [
       properties: {
         page: { type: 'integer', minimum: 1 },
         per_page: { type: 'integer', minimum: 1, maximum: 100 },
-        test_id: { type: 'string' },
-        suite_id: { type: 'string' },
-        run_id: { type: 'string' },
-        testrun_id: { type: 'integer' },
-        plan_id: { type: 'string' },
+        ...ISSUE_RESOURCE_PROPERTIES,
         source: { type: 'string' },
       },
       additionalProperties: false,
@@ -1154,11 +1120,7 @@ export const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        test_id: { type: 'string' },
-        suite_id: { type: 'string' },
-        run_id: { type: 'string' },
-        testrun_id: { type: 'integer' },
-        plan_id: { type: 'string' },
+        ...ISSUE_RESOURCE_PROPERTIES,
         url: { type: 'string' },
         jira_id: { type: 'string' },
       },
@@ -1186,11 +1148,7 @@ export const TOOL_DEFINITIONS = [
       properties: {
         page: { type: 'integer', minimum: 1 },
         per_page: { type: 'integer', minimum: 1, maximum: 100 },
-        test_id: { type: 'string' },
-        suite_id: { type: 'string' },
-        run_id: { type: 'string' },
-        testrun_id: { type: 'integer' },
-        plan_id: { type: 'string' },
+        ...ISSUE_RESOURCE_PROPERTIES,
         source: { type: 'string' },
       },
       additionalProperties: false,

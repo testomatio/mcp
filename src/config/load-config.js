@@ -19,7 +19,7 @@ export function loadConfig(argvOptions = {}) {
 
   if (!token) {
     throw new ConfigurationError(
-      'Project token is required. Use --token <token> or set TESTOMATIO_PROJECT_TOKEN'
+      'Project token is required. Use --token <token> or set TESTOMATIO_PROJECT_TOKEN (or TESTOMATIO_API_TOKEN).'
     );
   }
 
