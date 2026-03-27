@@ -4,6 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
 import { ToolRegistry } from './tool-registry.js';
 import { createLogger } from '../core/logger.js';
+import { getPackageVersion } from '../config/package-version.js';
 
 export class TestomatioMCPServer {
   constructor({ config, apiClient, logger }) {
@@ -14,7 +15,7 @@ export class TestomatioMCPServer {
     this.server = new Server(
       {
         name: 'testomatio-mcp-server',
-        version: '2.0.0-scaffold',
+        version: getPackageVersion(),
       },
       {
         capabilities: {

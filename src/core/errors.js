@@ -17,7 +17,7 @@ export class ApiError extends Error {
 
 export class NotImplementedToolError extends Error {
   constructor(toolName) {
-    super(`Tool "${toolName}" is not implemented yet`);
+    super(`Tool "${toolName}" is not registered in this MCP server`);
     this.name = 'NotImplementedToolError';
     this.toolName = toolName;
   }

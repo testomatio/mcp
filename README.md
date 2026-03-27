@@ -18,7 +18,10 @@ Model Context Protocol (MCP) server for Testomat.io Public API v2.
 - `src/config` - config loading, normalization, defaults
 - `src/core` - errors and logger
 - `src/api` - HTTP client and API resource client
-- `src/mcp` - MCP server, tool definitions, tool registry
+- `src/mcp` - MCP server, tool registry, and tool-definition modules
+  - `src/mcp/definitions` - domain-based tool definition files
+  - `src/mcp/configs` - reusable registry generation configs
+  - `src/mcp/registry` - domain/grouped registry method modules
 - `src/cli` - CLI bootstrap
 
 ## Run
