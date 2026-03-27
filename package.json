@@ -2,25 +2,14 @@
   "name": "@testomatio/mcp",
   "version": "1.0.14",
   "description": "Model Context Protocol server for Testomatio API",
-  "main": "index.js",
+  "main": "src/index.js",
   "bin": {
     "testomatio-mcp": "index.js"
   },
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:unit": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js",
-    "test:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js",
-    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
-    "test:integration:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js --watch",
-    "test:e2e:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
-    "test:coverage:integration": "node --experimental-vm-modules node_modules/.bin/jest --config jest.integration.config.js --coverage",
-    "test:coverage:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config jest.e2e.config.js --coverage",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e"
+    "dev": "node index.js"
   },
   "keywords": [
     "testomatio",
@@ -39,13 +28,11 @@
   },
   "files": [
     "index.js",
+    "src",
     "README.md"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
-  "devDependencies": {
-    "ajv": "^8.17.1",
-    "jest": "^30.2.0"
-  }
+  "devDependencies": {}
 }
