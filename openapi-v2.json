@@ -1,0 +1,2137 @@
+﻿---
+openapi: 3.1.0
+info:
+  title: Testomat.io Public API v2
+  version: 2.0.0
+  description: |
+    Public API for managing test management resources in Testomat.io.
+    All endpoints require Bearer token authentication and a project ID path parameter.
+servers:
+- url: https://beta.testomat.io
+security:
+- bearerAuth: []
+tags:
+- name: Tests
+  description: Manage test cases
+- name: Suites
+  description: Manage test suites (folders)
+- name: Plans
+  description: Manage test plans
+- name: Runs
+  description: Manage test runs
+- name: Testruns
+  description: Manage individual test results within runs
+- name: Rungroups
+  description: Manage run groups (environments/configurations)
+- name: Steps
+  description: Manage reusable test steps
+- name: Labels
+  description: Manage labels and custom fields
+- name: Tags
+  description: Browse tags and tagged tests
+- name: Issues
+  description: Manage linked issues (generic and Jira)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: API token from Testomat.io project settings
+  parameters:
+    projectId:
+      name: project_id
+      in: path
+      required: true
+      description: Project slug identifier
+      schema:
+        type: string
+    resourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    page:
+      name: page
+      in: query
+      description: Page number (minimum 1)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    perPage:
+      name: per_page
+      in: query
+      description: Items per page (1-100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 30
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+    Test:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public UID (e.g. "@Txxxxx")
+        type:
+          type: string
+          enum:
+          - test
+        title:
+          type: string
+        emoji:
+          type:
+          - string
+          - 'null'
+        state:
+          type:
+          - string
+          - 'null'
+        isShared:
+          type: boolean
+        assignedTo:
+          type:
+          - string
+          - 'null'
+          format: email
+        priority:
+          type:
+          - string
+          - 'null'
+        publicTitle:
+          type: string
+        cleanTitle:
+          type: string
+        selfTags:
+          type: array
+          items:
+            type: string
+        sync:
+          type:
+          - boolean
+          - 'null'
+        code:
+          type:
+          - string
+          - 'null'
+        description:
+          type:
+          - string
+          - 'null'
+        position:
+          type:
+          - integer
+          - 'null'
+        suiteId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the parent suite
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabelAttachment"
+    Suite:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public UID
+        type:
+          type: string
+          enum:
+          - suite
+        title:
+          type: string
+        emoji:
+          type:
+          - string
+          - 'null'
+        publicTitle:
+          type: string
+        isShared:
+          type: boolean
+        fileType:
+          type:
+          - string
+          - 'null'
+          description: 'Auto-detected: ''folder'' if suite has children, ''file''
+            otherwise'
+        testCount:
+          type: integer
+        assignedTo:
+          type:
+          - string
+          - 'null'
+          format: email
+        cleanTitle:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        sync:
+          type:
+          - boolean
+          - 'null'
+        description:
+          type:
+          - string
+          - 'null'
+        parentId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the parent suite, or null for root suites
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabelAttachment"
+        children:
+          type: array
+          description: Nested child suites (present in tree responses when children
+            exist)
+          items:
+            "$ref": "#/components/schemas/Suite"
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public UID
+        type:
+          type: string
+          enum:
+          - plan
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        kind:
+          type: string
+          enum:
+          - manual
+          - automated
+          - mixed
+          description: Plan type
+        hidden:
+          type: boolean
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabelAttachment"
+    Run:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public UID
+        type:
+          type: string
+          enum:
+          - run
+        cleanTitle:
+          type: string
+        kind:
+          type: string
+          enum:
+          - manual
+          - automated
+          - mixed
+          description: Run type
+        rungroupId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the rungroup this run belongs to
+        assignedTo:
+          type:
+          - string
+          - 'null'
+          format: email
+        assign_strategy:
+          type: string
+          enum:
+          - test
+          - random
+          - none
+        env:
+          type:
+          - string
+          - 'null'
+          description: Environment(s) for this run, comma-separated
+        description:
+          type:
+          - string
+          - 'null'
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabelAttachment"
+    Testrun:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum:
+          - testrun
+        testTitle:
+          type:
+          - string
+          - 'null'
+        message:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+          description: 'One of: passed, failed, skipped, pending'
+        substatus:
+          type:
+          - string
+          - 'null'
+        runTime:
+          type:
+          - integer
+          - 'null'
+          description: Test execution duration in milliseconds
+        automated:
+          type: boolean
+        assignedTo:
+          type:
+          - string
+          - 'null'
+          format: email
+        runId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the parent run
+        testId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the associated test
+    Rungroup:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public UID
+        type:
+          type: string
+          enum:
+          - rungroup
+        cleanTitle:
+          type: string
+        emoji:
+          type:
+          - string
+          - 'null'
+        description:
+          type:
+          - string
+          - 'null'
+        kind:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+        pin:
+          type:
+          - boolean
+          - 'null'
+        runs_count:
+          type: integer
+        finished_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        tests_count:
+          type: integer
+        archived_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        parentId:
+          type:
+          - string
+          - 'null'
+          description: Public UID of the parent run group
+        children:
+          type: array
+          description: Nested child run groups (present in tree responses when children
+            exist)
+          items:
+            "$ref": "#/components/schemas/Rungroup"
+    Step:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum:
+          - step
+        title:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        isSnippet:
+          type: boolean
+        kind:
+          type:
+          - string
+          - 'null'
+        usageCount:
+          type: integer
+        keywords:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabelAttachment"
+    Label:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Label slug
+        title:
+          type: string
+        color:
+          type:
+          - string
+          - 'null'
+        position:
+          type: integer
+        visibility:
+          type: string
+        list:
+          type: boolean
+    TagSummary:
+      type: object
+      properties:
+        title:
+          type: string
+        count:
+          type: integer
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Database ID
+        type:
+          type: string
+          enum:
+          - issue
+          - jira_issue
+        title:
+          type: string
+        url:
+          type:
+          - string
+          - 'null'
+        source:
+          type: string
+          description: Integration source (e.g. github, jira, linear, link)
+        resource_type:
+          type: string
+          description: Type of linked resource (test, suite, run, testrun, plan)
+        resource_id:
+          type: string
+          description: Public UID of the linked resource
+        jira_id:
+          type:
+          - string
+          - 'null'
+          description: Jira issue key (only for type=jira_issue)
+        synced:
+          type:
+          - boolean
+          - 'null'
+          description: Jira sync status (only for type=jira_issue)
+    LabelAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Label slug
+        title:
+          type: string
+        color:
+          type:
+          - string
+          - 'null'
+        position:
+          type: integer
+        visibility:
+          type: string
+        list:
+          type: boolean
+        value:
+          type:
+          - string
+          - 'null'
+          description: Custom field value (if label has a field type)
+        short:
+          type:
+          - string
+          - 'null'
+          description: Short display format for the field
+    LinkAction:
+      type: object
+      required:
+      - action
+      - type
+      properties:
+        action:
+          type: string
+          enum:
+          - add
+          - remove
+        type:
+          type: string
+          enum:
+          - label
+          - custom_field
+          - tag
+          - issue
+          - jira
+        value:
+          type: string
+          description: |
+            Meaning depends on type:
+            - label/custom_field: label slug, or "Slug:Value" colon notation
+            - tag: tag name
+            - issue: issue URL
+            - jira: Jira issue key (e.g. TST-123)
+        label:
+          type: string
+          description: Explicit label slug (when provided, value becomes the field
+            value)
+        id:
+          type: integer
+          description: Database ID for remove actions on issues/jira
+    IssueInput:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Issue URL (for generic issues). Provide either url or jira_id.
+        jira_id:
+          type: string
+          description: Jira issue key (e.g. TST-123). Provide either url or jira_id.
+    TestInput:
+      type: object
+      required:
+      - title
+      - suite_id
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        suite_id:
+          type: string
+          description: Public UID of the parent suite
+        priority:
+          type: string
+        assigned_to:
+          type: string
+          format: email
+          description: Email address of a non-readonly project member to assign.
+        code:
+          type: string
+        state:
+          type: string
+        link:
+          type: array
+          description: Add/remove labels, tags, issues, or jira links
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    SuiteInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        parent_id:
+          type: string
+          description: Public UID of the parent suite
+        file_type:
+          type: string
+          description: 'Auto-detected from children: ''folder'' if children provided,
+            ''file'' otherwise. Can be overridden explicitly.'
+        assigned_to:
+          type: string
+          format: email
+          description: Email address of a non-readonly project member to assign.
+        children:
+          type: array
+          description: Nested child suites to create recursively. When provided, file_type
+            is auto-set to 'folder'.
+          items:
+            "$ref": "#/components/schemas/SuiteChildInput"
+        link:
+          type: array
+          description: Add/remove labels, tags, issues, or jira links
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    SuiteChildInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        children:
+          type: array
+          description: Nested child suites (recursive)
+          items:
+            "$ref": "#/components/schemas/SuiteChildInput"
+    PlanInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        kind:
+          type: string
+        hidden:
+          type: boolean
+        as_manual:
+          type: boolean
+        test_plan:
+          type: object
+          additionalProperties: true
+        link:
+          type: array
+          description: Add/remove labels or issues/jira links
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    RunCreateInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        plan_id:
+          type: string
+        kind:
+          type: string
+          enum:
+          - manual
+          - automated
+          - mixed
+        rungroup_id:
+          type: string
+          description: Public UID of the run group
+        env:
+          type: string
+        assigned_to:
+          type: string
+          format: email
+          description: Email address of a non-readonly project member to assign.
+        assign_strategy:
+          type: string
+          enum:
+          - test
+          - random
+          - none
+          description: |
+            Strategy for assigning testruns to users:
+            - `test`: assign each testrun to the user assigned to the corresponding test
+            - `random`: distribute testruns evenly across all run assistants
+            - `none`: no automatic assignment (default)
+        test_ids:
+          type: array
+          items:
+            type: string
+        envs:
+          type: array
+          description: 'List of environments for multi-environment run creation. Only
+            applicable when `kind` is `manual` (or not specified). When provided,
+            a separate Run is created for each environment and grouped into a Rungroup.
+            Ignored for `automated` and `mixed` kinds.
+
+            '
+          items:
+            type: string
+          example:
+          - staging
+          - production
+        configuration:
+          type: object
+          additionalProperties: true
+        link:
+          type: array
+          description: Add/remove labels or issues/jira links
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    RunUpdateInput:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        plan_id:
+          type: string
+        kind:
+          type: string
+          enum:
+          - manual
+          - automated
+          - mixed
+        rungroup_id:
+          type: string
+          description: Public UID of the run group
+        env:
+          type: string
+        status_event:
+          type: string
+          enum:
+          - finish
+          - finish_manual
+          - launch
+          - rerun
+          - scheduled
+          - terminate
+          description: |
+            Trigger a run status transition:
+            - `finish`: Finish an automated run; final status is calculated from test results
+            - `finish_manual`: Finish a manual/mixed run; final status is calculated from test results
+            - `launch`: Start the run
+            - `rerun`: Restart the run
+            - `scheduled`: Move the run back to scheduled state
+            - `terminate`: Stop the run and mark it as terminated
+        assigned_to:
+          type: string
+          format: email
+          description: Email address of a non-readonly project member to assign.
+        assign_strategy:
+          type: string
+          enum:
+          - test
+          - random
+          - none
+          description: |
+            Strategy for assigning testruns to users:
+            - `test`: assign each testrun to the user assigned to the corresponding test
+            - `random`: distribute testruns evenly across all run assistants
+            - `none`: no automatic assignment (default)
+        test_ids:
+          type: array
+          items:
+            type: string
+        configuration:
+          type: object
+          additionalProperties: true
+        link:
+          type: array
+          description: Add/remove labels or issues/jira links
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    TestrunInput:
+      type: object
+      required:
+      - run_id
+      properties:
+        run_id:
+          type: string
+          description: Public UID of the run
+        test_id:
+          type: string
+          description: Public UID of the test
+        status:
+          type: string
+          description: 'One of: passed, failed, skipped, pending'
+        message:
+          type: string
+        run_time:
+          type: number
+        assigned_to:
+          type: string
+          format: email
+          description: Email address of a non-readonly project member to assign.
+        test_title:
+          type: string
+        automated:
+          type: boolean
+    RungroupInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        kind:
+          type: string
+        pin:
+          type: boolean
+        status:
+          type: string
+        parent_id:
+          type: string
+          description: Public UID of the parent run group
+        children:
+          type: array
+          description: Nested child run groups to create recursively
+          items:
+            "$ref": "#/components/schemas/RungroupChildInput"
+    RungroupChildInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        kind:
+          type: string
+        pin:
+          type: boolean
+        status:
+          type: string
+        children:
+          type: array
+          description: Nested child run groups (recursive)
+          items:
+            "$ref": "#/components/schemas/RungroupChildInput"
+    StepInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_snippet:
+          type: boolean
+        link:
+          type: array
+          description: Add/remove labels
+          items:
+            "$ref": "#/components/schemas/LinkAction"
+    LabelInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        color:
+          type: string
+        visibility:
+          type: array
+          items:
+            type: string
+        scope:
+          type: array
+          items:
+            type: string
+        field:
+          type: object
+          additionalProperties: true
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    UnprocessableEntity:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+paths:
+  "/api/v2/{project_id}/tests":
+    get:
+      summary: List tests
+      operationId: listTests
+      tags:
+      - Tests
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Paginated list of tests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Test"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+    post:
+      summary: Create a test
+      operationId: createTest
+      tags:
+      - Tests
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - test
+              properties:
+                test:
+                  "$ref": "#/components/schemas/TestInput"
+      responses:
+        '201':
+          description: Test created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Test"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/tests/{id}":
+    get:
+      summary: Get a test
+      operationId: getTest
+      tags:
+      - Tests
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '200':
+          description: Test details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Test"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a test
+      operationId: updateTest
+      tags:
+      - Tests
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - test
+              properties:
+                test:
+                  "$ref": "#/components/schemas/TestInput"
+      responses:
+        '200':
+          description: Test updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Test"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a test
+      operationId: deleteTest
+      tags:
+      - Tests
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '204':
+          description: Test deleted
+  "/api/v2/{project_id}/suites":
+    get:
+      summary: List suites as tree
+      operationId: listSuites
+      tags:
+      - Suites
+      description: |
+        Returns suites as a nested tree structure. Root suites are paginated, with all their children nested recursively.
+        When filter parameters are provided, returns only matching suites with their ancestor paths reconstructed as a tree (no pagination).
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      - name: file_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - file
+          - folder
+        description: Filter suites by file type
+      - name: tag
+        in: query
+        schema:
+          type: string
+        description: Filter suites by tag
+      - name: labels
+        in: query
+        schema:
+          type: string
+        description: Filter suites by label (supports label:value format)
+      - name: search_text
+        in: query
+        schema:
+          type: string
+        description: Search suites by title
+      responses:
+        '200':
+          description: Tree of suites with nested children. Includes pagination meta
+            when no filters are applied.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Suite"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a suite (with optional children tree)
+      operationId: createSuite
+      tags:
+      - Suites
+      description: |
+        Creates a suite. When `children` array is provided, recursively creates nested child suites.
+        The `file_type` is auto-detected: 'folder' for suites with children, 'file' for leaf suites.
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - suite
+              properties:
+                suite:
+                  "$ref": "#/components/schemas/SuiteInput"
+      responses:
+        '201':
+          description: Suite created (with nested children if provided)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Suite"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/suites/{id}":
+    get:
+      summary: Get a suite
+      operationId: getSuite
+      tags:
+      - Suites
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '200':
+          description: Suite details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Suite"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a suite
+      operationId: updateSuite
+      tags:
+      - Suites
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - suite
+              properties:
+                suite:
+                  "$ref": "#/components/schemas/SuiteInput"
+      responses:
+        '200':
+          description: Suite updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Suite"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a suite
+      operationId: deleteSuite
+      tags:
+      - Suites
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '204':
+          description: Suite deleted
+  "/api/v2/{project_id}/plans":
+    get:
+      summary: List plans
+      operationId: listPlans
+      tags:
+      - Plans
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Paginated list of plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Plan"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a plan
+      operationId: createPlan
+      tags:
+      - Plans
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - plan
+              properties:
+                plan:
+                  "$ref": "#/components/schemas/PlanInput"
+      responses:
+        '201':
+          description: Plan created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Plan"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/plans/{id}":
+    get:
+      summary: Get a plan
+      operationId: getPlan
+      tags:
+      - Plans
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '200':
+          description: Plan details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Plan"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a plan
+      operationId: updatePlan
+      tags:
+      - Plans
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - plan
+              properties:
+                plan:
+                  "$ref": "#/components/schemas/PlanInput"
+      responses:
+        '200':
+          description: Plan updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Plan"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a plan
+      operationId: deletePlan
+      tags:
+      - Plans
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '204':
+          description: Plan deleted
+  "/api/v2/{project_id}/runs":
+    get:
+      summary: List runs
+      operationId: listRuns
+      tags:
+      - Runs
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Paginated list of runs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Run"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a run
+      operationId: createRun
+      tags:
+      - Runs
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - run
+              properties:
+                run:
+                  "$ref": "#/components/schemas/RunCreateInput"
+      responses:
+        '201':
+          description: Run created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Run"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/runs/{id}":
+    get:
+      summary: Get a run
+      operationId: getRun
+      tags:
+      - Runs
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '200':
+          description: Run details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Run"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a run
+      operationId: updateRun
+      tags:
+      - Runs
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - run
+              properties:
+                run:
+                  "$ref": "#/components/schemas/RunUpdateInput"
+      responses:
+        '200':
+          description: Run updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Run"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a run
+      operationId: deleteRun
+      tags:
+      - Runs
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '204':
+          description: Run deleted
+  "/api/v2/{project_id}/testruns":
+    get:
+      summary: List testruns
+      operationId: listTestruns
+      tags:
+      - Testruns
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      - name: run_id
+        in: query
+        description: Filter by run (public UID)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Paginated list of testruns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Testrun"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a testrun
+      operationId: createTestrun
+      tags:
+      - Testruns
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - testrun
+              properties:
+                testrun:
+                  "$ref": "#/components/schemas/TestrunInput"
+      responses:
+        '201':
+          description: Testrun created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Testrun"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/testruns/{id}":
+    get:
+      summary: Get a testrun
+      operationId: getTestrun
+      tags:
+      - Testruns
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Testrun details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Testrun"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a testrun
+      operationId: updateTestrun
+      tags:
+      - Testruns
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - testrun
+              properties:
+                testrun:
+                  "$ref": "#/components/schemas/TestrunInput"
+      responses:
+        '200':
+          description: Testrun updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Testrun"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a testrun
+      operationId: deleteTestrun
+      tags:
+      - Testruns
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Testrun deleted
+  "/api/v2/{project_id}/rungroups":
+    get:
+      summary: List run groups as tree
+      operationId: listRungroups
+      tags:
+      - Rungroups
+      description: 'Returns run groups as a nested tree structure. Root groups are
+        paginated, with all their children nested recursively.
+
+        '
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Tree of run groups with nested children
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Rungroup"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a run group (with optional children tree)
+      operationId: createRungroup
+      tags:
+      - Rungroups
+      description: 'Creates a run group. When `children` array is provided, recursively
+        creates nested child groups.
+
+        '
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - rungroup
+              properties:
+                rungroup:
+                  "$ref": "#/components/schemas/RungroupInput"
+      responses:
+        '201':
+          description: Run group created (with nested children if provided)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Rungroup"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/rungroups/{id}":
+    get:
+      summary: Get a run group
+      operationId: getRungroup
+      tags:
+      - Rungroups
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '200':
+          description: Run group details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Rungroup"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a run group
+      operationId: updateRungroup
+      tags:
+      - Rungroups
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - rungroup
+              properties:
+                rungroup:
+                  "$ref": "#/components/schemas/RungroupInput"
+      responses:
+        '200':
+          description: Run group updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Rungroup"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a run group
+      operationId: deleteRungroup
+      tags:
+      - Rungroups
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/resourceId"
+      responses:
+        '204':
+          description: Run group deleted
+  "/api/v2/{project_id}/steps":
+    get:
+      summary: List steps
+      operationId: listSteps
+      tags:
+      - Steps
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Paginated list of steps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Step"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a step
+      operationId: createStep
+      tags:
+      - Steps
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - step
+              properties:
+                step:
+                  "$ref": "#/components/schemas/StepInput"
+      responses:
+        '201':
+          description: Step created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Step"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/steps/{id}":
+    get:
+      summary: Get a step
+      operationId: getStep
+      tags:
+      - Steps
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Step details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Step"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a step
+      operationId: updateStep
+      tags:
+      - Steps
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - step
+              properties:
+                step:
+                  "$ref": "#/components/schemas/StepInput"
+      responses:
+        '200':
+          description: Step updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Step"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a step
+      operationId: deleteStep
+      tags:
+      - Steps
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Step deleted
+  "/api/v2/{project_id}/labels":
+    get:
+      summary: List labels
+      operationId: listLabels
+      tags:
+      - Labels
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      responses:
+        '200':
+          description: Paginated list of labels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Label"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a label
+      operationId: createLabel
+      tags:
+      - Labels
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - label
+              properties:
+                label:
+                  "$ref": "#/components/schemas/LabelInput"
+      responses:
+        '201':
+          description: Label created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Label"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/labels/{id}":
+    get:
+      summary: Get a label
+      operationId: getLabel
+      tags:
+      - Labels
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        description: Label slug
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Label details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Label"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    put:
+      summary: Update a label
+      operationId: updateLabel
+      tags:
+      - Labels
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        description: Label slug
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - label
+              properties:
+                label:
+                  "$ref": "#/components/schemas/LabelInput"
+      responses:
+        '200':
+          description: Label updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Label"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+    delete:
+      summary: Delete a label
+      operationId: deleteLabel
+      tags:
+      - Labels
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        description: Label slug
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Label deleted
+  "/api/v2/{project_id}/tags":
+    get:
+      summary: List tags with counts
+      operationId: listTags
+      tags:
+      - Tags
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      responses:
+        '200':
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/TagSummary"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+  "/api/v2/{project_id}/tags/{id}":
+    get:
+      summary: Get tests by tag
+      operationId: getTag
+      tags:
+      - Tags
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        description: Tag title (may contain dots, colons, etc.)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Tests matching the tag
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Test"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v2/{project_id}/issues":
+    get:
+      summary: List linked issues
+      operationId: listIssues
+      tags:
+      - Issues
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - "$ref": "#/components/parameters/page"
+      - "$ref": "#/components/parameters/perPage"
+      - name: test_id
+        in: query
+        description: Filter by test (public UID)
+        schema:
+          type: string
+      - name: suite_id
+        in: query
+        description: Filter by suite (public UID)
+        schema:
+          type: string
+      - name: run_id
+        in: query
+        description: Filter by run (public UID)
+        schema:
+          type: string
+      - name: testrun_id
+        in: query
+        description: Filter by testrun (integer ID)
+        schema:
+          type: integer
+      - name: plan_id
+        in: query
+        description: Filter by plan (public UID)
+        schema:
+          type: string
+      - name: source
+        in: query
+        description: Filter by source (e.g. jira, github, linear, link)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Paginated list of issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Issue"
+                  meta:
+                    "$ref": "#/components/schemas/PaginationMeta"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+    post:
+      summary: Link an issue to a resource
+      operationId: createIssue
+      tags:
+      - Issues
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: test_id
+        in: query
+        description: Public UID of the test to link
+        schema:
+          type: string
+      - name: suite_id
+        in: query
+        description: Public UID of the suite to link
+        schema:
+          type: string
+      - name: run_id
+        in: query
+        description: Public UID of the run to link
+        schema:
+          type: string
+      - name: testrun_id
+        in: query
+        description: ID of the testrun to link
+        schema:
+          type: integer
+      - name: plan_id
+        in: query
+        description: Public UID of the plan to link
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - issue
+              properties:
+                issue:
+                  "$ref": "#/components/schemas/IssueInput"
+      responses:
+        '201':
+          description: Issue linked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Issue"
+        '422':
+          "$ref": "#/components/responses/UnprocessableEntity"
+  "/api/v2/{project_id}/issues/{id}":
+    delete:
+      summary: Unlink an issue
+      operationId: deleteIssue
+      tags:
+      - Issues
+      parameters:
+      - "$ref": "#/components/parameters/projectId"
+      - name: id
+        in: path
+        required: true
+        description: Database ID of the issue
+        schema:
+          type: integer
+      - name: type
+        in: query
+        required: true
+        description: 'Type of issue: ''issue'' or ''jira_issue'''
+        schema:
+          type: string
+          enum:
+          - issue
+          - jira_issue
+      responses:
+        '204':
+          description: Issue unlinked
+        '404':
+          "$ref": "#/components/responses/NotFound"
+
