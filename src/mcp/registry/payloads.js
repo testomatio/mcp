@@ -83,6 +83,7 @@ export const payloadMethods = {
     assigned_to: assignedTo,
     assign_strategy: assignStrategy,
     test_ids: testIds,
+    suite_ids: suiteIds,
     envs,
     configuration,
     link,
@@ -97,6 +98,7 @@ export const payloadMethods = {
       assigned_to: assignedTo,
       assign_strategy: assignStrategy,
       test_ids: testIds,
+      suite_ids: suiteIds,
       envs,
       configuration,
       link,
@@ -114,6 +116,7 @@ export const payloadMethods = {
     assigned_to: assignedTo,
     assign_strategy: assignStrategy,
     test_ids: testIds,
+    suite_ids: suiteIds,
     configuration,
     link,
   } = {}) {
@@ -128,6 +131,7 @@ export const payloadMethods = {
       assigned_to: assignedTo,
       assign_strategy: assignStrategy,
       test_ids: testIds,
+      suite_ids: suiteIds,
       configuration,
       link,
     };
