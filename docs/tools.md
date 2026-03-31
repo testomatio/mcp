@@ -468,7 +468,8 @@ Create a new test run.
 | env | string | No | Environment name |
 | assigned_to | string | No | Assignee ID |
 | assign_strategy | string | No | "test", "random", or "none" |
-| test_ids | array | No | Array of test IDs to include |
+| test_ids | array | No | Array of test public UIDs to include (use ["*"] for all tests) |
+| suite_ids | array | No | Array of suite public UIDs whose tests to include |
 | envs | array | No | Array of environment names |
 | configuration | object | No | Run configuration |
 | link | array | No | Links to labels, tags, issues |
@@ -482,6 +483,18 @@ Create a new test run.
     "kind": "automated",
     "env": "production",
     "test_ids": ["123", "456", "789"]
+  }
+}
+```
+
+**Example with suites:**
+```json
+{
+  "name": "runs_create",
+  "arguments": {
+    "title": "Auth Suite Tests",
+    "kind": "automated",
+    "suite_ids": ["suite1", "suite2"]
   }
 }
 ```
@@ -507,7 +520,8 @@ Update an existing run.
 | **status_event** | string | No | **"finish"\|"finish_manual"\|"launch"\|"rerun"\|"scheduled"\|"terminate"** |
 | assigned_to | string | No | Assignee ID |
 | assign_strategy | string | No | Assignment strategy |
-| test_ids | array | No | Test IDs |
+| test_ids | array | No | Test public UIDs |
+| suite_ids | array | No | Suite public UIDs whose tests to include |
 | configuration | object | No | Configuration |
 | link | array | No | Link updates |
 

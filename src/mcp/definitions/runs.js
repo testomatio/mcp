@@ -83,6 +83,12 @@ export const RUNS_TOOLS = [
             "type": "string"
           }
         },
+        "suite_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "envs": {
           "type": "array",
           "items": {
@@ -188,6 +194,12 @@ export const RUNS_TOOLS = [
           ]
         },
         "test_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suite_ids": {
           "type": "array",
           "items": {
             "type": "string"
