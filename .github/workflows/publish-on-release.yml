@@ -37,6 +37,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: ${{ contains(github.event.release.tag_name, 'beta') && 'beta' || 'latest' }}
+          access: public
 
   show-npm-log:
     runs-on: ubuntu-latest
