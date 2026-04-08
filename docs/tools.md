@@ -715,7 +715,8 @@ Create a new test plan.
 | kind | string | No | "manual", "automated", or "mixed" |
 | hidden | boolean | No | Hide plan |
 | as_manual | boolean | No | Treat as manual |
-| test_plan | object | No | Test plan configuration |
+| test_ids | array | No | List of test IDs (8-char) to include |
+| suite_ids | array | No | List of suite IDs (8-char) to include |
 | link | array | No | Links to labels, tags, issues |
 
 **API Endpoint:** `POST /api/v2/{project_id}/plans`
