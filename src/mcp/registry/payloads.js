@@ -253,7 +253,8 @@ export const payloadMethods = {
     kind,
     hidden,
     as_manual: asManual,
-    test_plan: testPlan,
+    test_ids: testIds,
+    suite_ids: suiteIds,
     link,
   } = {}) {
     return {
@@ -262,7 +263,8 @@ export const payloadMethods = {
       kind,
       hidden,
       as_manual: asManual,
-      test_plan: testPlan,
+      test_ids: testIds,
+      suite_ids: suiteIds,
       link,
     };
   },

@@ -63,8 +63,19 @@ export const PLANS_TOOLS = [
         "as_manual": {
           "type": "boolean"
         },
-        "test_plan": {
-          "type": "object"
+        "test_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included."
+        },
+        "suite_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
         },
         "link": {
           "type": "array",
@@ -136,8 +147,19 @@ export const PLANS_TOOLS = [
         "as_manual": {
           "type": "boolean"
         },
-        "test_plan": {
-          "type": "object"
+        "test_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included."
+        },
+        "suite_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
         },
         "link": {
           "type": "array",

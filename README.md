@@ -1,6 +1,6 @@
 # Testomat.io MCP Server
 
-Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, etc.) to interact with Testomat.io Public API v2.
+Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, OpenCode, etc.) to interact with Testomat.io Public API v2.
 
 ## Features
 
@@ -73,6 +73,33 @@ Add to `.cursorrules` or settings.json:
     "testomatio": {
       "command": "node",
       "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+Create `.opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "testomat": {
+      "type": "local",
+      "command": [
+        "node",
+        "node_modules/@testomatio/mcp/index.js",
+        "--token",
+        "<TOKEN>",
+        "--project",
+        "<PROJECT_ID>"
+      ],
+      "enabled": true,
+      "environment": {
+        "TESTOMATIO_BASE_URL": "https://app.testomat.io"
+      }
     }
   }
 }
