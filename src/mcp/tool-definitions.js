@@ -10,6 +10,7 @@ import { LABELS_TOOLS } from './definitions/labels.js';
 import { TAGS_TOOLS } from './definitions/tags.js';
 import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
+import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
 
 export const TOOL_DEFINITIONS = [
   ...SYSTEM_TOOLS,
@@ -24,4 +25,5 @@ export const TOOL_DEFINITIONS = [
   ...TAGS_TOOLS,
   ...ISSUES_TOOLS,
   ...PLANS_TOOLS,
+  ...REQUIREMENTS_TOOLS,
 ];

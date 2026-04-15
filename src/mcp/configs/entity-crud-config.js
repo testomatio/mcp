@@ -96,4 +96,16 @@ export const ENTITY_CRUD_CONFIGS = [
     createMode: 'wrapped',
     updateMode: 'wrapped',
   },
+  {
+    toolPrefix: 'requirements',
+    resource: 'requirements',
+    idArg: 'requirement_id',
+    listMethod: 'listRequirements',
+    searchMethod: 'searchRequirements',
+    payloadBuilder: 'buildRequirementPayload',
+    wrapperKey: 'requirement',
+    createMode: 'requirement',
+    updateMode: 'requirement',
+    updateMethod: 'patch',
+  },
 ];

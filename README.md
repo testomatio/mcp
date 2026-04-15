@@ -8,6 +8,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
   - Tags (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
+  - Requirements (including file uploads from local file paths)
 - **Smart Search** - delegates to list endpoints with query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
@@ -49,17 +50,24 @@ export TESTOMATIO_BASE_URL=https://beta.testomat.io
 
 ### Cursor IDE
 
-Add to `.cursorrules` or settings.json:
+Add this config to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` for global access:
 
 ```json
 {
   "mcpServers": {
     "testomatio": {
-      "command": "testomatio-mcp",
-      "args": ["--token", "<TOKEN>", "--project", "<PROJECT_ID>"],
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@testomatio/mcp",
+        "--token",
+        "<TOKEN>",
+        "--project",
+        "<PROJECT_ID>"
+      ],
       "env": {
-        "TESTOMATIO_PROJECT_TOKEN": "<TOKEN>",
-        "TESTOMATIO_PROJECT_ID": "<PROJECT_ID>"
+        "TESTOMATIO_BASE_URL": "https://app.testomat.io"
       }
     }
   }
@@ -68,12 +76,26 @@ Add to `.cursorrules` or settings.json:
 
 ### Claude Desktop
 
+Add this config to:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
     "testomatio": {
-      "command": "node",
-      "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
+      "command": "npx",
+      "args": [
+        "-y",
+        "@testomatio/mcp",
+        "--token",
+        "<TOKEN>",
+        "--project",
+        "<PROJECT_ID>"
+      ],
+      "env": {
+        "TESTOMATIO_BASE_URL": "https://app.testomat.io"
+      }
     }
   }
 }
@@ -81,7 +103,7 @@ Add to `.cursorrules` or settings.json:
 
 ### OpenCode
 
-Create `.opencode/opencode.json`:
+Add this config to `opencode.json` in your project root, or to `~/.config/opencode/opencode.json` for global access:
 
 ```json
 {
@@ -90,8 +112,9 @@ Create `.opencode/opencode.json`:
     "testomat": {
       "type": "local",
       "command": [
-        "node",
-        "node_modules/@testomatio/mcp/index.js",
+        "npx",
+        "-y",
+        "@testomatio/mcp",
         "--token",
         "<TOKEN>",
         "--project",
@@ -192,4 +215,17 @@ src/
 ```bash
 npm install
 npm run start -- --token <TOKEN> --project <PROJECT_ID>
+```
+
+For local MCP development, point Claude Desktop to the checked-out entrypoint:
+
+```json
+{
+  "mcpServers": {
+    "testomatio-local": {
+      "command": "node",
+      "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
+    }
+  }
+}
 ```

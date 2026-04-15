@@ -1,5 +1,9 @@
 import { ApiError } from '../core/errors.js';
 
+function isFormData(body) {
+  return typeof FormData !== 'undefined' && body instanceof FormData;
+}
+
 function buildUrl(baseUrl, path, query = {}) {
   const url = new URL(path, `${baseUrl}/`);
 
@@ -41,8 +45,12 @@ export class HttpClient {
     };
 
     if (body !== undefined) {
-      headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
+      if (isFormData(body)) {
+        options.body = body;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+      }
     }
 
     this.logger.debug('HTTP request', { method, url });

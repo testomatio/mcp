@@ -31,12 +31,24 @@ export class TestomatioApiClient {
     return this.mutate('POST', this.buildPath(resource), { body });
   }
 
+  async createMultipart(resource, formData) {
+    return this.mutate('POST', this.buildPath(resource), { body: formData });
+  }
+
   async createWithQuery(resource, { query = {}, body = {} } = {}) {
     return this.mutate('POST', this.buildPath(resource), { query, body });
   }
 
   async update(resource, id, body = {}) {
     return this.mutate('PUT', this.buildPath(resource, id), { body });
+  }
+
+  async patch(resource, id, body = {}) {
+    return this.mutate('PATCH', this.buildPath(resource, id), { body });
+  }
+
+  async patchMultipart(resource, id, formData) {
+    return this.mutate('PATCH', this.buildPath(resource, id), { body: formData });
   }
 
   async delete(resource, id, query = {}) {

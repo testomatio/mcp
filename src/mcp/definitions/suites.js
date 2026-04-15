@@ -102,7 +102,8 @@ export const SUITES_TOOLS = [
                   "custom_field",
                   "tag",
                   "issue",
-                  "jira"
+                  "jira",
+                  "requirement"
                 ]
               },
               "value": {
@@ -176,7 +177,8 @@ export const SUITES_TOOLS = [
                   "custom_field",
                   "tag",
                   "issue",
-                  "jira"
+                  "jira",
+                  "requirement"
                 ]
               },
               "value": {

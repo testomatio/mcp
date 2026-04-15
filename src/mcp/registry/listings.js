@@ -90,6 +90,14 @@ export const listingMethods = {
     return this.listPlans({ page, per_page: perPage, query });
   },
 
+  listRequirements({ page, per_page: perPage, source, scope } = {}) {
+    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope });
+  },
+
+  searchRequirements({ page, per_page: perPage, source, scope } = {}) {
+    return this.listRequirements({ page, per_page: perPage, source, scope });
+  },
+
   listTags() {
     return this.apiClient.list('tags');
   },
