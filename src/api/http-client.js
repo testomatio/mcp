@@ -26,12 +26,13 @@ export class HttpClient {
     this.logger = logger;
   }
 
-  async request(method, path, { query, body } = {}) {
+  async request(method, path, { query, body, headers: requestHeaders = {} } = {}) {
     const url = buildUrl(this.baseUrl, path, query);
 
     const headers = {
       Accept: 'application/json',
       Authorization: `Bearer ${this.token}`,
+      ...requestHeaders,
     };
 
     const options = {

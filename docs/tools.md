@@ -1179,6 +1179,10 @@ Search issues (delegates to issues_list with filters).
 
 ## Common Patterns
 
+### API Sessions
+
+The MCP server automatically starts a Testomat.io API session before the first mutating request (`POST`, `PUT`, or `DELETE`) and sends the returned session hash as `X-Session-Hash` on subsequent mutating requests. The session is stopped when the MCP server shuts down. Read-only `GET` requests do not start or use sessions.
+
 ### Link Parameter Structure
 
 Most entities support linking via the `link` parameter:
