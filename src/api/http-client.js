@@ -1,4 +1,5 @@
 import { ApiError } from '../core/errors.js';
+import { getSystemCaDispatcher } from './system-ca-dispatcher.js';
 
 function buildUrl(baseUrl, path, query = {}) {
   const url = new URL(path, `${baseUrl}/`);
@@ -20,10 +21,11 @@ function buildUrl(baseUrl, path, query = {}) {
 }
 
 export class HttpClient {
-  constructor({ baseUrl, token, logger }) {
+  constructor({ baseUrl, token, logger, useSystemCa = false }) {
     this.baseUrl = baseUrl;
     this.token = token;
     this.logger = logger;
+    this.useSystemCa = useSystemCa;
   }
 
   async request(method, path, { query, body } = {}) {
@@ -42,6 +44,16 @@ export class HttpClient {
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
       options.body = JSON.stringify(body);
+    }
+
+    if (this.useSystemCa) {
+      try {
+        options.dispatcher = await getSystemCaDispatcher();
+      } catch (error) {
+        throw new Error(
+          `Failed to load system CA certificates. Ensure optional dependencies were installed or use NODE_OPTIONS=--use-system-ca on supported Node.js versions. Original error: ${error.message || error}`
+        );
+      }
     }
 
     this.logger.debug('HTTP request', { method, url });

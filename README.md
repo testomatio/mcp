@@ -44,6 +44,13 @@ testomatio-mcp
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
 
+**Optional: corporate network certificates**
+```bash
+export TESTOMATIO_USE_SYSTEM_CA=1
+```
+
+Enable this when HTTPS requests fail because Node.js does not trust a corporate TLS inspection certificate that is already trusted by the operating system.
+
 ## Usage with AI Assistants
 
 ### Cursor IDE
@@ -176,8 +183,21 @@ src/
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
 | `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
+| `TESTOMATIO_USE_SYSTEM_CA` | No | `false` | Load operating system trusted CA certificates for corporate TLS inspection/proxy environments |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
+
+## Corporate TLS Certificates
+
+Some corporate networks inspect HTTPS traffic and re-sign certificates with a company root certificate. Browsers and system tools may work because that certificate is trusted by macOS Keychain, Windows Certificate Store, or the Linux system store, while Node.js may still reject the same request with errors such as `unable to get local issuer certificate` or `self signed certificate in certificate chain`.
+
+Set `TESTOMATIO_USE_SYSTEM_CA=1` to make the MCP server load the operating system trusted CA certificates for its API requests:
+
+```bash
+TESTOMATIO_USE_SYSTEM_CA=1 testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
+```
+
+This keeps TLS verification enabled. It only extends the trusted CA list with certificates trusted by the operating system.
 
 ## Important Notes
 
