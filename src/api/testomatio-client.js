@@ -1,13 +1,12 @@
 import { HttpClient } from './http-client.js';
 
 export class TestomatioApiClient {
-  constructor({ baseUrl, projectId, token, logger, useSystemCa = false }) {
+  constructor({ baseUrl, projectId, token, logger }) {
     this.projectId = projectId;
     this.http = new HttpClient({
       baseUrl,
       token,
       logger,
-      useSystemCa,
     });
   }
 

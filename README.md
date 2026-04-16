@@ -44,13 +44,6 @@ testomatio-mcp
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
 
-**Optional: corporate network certificates**
-```bash
-export TESTOMATIO_USE_SYSTEM_CA=1
-```
-
-Enable this when HTTPS requests fail because Node.js does not trust a corporate TLS inspection certificate that is already trusted by the operating system.
-
 ## Usage with AI Assistants
 
 ### Cursor IDE
@@ -183,21 +176,40 @@ src/
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
 | `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
-| `TESTOMATIO_USE_SYSTEM_CA` | No | `false` | Load operating system trusted CA certificates for corporate TLS inspection/proxy environments |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 
 ## Corporate TLS Certificates
 
-Some corporate networks inspect HTTPS traffic and re-sign certificates with a company root certificate. Browsers and system tools may work because that certificate is trusted by macOS Keychain, Windows Certificate Store, or the Linux system store, while Node.js may still reject the same request with errors such as `unable to get local issuer certificate` or `self signed certificate in certificate chain`.
+If the MCP server runs behind a corporate proxy or TLS inspection, Node.js may reject Testomat.io HTTPS requests even when the same URL works in a browser. This usually means the company root certificate is trusted by the operating system, but not by Node.js.
 
-Set `TESTOMATIO_USE_SYSTEM_CA=1` to make the MCP server load the operating system trusted CA certificates for its API requests:
+Use Node.js system CA support:
 
 ```bash
-TESTOMATIO_USE_SYSTEM_CA=1 testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
+NODE_OPTIONS=--use-system-ca testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
 ```
 
-This keeps TLS verification enabled. It only extends the trusted CA list with certificates trusted by the operating system.
+For MCP clients, pass `NODE_OPTIONS` in the server environment:
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "command": "testomatio-mcp",
+      "args": ["--token", "<TOKEN>", "--project", "<PROJECT_ID>"],
+      "env": {
+        "NODE_OPTIONS": "--use-system-ca"
+      }
+    }
+  }
+}
+```
+
+If your Node.js version does not support `--use-system-ca`, export the corporate root certificate to a PEM file and use Node.js extra CA support:
+
+```bash
+NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
+```
 
 ## Important Notes
 
