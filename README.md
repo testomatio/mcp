@@ -48,17 +48,24 @@ export TESTOMATIO_BASE_URL=https://beta.testomat.io
 
 ### Cursor IDE
 
-Add to `.cursorrules` or settings.json:
+Add this config to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` for global access:
 
 ```json
 {
   "mcpServers": {
     "testomatio": {
-      "command": "testomatio-mcp",
-      "args": ["--token", "<TOKEN>", "--project", "<PROJECT_ID>"],
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@testomatio/mcp",
+        "--token",
+        "<TOKEN>",
+        "--project",
+        "<PROJECT_ID>"
+      ],
       "env": {
-        "TESTOMATIO_PROJECT_TOKEN": "<TOKEN>",
-        "TESTOMATIO_PROJECT_ID": "<PROJECT_ID>"
+        "TESTOMATIO_BASE_URL": "https://app.testomat.io"
       }
     }
   }
@@ -67,12 +74,26 @@ Add to `.cursorrules` or settings.json:
 
 ### Claude Desktop
 
+Add this config to:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
     "testomatio": {
-      "command": "node",
-      "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
+      "command": "npx",
+      "args": [
+        "-y",
+        "@testomatio/mcp",
+        "--token",
+        "<TOKEN>",
+        "--project",
+        "<PROJECT_ID>"
+      ],
+      "env": {
+        "TESTOMATIO_BASE_URL": "https://app.testomat.io"
+      }
     }
   }
 }
@@ -80,7 +101,7 @@ Add to `.cursorrules` or settings.json:
 
 ### OpenCode
 
-Create `.opencode/opencode.json`:
+Add this config to `opencode.json` in your project root, or to `~/.config/opencode/opencode.json` for global access:
 
 ```json
 {
@@ -89,8 +110,9 @@ Create `.opencode/opencode.json`:
     "testomat": {
       "type": "local",
       "command": [
-        "node",
-        "node_modules/@testomatio/mcp/index.js",
+        "npx",
+        "-y",
+        "@testomatio/mcp",
         "--token",
         "<TOKEN>",
         "--project",
@@ -222,4 +244,17 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 ```bash
 npm install
 npm run start -- --token <TOKEN> --project <PROJECT_ID>
+```
+
+For local MCP development, point Claude Desktop to the checked-out entrypoint:
+
+```json
+{
+  "mcpServers": {
+    "testomatio-local": {
+      "command": "node",
+      "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
+    }
+  }
+}
 ```
