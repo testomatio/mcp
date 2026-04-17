@@ -18,7 +18,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 ### Installation
 
 ```bash
-npm install -g @testomatio/mcp
+npm install -g @testomatio/mcp@latest
 ```
 
 ### Configuration
@@ -58,7 +58,7 @@ Add this config to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json
       "command": "npx",
       "args": [
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
@@ -85,7 +85,7 @@ Add this config to:
       "command": "npx",
       "args": [
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
@@ -112,7 +112,7 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
       "command": [
         "npx",
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
