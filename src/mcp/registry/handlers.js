@@ -82,6 +82,9 @@ export const handlerMethods = {
     if (spec.createMode === 'run') {
       return this.createRunWithFallback(args);
     }
+    if (spec.createMode === 'requirement') {
+      return this.createRequirement(args);
+    }
     const payload = this[spec.payloadBuilder](args);
     return this.createWrapped(spec.resource, spec.wrapperKey, payload);
   },
@@ -90,7 +93,13 @@ export const handlerMethods = {
     if (spec.updateMode === 'run') {
       return this.updateRunWithFallback(id, args);
     }
+    if (spec.updateMode === 'requirement') {
+      return this.updateRequirement(id, args);
+    }
     const payload = this[spec.payloadBuilder](args);
+    if (spec.updateMethod === 'patch') {
+      return this.patchWrapped(spec.resource, id, spec.wrapperKey, payload);
+    }
     return this.updateWrapped(spec.resource, id, spec.wrapperKey, payload);
   },
 };

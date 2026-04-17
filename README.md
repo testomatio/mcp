@@ -8,9 +8,11 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
   - Tags (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
+  - Requirements (including file uploads from local file paths)
 - **Smart Search** - delegates to list endpoints with query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
+- **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
 
 ## Quick Start
@@ -238,6 +240,7 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
 - **Search** - No dedicated `/search` endpoints; search uses list with filters
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
+- **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 
 ## Development
 
