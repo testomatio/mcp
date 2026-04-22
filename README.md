@@ -6,7 +6,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 
 - **Full CRUD** for core entities:
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
-  - Tags (read-only access)
+  - Tags and Milestones (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
   - Requirements (including file uploads from local file paths)
 - **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding

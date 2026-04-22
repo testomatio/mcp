@@ -144,6 +144,10 @@ export const listingMethods = {
     return this.listRequirements({ page, per_page: perPage, source, scope });
   },
 
+  listMilestones({ page, per_page: perPage, type, status } = {}) {
+    return this.apiClient.list('milestones', { page, per_page: perPage, type, status });
+  },
+
   listTags() {
     return this.apiClient.list('tags');
   },

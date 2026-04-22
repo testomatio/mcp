@@ -15,6 +15,7 @@ Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server
 - [Snippet Management](#snippet-management)
 - [Label Management](#label-management)
 - [Tag Management](#tag-management)
+- [Milestone Management](#milestone-management)
 - [Issue Management](#issue-management)
 - [Requirement Management](#requirement-management)
 
@@ -1157,6 +1158,37 @@ Search by tag title (delegates to tags_get).
 |------|------|----------|-------------|
 | tag_id | string | No | Tag ID |
 | query | string | No | Search query |
+
+---
+
+## Milestone Management
+
+### milestones_list
+
+List milestones.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| type | string | No | Filter by milestone type title, e.g. `Sprint` or `Release` |
+| status | string | No | `created`, `active`, or `closed` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones`
+
+---
+
+### milestones_get
+
+Get a milestone by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| milestone_id | string | Yes | Milestone slug |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones/{id}`
 
 ---
 

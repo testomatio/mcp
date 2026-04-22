@@ -59,6 +59,10 @@ export const handlerMethods = {
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
     handlers.tags_search = async (args = {}) => this.asText(await this.searchTags(args));
 
+    handlers.milestones_list = async (args = {}) => this.asText(await this.listMilestones(args));
+    handlers.milestones_get = async ({ milestone_id: milestoneId }) =>
+      this.asText(await this.apiClient.get('milestones', milestoneId));
+
     handlers.issues_list = async (args = {}) => this.asText(await this.listIssues(args));
     handlers.issues_search = async (args = {}) => this.asText(await this.searchIssues(args));
     handlers.issues_create = async (args = {}) => this.asText(await this.createIssue(args));
