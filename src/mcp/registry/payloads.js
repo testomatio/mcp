@@ -143,7 +143,7 @@ export const payloadMethods = {
   buildRunCreatePayload({
     title,
     description,
-    plan_id: planId,
+    plan_ids: planIds,
     kind,
     rungroup_id: rungroupId,
     env,
@@ -152,13 +152,12 @@ export const payloadMethods = {
     test_ids: testIds,
     suite_ids: suiteIds,
     envs,
-    configuration,
     link,
   } = {}) {
     return {
       title,
       description,
-      plan_id: planId,
+      plan_ids: planIds,
       kind,
       rungroup_id: rungroupId,
       env,
@@ -167,7 +166,6 @@ export const payloadMethods = {
       test_ids: testIds,
       suite_ids: suiteIds,
       envs,
-      configuration,
       link,
     };
   },
@@ -175,7 +173,6 @@ export const payloadMethods = {
   buildRunUpdatePayload({
     title,
     description,
-    plan_id: planId,
     kind,
     rungroup_id: rungroupId,
     env,
@@ -184,13 +181,11 @@ export const payloadMethods = {
     assign_strategy: assignStrategy,
     test_ids: testIds,
     suite_ids: suiteIds,
-    configuration,
     link,
   } = {}) {
     return {
       title,
       description,
-      plan_id: planId,
       kind,
       rungroup_id: rungroupId,
       env,
@@ -199,7 +194,6 @@ export const payloadMethods = {
       assign_strategy: assignStrategy,
       test_ids: testIds,
       suite_ids: suiteIds,
-      configuration,
       link,
     };
   },

@@ -9,18 +9,20 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Tags (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
   - Requirements (including file uploads from local file paths)
-- **Smart Search** - delegates to list endpoints with query/filter forwarding
+- **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
+- **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
+- **Safe TQL Guidance** - prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not guess undocumented TQL syntax; fall back only when the API rejects the TQL expression or the needed field is not supported
 
 ## Quick Start
 
 ### Installation
 
 ```bash
-npm install -g @testomatio/mcp
+npm install -g @testomatio/mcp@latest
 ```
 
 ### Configuration
@@ -60,7 +62,7 @@ Add this config to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json
       "command": "npx",
       "args": [
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
@@ -87,7 +89,7 @@ Add this config to:
       "command": "npx",
       "args": [
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
@@ -114,7 +116,7 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
       "command": [
         "npx",
         "-y",
-        "@testomatio/mcp",
+        "@testomatio/mcp@latest",
         "--token",
         "<TOKEN>",
         "--project",
@@ -135,7 +137,7 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
 ```json
 {
   "name": "tests_list",
-  "arguments": { "page": 1, "per_page": 50 }
+  "arguments": { "page": 1, "per_page": 50, "tql": "priority == high" }
 }
 ```
 
@@ -180,16 +182,16 @@ Complete tool reference: [docs/tools.md](./docs/tools.md)
 
 ## Project Structure
 
-```
+```text
 src/
-├── config/          # Config loading, defaults
-├── core/            # Errors, logger
-├── api/             # HTTP client, Testomat.io API client
-├── mcp/             # MCP server, tools, registry
-│   ├── definitions/ # Tool definitions by entity
-│   ├── configs/     # Registry generation configs
-│   └── registry/    # Tool handlers
-└── cli/             # CLI bootstrap
+|- config/          # Config loading, defaults
+|- core/            # Errors, logger
+|- api/             # HTTP client, Testomat.io API client
+|- mcp/             # MCP server, tools, registry
+|  |- definitions/  # Tool definitions by entity
+|  |- configs/      # Registry generation configs
+|  `- registry/     # Tool handlers
+`- cli/             # CLI bootstrap
 ```
 
 ## Environment Variables
@@ -203,10 +205,45 @@ src/
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 
+## Corporate TLS Certificates
+
+If the MCP server runs behind a corporate proxy or TLS inspection, Node.js may reject Testomat.io HTTPS requests even when the same URL works in a browser. This usually means the company root certificate is trusted by the operating system, but not by Node.js.
+
+Use Node.js system CA support:
+
+```bash
+NODE_OPTIONS=--use-system-ca testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
+```
+
+For MCP clients, pass `NODE_OPTIONS` in the server environment:
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "command": "testomatio-mcp",
+      "args": ["--token", "<TOKEN>", "--project", "<PROJECT_ID>"],
+      "env": {
+        "NODE_OPTIONS": "--use-system-ca"
+      }
+    }
+  }
+}
+```
+
+If your Node.js version does not support `--use-system-ca`, export the corporate root certificate to a PEM file and use Node.js extra CA support:
+
+```bash
+NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> --project <PROJECT_ID>
+```
+
 ## Important Notes
 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
-- **Search** - No dedicated `/search` endpoints; search uses list with filters
+- **Search** - No dedicated `/search` endpoints. MCP search tools delegate to list tools; for `tests` and `runs` the MCP interface is intentionally simplified to `tql`, while other entities stay closer to Public API v2 filters
+- **TQL** - Use `tql` as the single search/filter input for `tests_list/tests_search` and `runs_list/runs_search`
+- **TQL Safety** - Prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not invent tag-style or free-text syntax unless it was verified
+- **Fallback Rule** - For `tests` and `runs`, try `tql` first. Use other tools or extra analysis only after the API rejects the TQL expression or the needed field is not supported by TQL
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
 - **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 

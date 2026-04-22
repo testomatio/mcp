@@ -17,8 +17,104 @@ export const TESTRUNS_TOOLS = [
         "run_id": {
           "type": "string"
         },
-        "query": {
+        "test_ids": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter_status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped",
+            "pending"
+          ]
+        },
+        "filter_kind": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "automated"
+          ]
+        },
+        "filter_user": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "filter_priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
+        },
+        "filter_substatus": {
           "type": "string"
+        },
+        "filter_search": {
+          "type": "string"
+        },
+        "filter_message": {
+          "type": "boolean"
+        },
+        "filter_link": {
+          "type": "boolean"
+        },
+        "filter_finished_at_date_range": {
+          "type": "string"
+        },
+        "tags": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "envs": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "rungroups": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "defects": {
+          "type": "string",
+          "enum": [
+            "has_defects",
+            "without_defects"
+          ]
         }
       },
       "additionalProperties": false
@@ -142,7 +238,51 @@ export const TESTRUNS_TOOLS = [
         "run_id": {
           "type": "string"
         },
-        "query": {
+        "test_ids": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter_status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped",
+            "pending"
+          ]
+        },
+        "filter_kind": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "automated"
+          ]
+        },
+        "filter_user": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "filter_priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
+        },
+        "filter_substatus": {
+          "type": "string"
+        },
+        "filter_search": {
           "type": "string"
         },
         "page": {
@@ -153,6 +293,58 @@ export const TESTRUNS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "filter_message": {
+          "type": "boolean"
+        },
+        "filter_link": {
+          "type": "boolean"
+        },
+        "filter_finished_at_date_range": {
+          "type": "string"
+        },
+        "tags": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "envs": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "rungroups": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "defects": {
+          "type": "string",
+          "enum": [
+            "has_defects",
+            "without_defects"
+          ]
         }
       },
       "additionalProperties": false

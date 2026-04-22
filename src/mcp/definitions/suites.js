@@ -29,9 +29,6 @@ export const SUITES_TOOLS = [
         },
         "search_text": {
           "type": "string"
-        },
-        "query": {
-          "type": "string"
         }
       },
       "additionalProperties": false
@@ -101,6 +98,7 @@ export const SUITES_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira",
                   "requirement"
@@ -176,6 +174,7 @@ export const SUITES_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira",
                   "requirement"
@@ -223,9 +222,6 @@ export const SUITES_TOOLS = [
       "type": "object",
       "properties": {
         "search_text": {
-          "type": "string"
-        },
-        "query": {
           "type": "string"
         },
         "page": {
