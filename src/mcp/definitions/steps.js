@@ -13,9 +13,6 @@ export const STEPS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
-        },
-        "query": {
-          "type": "string"
         }
       },
       "additionalProperties": false
@@ -67,6 +64,7 @@ export const STEPS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -123,6 +121,7 @@ export const STEPS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -162,26 +161,4 @@ export const STEPS_TOOLS = [
       "additionalProperties": false
     }
   },
-  {
-    "name": "steps_search",
-    "description": "Search steps (delegates to steps list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
-      "additionalProperties": false
-    }
-  }
 ];

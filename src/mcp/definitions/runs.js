@@ -1,7 +1,7 @@
 export const RUNS_TOOLS = [
   {
     "name": "runs_list",
-    "description": "List runs (/api/v2/{project_id}/runs)",
+    "description": "List runs (/api/v2/{project_id}/runs). Use `tql` first for search/filtering. Prefer known-safe expressions such as `size == 5` or `size > 1`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -14,8 +14,9 @@ export const RUNS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "query": {
-          "type": "string"
+        "tql": {
+          "type": "string",
+          "description": "Universal TQL filter for runs. Prefer known-safe expressions like `size == 5` or `size > 1`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
         }
       },
       "additionalProperties": false
@@ -49,8 +50,11 @@ export const RUNS_TOOLS = [
         "description": {
           "type": "string"
         },
-        "plan_id": {
-          "type": "string"
+        "plan_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "kind": {
           "type": "string",
@@ -95,9 +99,6 @@ export const RUNS_TOOLS = [
             "type": "string"
           }
         },
-        "configuration": {
-          "type": "object"
-        },
         "link": {
           "type": "array",
           "items": {
@@ -116,6 +117,7 @@ export const RUNS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -152,9 +154,6 @@ export const RUNS_TOOLS = [
           "type": "string"
         },
         "description": {
-          "type": "string"
-        },
-        "plan_id": {
           "type": "string"
         },
         "kind": {
@@ -205,9 +204,6 @@ export const RUNS_TOOLS = [
             "type": "string"
           }
         },
-        "configuration": {
-          "type": "object"
-        },
         "link": {
           "type": "array",
           "items": {
@@ -226,6 +222,7 @@ export const RUNS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -267,13 +264,10 @@ export const RUNS_TOOLS = [
   },
   {
     "name": "runs_search",
-    "description": "Search runs (delegates to runs list; docs has no dedicated search parameter)",
+    "description": "Search runs using TQL (delegates to runs_list). Use `tql` first. Prefer known-safe expressions such as `size == 5` or `size > 1`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
     "inputSchema": {
       "type": "object",
       "properties": {
-        "query": {
-          "type": "string"
-        },
         "page": {
           "type": "integer",
           "minimum": 1
@@ -282,6 +276,10 @@ export const RUNS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "tql": {
+          "type": "string",
+          "description": "Universal TQL filter for runs. Prefer known-safe expressions like `size == 5` or `size > 1`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
         }
       },
       "additionalProperties": false

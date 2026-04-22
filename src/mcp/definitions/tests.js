@@ -1,7 +1,7 @@
 export const TESTS_TOOLS = [
   {
     "name": "tests_list",
-    "description": "List tests (/api/v2/{project_id}/tests)",
+    "description": "List tests (/api/v2/{project_id}/tests). Use `tql` first for search/filtering. Prefer known-safe expressions such as `priority == high` or `state == automated`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -14,23 +14,9 @@ export const TESTS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "suite_id": {
-          "type": "string"
-        },
-        "search_text": {
-          "type": "string"
-        },
-        "query": {
-          "type": "string"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
+        "tql": {
+          "type": "string",
+          "description": "Universal TQL filter for tests. Prefer known-safe expressions like `priority == high` or `state == automated`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
         }
       },
       "additionalProperties": false
@@ -100,6 +86,7 @@ export const TESTS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -178,6 +165,7 @@ export const TESTS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -219,16 +207,10 @@ export const TESTS_TOOLS = [
   },
   {
     "name": "tests_search",
-    "description": "Search tests by text (delegates to tests list with search_text)",
+    "description": "Search tests using TQL (delegates to tests_list). Use `tql` first. Prefer known-safe expressions such as `priority == high` or `state == automated`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
     "inputSchema": {
       "type": "object",
       "properties": {
-        "query": {
-          "type": "string"
-        },
-        "search_text": {
-          "type": "string"
-        },
         "page": {
           "type": "integer",
           "minimum": 1
@@ -238,17 +220,9 @@ export const TESTS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "suite_id": {
-          "type": "string"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
+        "tql": {
+          "type": "string",
+          "description": "Universal TQL filter for tests. Prefer known-safe expressions like `priority == high` or `state == automated`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
         }
       },
       "additionalProperties": false
