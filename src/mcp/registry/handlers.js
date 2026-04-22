@@ -8,8 +8,10 @@ export const handlerMethods = {
 
       handlers[`${toolPrefix}_list`] = async (args = {}) =>
         this.asText(await this[listMethod](args));
-      handlers[`${toolPrefix}_search`] = async (args = {}) =>
-        this.asText(await this[searchMethod](args));
+      if (searchMethod) {
+        handlers[`${toolPrefix}_search`] = async (args = {}) =>
+          this.asText(await this[searchMethod](args));
+      }
       handlers[`${toolPrefix}_get`] = async (args = {}) =>
         this.asText(await this.apiClient.get(resource, this.pickRequiredArg(args, idArg)));
       handlers[`${toolPrefix}_create`] = async (args = {}) =>

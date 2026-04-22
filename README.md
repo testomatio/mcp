@@ -8,10 +8,12 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
   - Tags (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
-- **Smart Search** - delegates to list endpoints with query/filter forwarding
+- **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Run Management** - status transitions via `status_event` parameter
+- **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
+- **Safe TQL Guidance** - prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not guess undocumented TQL syntax; fall back only when the API rejects the TQL expression or the needed field is not supported
 
 ## Quick Start
 
@@ -133,7 +135,7 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
 ```json
 {
   "name": "tests_list",
-  "arguments": { "page": 1, "per_page": 50 }
+  "arguments": { "page": 1, "per_page": 50, "tql": "priority == high" }
 }
 ```
 
@@ -178,16 +180,16 @@ Complete tool reference: [docs/tools.md](./docs/tools.md)
 
 ## Project Structure
 
-```
+```text
 src/
-├── config/          # Config loading, defaults
-├── core/            # Errors, logger
-├── api/             # HTTP client, Testomat.io API client
-├── mcp/             # MCP server, tools, registry
-│   ├── definitions/ # Tool definitions by entity
-│   ├── configs/     # Registry generation configs
-│   └── registry/    # Tool handlers
-└── cli/             # CLI bootstrap
+|- config/          # Config loading, defaults
+|- core/            # Errors, logger
+|- api/             # HTTP client, Testomat.io API client
+|- mcp/             # MCP server, tools, registry
+|  |- definitions/  # Tool definitions by entity
+|  |- configs/      # Registry generation configs
+|  `- registry/     # Tool handlers
+`- cli/             # CLI bootstrap
 ```
 
 ## Environment Variables
@@ -236,7 +238,10 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 ## Important Notes
 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
-- **Search** - No dedicated `/search` endpoints; search uses list with filters
+- **Search** - No dedicated `/search` endpoints. MCP search tools delegate to list tools; for `tests` and `runs` the MCP interface is intentionally simplified to `tql`, while other entities stay closer to Public API v2 filters
+- **TQL** - Use `tql` as the single search/filter input for `tests_list/tests_search` and `runs_list/runs_search`
+- **TQL Safety** - Prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not invent tag-style or free-text syntax unless it was verified
+- **Fallback Rule** - For `tests` and `runs`, try `tql` first. Use other tools or extra analysis only after the API rejects the TQL expression or the needed field is not supported by TQL
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
 
 ## Development

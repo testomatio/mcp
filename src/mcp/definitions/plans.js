@@ -14,7 +14,24 @@ export const PLANS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "query": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "automated",
+            "mixed"
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search_text": {
           "type": "string"
         }
       },
@@ -95,6 +112,7 @@ export const PLANS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -179,6 +197,7 @@ export const PLANS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -224,7 +243,7 @@ export const PLANS_TOOLS = [
     "inputSchema": {
       "type": "object",
       "properties": {
-        "query": {
+        "search_text": {
           "type": "string"
         },
         "page": {
@@ -235,6 +254,23 @@ export const PLANS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "automated",
+            "mixed"
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false

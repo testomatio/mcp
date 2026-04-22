@@ -47,17 +47,17 @@ Check server status and active configuration.
 
 List all tests in the project with filtering.
 
+Use `tql` first for search/filtering.
+Prefer known-safe expressions such as `priority == high` and `state == automated`.
+Do not guess undocumented TQL syntax.
+Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number (min: 1) |
 | per_page | integer | No | Items per page (min: 1, max: 100) |
-| suite_id | string | No | Filter by suite ID |
-| search_text | string | No | Search in test content |
-| query | string | No | Advanced query filter |
-| assigned_to | string | No | Filter by assignee |
-| priority | string | No | Filter by priority |
-| state | string | No | Filter by state |
+| tql | string | No | Universal TQL filter for tests. Safe examples: `priority == high`, `state == automated` |
 
 **Example:**
 ```json
@@ -66,8 +66,7 @@ List all tests in the project with filtering.
   "arguments": {
     "page": 1,
     "per_page": 50,
-    "suite_id": "123",
-    "priority": "high"
+    "tql": "priority == high"
   }
 }
 ```
@@ -114,7 +113,7 @@ Create a new test.
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code/automation reference |
 | state | string | No | Test state |
-| link | array | No | Links to labels, tags, issues |
+| link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **Link Array Format:**
 ```json
@@ -122,7 +121,7 @@ Create a new test.
   "link": [
     {
       "action": "add|remove",
-      "type": "label|custom_field|tag|issue|jira",
+      "type": "label|custom_field|tag|milestone|issue|jira|requirement",
       "value": "identifier"
     }
   ]
@@ -209,7 +208,12 @@ Delete a test.
 
 ### tests_search
 
-Search tests by text (delegates to tests_list with search_text).
+Search tests (delegates to `tests_list`).
+
+Use `tql` first.
+Prefer known-safe expressions such as `priority == high` and `state == automated`.
+Do not guess undocumented TQL syntax.
+Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
 
 **Parameters:** Same as `tests_list`
 
@@ -218,7 +222,7 @@ Search tests by text (delegates to tests_list with search_text).
 {
   "name": "tests_search",
   "arguments": {
-    "search_text": "login",
+    "tql": "state == automated",
     "page": 1,
     "per_page": 20
   }
@@ -332,7 +336,6 @@ List suites as a tree structure.
 | tag | string | No | Filter by tag |
 | labels | string | No | Filter by labels |
 | search_text | string | No | Search text |
-| query | string | No | Advanced query |
 
 **API Endpoint:** `GET /api/v2/{project_id}/suites`
 
@@ -366,7 +369,7 @@ Create a new suite.
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
-| link | array | No | Links to labels, tags, etc. |
+| link | array | No | Links to labels, tags, milestones, issues, jira, or requirements |
 
 **API Endpoint:** `POST /api/v2/{project_id}/suites`
 
@@ -388,7 +391,7 @@ Update an existing suite.
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
-| link | array | No | Link updates |
+| link | array | No | Link updates for labels, tags, milestones, issues, jira, or requirements |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/suites/{id}`
 
@@ -429,12 +432,29 @@ Same pattern as test issue operations, but for suites.
 
 List all test runs.
 
+Use `tql` first for search/filtering.
+Prefer known-safe expressions such as `size == 5` and `size > 1`.
+Do not guess undocumented TQL syntax.
+Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
+| tql | string | No | Universal TQL filter for runs. Safe examples: `size == 5`, `size > 1` |
+
+**Example:**
+```json
+{
+  "name": "runs_list",
+  "arguments": {
+    "page": 1,
+    "per_page": 10,
+    "tql": "size > 1"
+  }
+}
+```
 
 **API Endpoint:** `GET /api/v2/{project_id}/runs`
 
@@ -462,7 +482,7 @@ Create a new test run.
 |------|------|----------|-------------|
 | title | string | Yes | Run title |
 | description | string | No | Run description |
-| plan_id | string | No | Associated plan ID |
+| plan_ids | array | No | List of plan public UIDs to include in the run |
 | kind | string | No | "manual", "automated", or "mixed" |
 | rungroup_id | string | No | Run group ID |
 | env | string | No | Environment name |
@@ -471,8 +491,7 @@ Create a new test run.
 | test_ids | array | No | Array of test public UIDs to include (use ["*"] for all tests) |
 | suite_ids | array | No | Array of suite public UIDs whose tests to include |
 | envs | array | No | Array of environment names |
-| configuration | object | No | Run configuration |
-| link | array | No | Links to labels, tags, issues |
+| link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **Example:**
 ```json
@@ -513,7 +532,6 @@ Update an existing run.
 | run_id | string | Yes | Run ID |
 | title | string | No | New title |
 | description | string | No | Description |
-| plan_id | string | No | Plan ID |
 | kind | string | No | Run type |
 | rungroup_id | string | No | Run group ID |
 | env | string | No | Environment |
@@ -522,8 +540,7 @@ Update an existing run.
 | assign_strategy | string | No | Assignment strategy |
 | test_ids | array | No | Test public UIDs |
 | suite_ids | array | No | Suite public UIDs whose tests to include |
-| configuration | object | No | Configuration |
-| link | array | No | Link updates |
+| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
 
 **Status Event Example:**
 ```json
@@ -555,7 +572,12 @@ Delete a run.
 
 ### runs_search
 
-Search runs (delegates to runs list).
+Search runs (delegates to `runs_list`).
+
+Use `tql` first.
+Prefer known-safe expressions such as `size == 5` and `size > 1`.
+Do not guess undocumented TQL syntax.
+Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
 
 ---
 
@@ -579,7 +601,21 @@ List test runs (individual test results within a run).
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
 | run_id | string | No | Filter by parent run ID |
-| query | string | No | Query filter |
+| test_ids | array\|string | No | Test IDs; arrays are sent as comma-separated values |
+| filter_status | string | No | `passed`, `failed`, `skipped`, `pending` |
+| filter_kind | string | No | `manual` or `automated` |
+| filter_user | integer\|string | No | Assigned user ID |
+| filter_priority | string | No | Test priority |
+| filter_substatus | string | No | Custom substatus filter |
+| filter_search | string | No | Text search across test title |
+| filter_message | boolean | No | Only testruns with a message |
+| filter_link | boolean | No | Only testruns with linked issues |
+| filter_finished_at_date_range | string | No | ISO date range, comma-separated |
+| tags | array\|string | No | Test tags, comma-separated when sent to API |
+| labels | array\|string | No | Run labels, comma-separated when sent to API |
+| envs | array\|string | No | Run environments, comma-separated when sent to API |
+| rungroups | array\|string | No | Rungroup IDs, comma-separated when sent to API |
+| defects | string | No | `has_defects` or `without_defects` |
 
 **API Endpoint:** `GET /api/v2/{project_id}/testruns`
 
@@ -665,6 +701,12 @@ Delete a test run.
 
 ---
 
+### testruns_search
+
+Search testruns (delegates to `testruns_list` with the same filters).
+
+---
+
 ### TestRun Issue Operations
 
 **testruns_issues_list**, **testruns_issues_link**, **testruns_issues_unlink**
@@ -684,7 +726,10 @@ List test plans.
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
+| kind | string | No | `manual`, `automated`, `mixed` |
+| hidden | boolean | No | Filter hidden vs visible plans |
+| labels | array | No | Filter by labels (OR logic) |
+| search_text | string | No | Plain text search across plan titles |
 
 **API Endpoint:** `GET /api/v2/{project_id}/plans`
 
@@ -717,7 +762,7 @@ Create a new test plan.
 | as_manual | boolean | No | Treat as manual |
 | test_ids | array | No | List of test IDs (8-char) to include |
 | suite_ids | array | No | List of suite IDs (8-char) to include |
-| link | array | No | Links to labels, tags, issues |
+| link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `POST /api/v2/{project_id}/plans`
 
@@ -736,8 +781,9 @@ Update an existing plan.
 | kind | string | No | Plan type |
 | hidden | boolean | No | Hidden flag |
 | as_manual | boolean | No | Manual flag |
-| test_plan | object | No | Test plan config |
-| link | array | No | Link updates |
+| test_ids | array | No | List of test IDs (8-char) to include |
+| suite_ids | array | No | List of suite IDs (8-char) to include |
+| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/plans/{id}`
 
@@ -753,6 +799,12 @@ Delete a plan.
 | plan_id | string | Yes | Plan ID |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/plans/{id}`
+
+---
+
+### plans_search
+
+Search plans (delegates to `plans_list` with the same filters).
 
 ---
 
@@ -775,7 +827,6 @@ List run groups as a tree.
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
 
 **API Endpoint:** `GET /api/v2/{project_id}/rungroups`
 
@@ -859,7 +910,6 @@ List test steps.
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
 
 **API Endpoint:** `GET /api/v2/{project_id}/steps`
 
@@ -887,7 +937,7 @@ Create a new step.
 |------|------|----------|-------------|
 | title | string | Yes | Step title |
 | description | string | No | Step description |
-| link | array | No | Links to labels, tags, issues |
+| link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `POST /api/v2/{project_id}/steps`
 
@@ -903,7 +953,7 @@ Update an existing step.
 | step_id | integer | Yes | Step ID |
 | title | string | No | New title |
 | description | string | No | Description |
-| link | array | No | Link updates |
+| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/steps/{id}`
 
@@ -933,7 +983,6 @@ List code snippets.
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
 
 **API Endpoint:** `GET /api/v2/{project_id}/snippets`
 
@@ -961,7 +1010,7 @@ Create a new snippet.
 |------|------|----------|-------------|
 | title | string | Yes | Snippet title |
 | description | string | No | Description |
-| link | array | No | Links to labels, tags, issues |
+| link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `POST /api/v2/{project_id}/snippets`
 
@@ -977,7 +1026,7 @@ Update an existing snippet.
 | snippet_id | integer | Yes | Snippet ID |
 | title | string | No | New title |
 | description | string | No | Description |
-| link | array | No | Link updates |
+| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/snippets/{id}`
 
@@ -1007,7 +1056,6 @@ List labels.
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| query | string | No | Query filter |
 
 **API Endpoint:** `GET /api/v2/{project_id}/labels`
 
@@ -1188,12 +1236,14 @@ Most entities support linking via the `link` parameter:
   "link": [
     {
       "action": "add|remove",
-      "type": "label|custom_field|tag|issue|jira",
+      "type": "label|custom_field|tag|milestone|issue|jira|requirement",
       "value": "identifier"
     }
   ]
 }
 ```
+
+`requirement` is only applicable to suites.
 
 ### Pagination
 
