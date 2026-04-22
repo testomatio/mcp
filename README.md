@@ -6,11 +6,13 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 
 - **Full CRUD** for core entities:
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
-  - Tags (read-only access)
+  - Tags and Milestones (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
+  - Requirements (including file uploads from local file paths)
 - **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
+- **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
 - **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
 - **Safe TQL Guidance** - prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not guess undocumented TQL syntax; fall back only when the API rejects the TQL expression or the needed field is not supported
@@ -243,6 +245,7 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 - **TQL Safety** - Prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not invent tag-style or free-text syntax unless it was verified
 - **Fallback Rule** - For `tests` and `runs`, try `tql` first. Use other tools or extra analysis only after the API rejects the TQL expression or the needed field is not supported by TQL
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
+- **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 
 ## Development
 

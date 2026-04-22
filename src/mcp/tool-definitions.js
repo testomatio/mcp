@@ -8,8 +8,10 @@ import { STEPS_TOOLS } from './definitions/steps.js';
 import { SNIPPETS_TOOLS } from './definitions/snippets.js';
 import { LABELS_TOOLS } from './definitions/labels.js';
 import { TAGS_TOOLS } from './definitions/tags.js';
+import { MILESTONES_TOOLS } from './definitions/milestones.js';
 import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
+import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
 
 export const TOOL_DEFINITIONS = [
   ...SYSTEM_TOOLS,
@@ -22,6 +24,8 @@ export const TOOL_DEFINITIONS = [
   ...SNIPPETS_TOOLS,
   ...LABELS_TOOLS,
   ...TAGS_TOOLS,
+  ...MILESTONES_TOOLS,
   ...ISSUES_TOOLS,
   ...PLANS_TOOLS,
+  ...REQUIREMENTS_TOOLS,
 ];
