@@ -9,7 +9,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "sync:enterprise-package": "node scripts/sync-enterprise-package.js"
   },
   "keywords": [
     "testomatio",

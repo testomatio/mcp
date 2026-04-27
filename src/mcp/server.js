@@ -7,14 +7,28 @@ import { createLogger } from '../core/logger.js';
 import { getPackageVersion } from '../config/package-version.js';
 
 export class TestomatioMCPServer {
-  constructor({ config, apiClient, logger }) {
+  constructor({
+    config,
+    apiClient,
+    logger,
+    tools = TOOL_DEFINITIONS,
+    name = 'testomatio-mcp-server',
+    registryOptions = {},
+  }) {
     this.config = config;
     this.logger = logger || createLogger();
-    this.toolRegistry = new ToolRegistry({ config, apiClient, logger: this.logger });
+    this.tools = tools;
+    this.toolRegistry = new ToolRegistry({
+      config,
+      apiClient,
+      logger: this.logger,
+      tools,
+      ...registryOptions,
+    });
 
     this.server = new Server(
       {
-        name: 'testomatio-mcp-server',
+        name,
         version: getPackageVersion(),
       },
       {
@@ -29,7 +43,7 @@ export class TestomatioMCPServer {
 
   setupHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: TOOL_DEFINITIONS,
+      tools: this.tools,
     }));
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {

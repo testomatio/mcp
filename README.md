@@ -23,6 +23,8 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 npm install -g @testomatio/mcp@latest
 ```
 
+Need enterprise analytics tools? Install `@testomatio/mcp-enterprise@latest` instead. Details are in the `Enterprise Analytics` section below.
+
 ### Configuration
 
 **Required credentials:**
@@ -243,6 +245,7 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 - **TQL Safety** - Prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not invent tag-style or free-text syntax unless it was verified
 - **Fallback Rule** - For `tests` and `runs`, try `tql` first. Use other tools or extra analysis only after the API rejects the TQL expression or the needed field is not supported by TQL
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
+- **Enterprise Package** - Analytics tools are intentionally exposed only by `@testomatio/mcp-enterprise`, not by the standard `@testomatio/mcp` package
 
 ## Development
 
@@ -260,6 +263,58 @@ For local MCP development, point Claude Desktop to the checked-out entrypoint:
       "command": "node",
       "args": ["/path/to/mcp/index.js", "--token", "<TOKEN>", "--project", "<PROJECT_ID>"]
     }
+  }
+}
+```
+
+## Enterprise Analytics
+
+Enterprise analytics is available only in the separate `@testomatio/mcp-enterprise` package.
+
+Installation:
+
+```bash
+npm install -g @testomatio/mcp-enterprise@latest
+```
+
+Run:
+
+```bash
+testomatio-mcp-enterprise --token <PROJECT_TOKEN> --project <PROJECT_ID>
+```
+
+Included tools:
+
+- `analytics_tests` - `GET /api/v2/{project_id}/analytics/tests/{kind}`
+- `analytics_stats` - `GET /api/v2/{project_id}/analytics/stats/{kind}`
+
+Analytics endpoints require the `api_analytics` subscription feature. Use `q` as the TQL filter parameter for analytics tools.
+
+Example `analytics_tests` call:
+
+```json
+{
+  "name": "analytics_tests",
+  "arguments": {
+    "kind": "flaky",
+    "q": "priority == 'high'",
+    "days": 30,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+Example `analytics_stats` call:
+
+```json
+{
+  "name": "analytics_stats",
+  "arguments": {
+    "kind": "success-rate-by-date",
+    "q": "tag IN ['@smoke']",
+    "from": "2026-04-01",
+    "to": "2026-04-30"
   }
 }
 ```

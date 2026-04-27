@@ -12,10 +12,12 @@ function formatJson(payload) {
 }
 
 export class ToolRegistry {
-  constructor({ config, apiClient, logger }) {
+  constructor({ config, apiClient, logger, tools = TOOL_DEFINITIONS, handlerRegistrars = [] }) {
     this.config = config;
     this.apiClient = apiClient;
     this.logger = logger;
+    this.tools = tools;
+    this.handlerRegistrars = handlerRegistrars;
     this.handlers = this.buildHandlers();
   }
 
@@ -37,8 +39,11 @@ export class ToolRegistry {
     this.registerEntityCrudHandlers(handlers);
     this.registerScopedIssueHandlers(handlers);
     this.registerGlobalHandlers(handlers);
+    for (const registerHandlers of this.handlerRegistrars) {
+      registerHandlers.call(this, handlers);
+    }
 
-    for (const tool of TOOL_DEFINITIONS) {
+    for (const tool of this.tools) {
       if (tool.name === 'system_ping') continue;
       if (!handlers[tool.name]) {
         handlers[tool.name] = async () => textResponse(`${DEFAULT_TOOL_RESPONSE} (${tool.name})`);
