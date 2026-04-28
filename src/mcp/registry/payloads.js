@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 export const payloadMethods = {
   async createWrapped(resource, wrapperKey, payload) {
     const wrappedBody = { [wrapperKey]: payload };
@@ -21,6 +24,70 @@ export const payloadMethods = {
       }
       return this.apiClient.update(resource, id, wrappedBody);
     }
+  },
+
+  async patchWrapped(resource, id, wrapperKey, payload) {
+    const wrappedBody = { [wrapperKey]: payload };
+    try {
+      return await this.apiClient.patch(resource, id, payload);
+    } catch (error) {
+      if (!this.shouldRetryWrappedBody(error, wrapperKey)) {
+        throw error;
+      }
+      return this.apiClient.patch(resource, id, wrappedBody);
+    }
+  },
+
+  async createRequirement(args = {}) {
+    const { files, ...payloadArgs } = args;
+    const payload = this.buildRequirementPayload(payloadArgs);
+
+    if (this.hasFiles(files)) {
+      return this.apiClient.createMultipart(
+        'requirements',
+        await this.buildRequirementFormData(payload, files)
+      );
+    }
+
+    return this.createWrapped('requirements', 'requirement', payload);
+  },
+
+  async updateRequirement(requirementId, args = {}) {
+    const { files, ...payloadArgs } = args;
+    const payload = this.buildRequirementPayload(payloadArgs);
+
+    if (this.hasFiles(files)) {
+      return this.apiClient.patchMultipart(
+        'requirements',
+        requirementId,
+        await this.buildRequirementFormData(payload, files)
+      );
+    }
+
+    return this.patchWrapped('requirements', requirementId, 'requirement', payload);
+  },
+
+  hasFiles(files) {
+    return Array.isArray(files) && files.length > 0;
+  },
+
+  async buildRequirementFormData(payload, files = []) {
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined || value === null) {
+        return;
+      }
+      formData.append(key, typeof value === 'boolean' ? String(value) : value);
+    });
+
+    for (const filePath of files) {
+      const resolvedPath = path.resolve(String(filePath));
+      const data = await fs.readFile(resolvedPath);
+      formData.append('files', new Blob([data]), path.basename(resolvedPath));
+    }
+
+    return formData;
   },
 
   buildTestPayload({
@@ -260,6 +327,26 @@ export const payloadMethods = {
       test_ids: testIds,
       suite_ids: suiteIds,
       link,
+    };
+  },
+
+  buildRequirementPayload({
+    title,
+    source_type: sourceType,
+    description,
+    details,
+    active,
+    global,
+    confluence_url: confluenceUrl,
+  } = {}) {
+    return {
+      title,
+      source_type: sourceType,
+      description,
+      details,
+      active,
+      global,
+      confluence_url: confluenceUrl,
     };
   },
 };

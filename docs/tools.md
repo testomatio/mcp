@@ -15,7 +15,9 @@ Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server
 - [Snippet Management](#snippet-management)
 - [Label Management](#label-management)
 - [Tag Management](#tag-management)
+- [Milestone Management](#milestone-management)
 - [Issue Management](#issue-management)
+- [Requirement Management](#requirement-management)
 
 ---
 
@@ -1169,6 +1171,37 @@ Search by tag title (delegates to tags_get).
 
 ---
 
+## Milestone Management
+
+### milestones_list
+
+List milestones.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| type | string | No | Filter by milestone type title, e.g. `Sprint` or `Release` |
+| status | string | No | `created`, `active`, or `closed` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones`
+
+---
+
+### milestones_get
+
+Get a milestone by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| milestone_id | string | Yes | Milestone slug |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones/{id}`
+
+---
+
 ## Issue Management (Global)
 
 ### issues_list
@@ -1235,7 +1268,104 @@ Search issues (delegates to issues_list with filters).
 
 ---
 
+## Requirement Management
+
+### requirements_list
+
+List requirements with optional filters.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| source | string | No | Filter by source type: `jira`, `confluence`, `file`, `text` |
+| scope | string | No | Filter by scope: `global`, `attached`, `detached`, `without_suites` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/requirements`
+
+---
+
+### requirements_get
+
+Get a requirement by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+
+**API Endpoint:** `GET /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_create
+
+Create a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| title | string | Yes | Requirement title |
+| source_type | string | Yes | `jira`, `confluence`, `file`, or `text` |
+| description | string | No | Required for text requirements; must be at least 500 characters |
+| details | string | No | Extended details or raw content |
+| active | boolean | No | Active flag |
+| global | boolean | No | Project-level requirement flag |
+| confluence_url | string | No | Required for confluence requirements |
+| files | array | No | Local file paths to upload for file requirements |
+
+**API Endpoint:** `POST /api/v2/{project_id}/requirements`
+
+---
+
+### requirements_update
+
+Update a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+| title | string | No | New title |
+| description | string | No | Text requirement description |
+| details | string | No | Extended details or raw content |
+| active | boolean | No | Active flag |
+| global | boolean | No | Project-level requirement flag |
+| files | array | No | Local file paths to upload for file requirements |
+
+**API Endpoint:** `PATCH /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_delete
+
+Delete a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_search
+
+Search requirements by delegating to `requirements_list` with filters.
+
+**Parameters:** Same as `requirements_list`
+
+**Note:** File uploads use local file paths readable by the MCP server process.
+
+---
+
 ## Common Patterns
+
+### API Sessions
+
+The MCP server automatically starts a Testomat.io API session before the first mutating request (`POST`, `PUT`, or `DELETE`) and sends the returned session hash as `X-Session-Hash` on subsequent mutating requests. The session is stopped when the MCP server shuts down. Read-only `GET` requests do not start or use sessions.
 
 ### Link Parameter Structure
 
@@ -1253,7 +1383,7 @@ Most entities support linking via the `link` parameter:
 }
 ```
 
-`requirement` is only applicable to suites.
+`requirement` is only applicable to suites. Use the requirement ID (8-char) as the link value.
 
 ### Pagination
 
