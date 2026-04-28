@@ -103,3 +103,31 @@ export const RUNS_TQL_REFERENCE =
 export const RUNS_TQL_INPUT_DESCRIPTION =
   `TQL filter for runs. Documented variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
   `Examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
+
+export const ANALYTICS_TESTS_TQL_REFERENCE =
+  `TQL (Testomat.io Query Language) is a string expression passed in \`q\` to filter enterprise analytics test reports. ${COMMON_TQL_SYNTAX} ` +
+  'For analytics tools, the API parameter name is `q`, not `tql`. ' +
+  `Documented analytics test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
+
+export const ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION =
+  'TQL filter for analytics test reports. The API parameter name is `q`, not `tql`. ' +
+  `Documented variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
+
+export const ANALYTICS_STATS_TQL_REFERENCE =
+  `TQL (Testomat.io Query Language) is a string expression passed in \`q\` to filter enterprise analytics aggregated reports. ${COMMON_TQL_SYNTAX} ` +
+  'For analytics tools, the API parameter name is `q`, not `tql`. ' +
+  'According to the official Analytics docs, analytics queries are configured using supported query variables for two data sources: `Tests Variables` and `Runs Variables`. ' +
+  `Documented Tests Variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented Runs Variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented Tests examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented Runs examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  'Use Tests Variables for test-centric filters and Runs Variables for run-centric filters such as `plan`, `rungroup`, `env`, `finished_at`, or `has_test_tag`. Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
+
+export const ANALYTICS_STATS_TQL_INPUT_DESCRIPTION =
+  'TQL filter for analytics aggregated reports. The API parameter name is `q`, not `tql`. ' +
+  `Documented Tests Variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented Runs Variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}, ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;

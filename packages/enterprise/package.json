@@ -1,0 +1,41 @@
+{
+  "name": "@testomatio/mcp-enterprise",
+  "version": "2.0.1-beta",
+  "description": "Enterprise Model Context Protocol server for Testomat.io API with analytics tools",
+  "main": "index.js",
+  "bin": {
+    "testomatio-mcp-enterprise": "index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "prepack": "node ../../scripts/sync-enterprise-package.js"
+  },
+  "keywords": [
+    "testomatio",
+    "mcp",
+    "model-context-protocol",
+    "testing",
+    "api",
+    "analytics",
+    "enterprise"
+  ],
+  "author": "Testomatio Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/testomatio/mcp",
+    "directory": "packages/enterprise"
+  },
+  "dependencies": {
+    "@testomatio/mcp": "2.0.1-beta",
+    "commander": "^12.0.0"
+  },
+  "files": [
+    "index.js",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

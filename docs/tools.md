@@ -17,6 +17,7 @@ Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server
 - [Tag Management](#tag-management)
 - [Milestone Management](#milestone-management)
 - [Issue Management](#issue-management)
+- [Enterprise Analytics](#enterprise-analytics)
 - [Requirement Management](#requirement-management)
 
 ---
@@ -1400,3 +1401,81 @@ Two ways to link issues:
 ### Search
 
 Search operations typically delegate to list operations with filter parameters.
+
+---
+
+## Enterprise Analytics
+
+Analytics tools are available only in the separate `@testomatio/mcp-enterprise` package. They require the `api_analytics` subscription feature.
+
+### analytics_tests
+
+List tests matching an analytics report.
+
+Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| kind | string | Yes | One of: `flaky`, `slow`, `failing`, `evergreen`, `never-executed`, `skipped`, `failures`, `defects`, `issues` |
+| q | string | No | TQL filter, for example `priority == 'high' AND tag IN ['@smoke']` |
+| days | integer | No | Lookback window in days |
+| from | string | No | Inclusive start date in YYYY-MM-DD format |
+| to | string | No | Inclusive end date in YYYY-MM-DD format |
+| envs | string | No | Comma-separated execution environments |
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| min | number | No | Flaky rate lower bound, only for `flaky` |
+| max | number | No | Flaky rate upper bound, only for `flaky` |
+| threshold_ms | integer | No | Duration threshold, only for `slow` |
+| maturity_days | integer | No | Minimum test age, only for `never-executed` |
+| run | string | No | Scope to one run UID, only for `flaky` and `slow` |
+
+**Example:**
+```json
+{
+  "name": "analytics_tests",
+  "arguments": {
+    "kind": "flaky",
+    "q": "priority == 'high'",
+    "days": 30,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+**API Endpoint:** `GET /api/v2/{project_id}/analytics/tests/{kind}`
+
+---
+
+### analytics_stats
+
+Fetch an aggregated analytics report.
+
+Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| kind | string | Yes | One of: `project-summary`, `runs-summary`, `success-rate-by-date`, `automation-rate-by-date`, `testruns-by-date`, `priority-by-date` |
+| q | string | No | TQL filter, for example `tag IN ['@smoke']` |
+| days | integer | No | Lookback window in days |
+| from | string | No | Inclusive start date in YYYY-MM-DD format |
+| to | string | No | Inclusive end date in YYYY-MM-DD format |
+| envs | string | No | Comma-separated execution environments |
+
+**Example:**
+```json
+{
+  "name": "analytics_stats",
+  "arguments": {
+    "kind": "success-rate-by-date",
+    "q": "tag IN ['@smoke']",
+    "from": "2026-04-01",
+    "to": "2026-04-30"
+  }
+}
+```
+
+**API Endpoint:** `GET /api/v2/{project_id}/analytics/stats/{kind}`
