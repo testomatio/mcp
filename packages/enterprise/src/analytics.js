@@ -1,4 +1,10 @@
-import { TOOL_DEFINITIONS } from './load-core.js';
+import {
+  ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
+  ANALYTICS_STATS_TQL_REFERENCE,
+  ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION,
+  ANALYTICS_TESTS_TQL_REFERENCE,
+  TOOL_DEFINITIONS,
+} from './load-core.js';
 
 const ANALYTICS_TEST_KINDS = [
   'flaky',
@@ -22,11 +28,6 @@ const ANALYTICS_STATS_KINDS = [
 ];
 
 const commonAnalyticsProperties = {
-  q: {
-    type: 'string',
-    description:
-      "TQL filter for analytics data. API parameter name is `q`, for example: priority == 'high' AND tag IN ['@smoke'].",
-  },
   days: {
     type: 'integer',
     minimum: 1,
@@ -50,7 +51,7 @@ export const ANALYTICS_TOOLS = [
   {
     name: 'analytics_tests',
     description:
-      'Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. Use `q` as the TQL filter.',
+      `Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. ${ANALYTICS_TESTS_TQL_REFERENCE}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -58,6 +59,10 @@ export const ANALYTICS_TOOLS = [
           type: 'string',
           enum: ANALYTICS_TEST_KINDS,
           description: 'Test-level analytics report kind.',
+        },
+        q: {
+          type: 'string',
+          description: ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION,
         },
         ...commonAnalyticsProperties,
         page: {
@@ -103,7 +108,7 @@ export const ANALYTICS_TOOLS = [
   {
     name: 'analytics_stats',
     description:
-      'Enterprise analytics: fetch an aggregated analytics report (/api/v2/{project_id}/analytics/stats/{kind}). Requires api_analytics subscription feature. Use `q` as the TQL filter.',
+      `Enterprise analytics: fetch an aggregated analytics report (/api/v2/{project_id}/analytics/stats/{kind}). Requires api_analytics subscription feature. ${ANALYTICS_STATS_TQL_REFERENCE}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -111,6 +116,10 @@ export const ANALYTICS_TOOLS = [
           type: 'string',
           enum: ANALYTICS_STATS_KINDS,
           description: 'Aggregated analytics report kind.',
+        },
+        q: {
+          type: 'string',
+          description: ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
         },
         ...commonAnalyticsProperties,
       },

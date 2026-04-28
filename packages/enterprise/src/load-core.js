@@ -19,6 +19,10 @@ async function loadCoreModule() {
 const coreModule = await loadCoreModule();
 
 export const {
+  ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
+  ANALYTICS_STATS_TQL_REFERENCE,
+  ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION,
+  ANALYTICS_TESTS_TQL_REFERENCE,
   ConfigurationError,
   TOOL_DEFINITIONS,
   createApplication,
