@@ -1,7 +1,9 @@
+import { TESTS_TQL_INPUT_DESCRIPTION, TESTS_TQL_REFERENCE } from './tql-reference.js';
+
 export const TESTS_TOOLS = [
   {
     "name": "tests_list",
-    "description": "List tests (/api/v2/{project_id}/tests). Use `tql` first for search/filtering. Prefer known-safe expressions such as `priority == high` or `state == automated`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
+    "description": `List tests (/api/v2/{project_id}/tests). ${TESTS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -16,7 +18,7 @@ export const TESTS_TOOLS = [
         },
         "tql": {
           "type": "string",
-          "description": "Universal TQL filter for tests. Prefer known-safe expressions like `priority == high` or `state == automated`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
+          "description": TESTS_TQL_INPUT_DESCRIPTION
         }
       },
       "additionalProperties": false
@@ -207,7 +209,7 @@ export const TESTS_TOOLS = [
   },
   {
     "name": "tests_search",
-    "description": "Search tests using TQL (delegates to tests_list). Use `tql` first. Prefer known-safe expressions such as `priority == high` or `state == automated`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
+    "description": `Search tests using TQL (delegates to tests_list). ${TESTS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -222,7 +224,7 @@ export const TESTS_TOOLS = [
         },
         "tql": {
           "type": "string",
-          "description": "Universal TQL filter for tests. Prefer known-safe expressions like `priority == high` or `state == automated`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
+          "description": TESTS_TQL_INPUT_DESCRIPTION
         }
       },
       "additionalProperties": false

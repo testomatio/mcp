@@ -15,7 +15,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
 - **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
-- **Safe TQL Guidance** - prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not guess undocumented TQL syntax; fall back only when the API rejects the TQL expression or the needed field is not supported
+- **Built-In TQL Reference** - MCP tool descriptions include exact TQL fields, syntax, and examples for agents
 
 ## Quick Start
 
@@ -137,7 +137,7 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
 ```json
 {
   "name": "tests_list",
-  "arguments": { "page": 1, "per_page": 50, "tql": "priority == high" }
+  "arguments": { "page": 1, "per_page": 50, "tql": "priority == 'high'" }
 }
 ```
 
@@ -242,8 +242,8 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
 - **Search** - No dedicated `/search` endpoints. MCP search tools delegate to list tools; for `tests` and `runs` the MCP interface is intentionally simplified to `tql`, while other entities stay closer to Public API v2 filters
 - **TQL** - Use `tql` as the single search/filter input for `tests_list/tests_search` and `runs_list/runs_search`
-- **TQL Safety** - Prefer documented expressions like `priority == high`, `state == automated`, `size == 5`, `size > 1`; do not invent tag-style or free-text syntax unless it was verified
-- **Fallback Rule** - For `tests` and `runs`, try `tql` first. Use other tools or extra analysis only after the API rejects the TQL expression or the needed field is not supported by TQL
+- **TQL Syntax** - For user-facing syntax details and more examples, see the official TQL docs: https://docs.testomat.io/advanced/tql/
+- **TQL Scope** - The full agent-oriented whitelist of documented fields lives inside MCP tool descriptions for `tests` and `runs`
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
 - **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 

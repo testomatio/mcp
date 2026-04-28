@@ -1,7 +1,9 @@
+import { RUNS_TQL_INPUT_DESCRIPTION, RUNS_TQL_REFERENCE } from './tql-reference.js';
+
 export const RUNS_TOOLS = [
   {
     "name": "runs_list",
-    "description": "List runs (/api/v2/{project_id}/runs). Use `tql` first for search/filtering. Prefer known-safe expressions such as `size == 5` or `size > 1`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
+    "description": `List runs (/api/v2/{project_id}/runs). ${RUNS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -16,7 +18,7 @@ export const RUNS_TOOLS = [
         },
         "tql": {
           "type": "string",
-          "description": "Universal TQL filter for runs. Prefer known-safe expressions like `size == 5` or `size > 1`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
+          "description": RUNS_TQL_INPUT_DESCRIPTION
         }
       },
       "additionalProperties": false
@@ -264,7 +266,7 @@ export const RUNS_TOOLS = [
   },
   {
     "name": "runs_search",
-    "description": "Search runs using TQL (delegates to runs_list). Use `tql` first. Prefer known-safe expressions such as `size == 5` or `size > 1`. Do not guess undocumented TQL syntax. Fall back to other tools or analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.",
+    "description": `Search runs using TQL (delegates to runs_list). ${RUNS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -279,7 +281,7 @@ export const RUNS_TOOLS = [
         },
         "tql": {
           "type": "string",
-          "description": "Universal TQL filter for runs. Prefer known-safe expressions like `size == 5` or `size > 1`. Do not guess undocumented syntax. Fall back only if the API rejects the TQL expression or the needed field is not supported by TQL."
+          "description": RUNS_TQL_INPUT_DESCRIPTION
         }
       },
       "additionalProperties": false
