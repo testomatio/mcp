@@ -59,6 +59,10 @@ export const handlerMethods = {
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
     handlers.tags_search = async (args = {}) => this.asText(await this.searchTags(args));
 
+    handlers.milestones_list = async (args = {}) => this.asText(await this.listMilestones(args));
+    handlers.milestones_get = async ({ milestone_id: milestoneId }) =>
+      this.asText(await this.apiClient.get('milestones', milestoneId));
+
     handlers.issues_list = async (args = {}) => this.asText(await this.listIssues(args));
     handlers.issues_search = async (args = {}) => this.asText(await this.searchIssues(args));
     handlers.issues_create = async (args = {}) => this.asText(await this.createIssue(args));
@@ -84,6 +88,9 @@ export const handlerMethods = {
     if (spec.createMode === 'run') {
       return this.createRunWithFallback(args);
     }
+    if (spec.createMode === 'requirement') {
+      return this.createRequirement(args);
+    }
     const payload = this[spec.payloadBuilder](args);
     return this.createWrapped(spec.resource, spec.wrapperKey, payload);
   },
@@ -92,7 +99,13 @@ export const handlerMethods = {
     if (spec.updateMode === 'run') {
       return this.updateRunWithFallback(id, args);
     }
+    if (spec.updateMode === 'requirement') {
+      return this.updateRequirement(id, args);
+    }
     const payload = this[spec.payloadBuilder](args);
+    if (spec.updateMethod === 'patch') {
+      return this.patchWrapped(spec.resource, id, spec.wrapperKey, payload);
+    }
     return this.updateWrapped(spec.resource, id, spec.wrapperKey, payload);
   },
 };

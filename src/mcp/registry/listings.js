@@ -136,6 +136,18 @@ export const listingMethods = {
     return this.listPlans({ page, per_page: perPage, search_text: searchText, ...rest });
   },
 
+  listRequirements({ page, per_page: perPage, source, scope } = {}) {
+    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope });
+  },
+
+  searchRequirements({ page, per_page: perPage, source, scope } = {}) {
+    return this.listRequirements({ page, per_page: perPage, source, scope });
+  },
+
+  listMilestones({ page, per_page: perPage, type, status } = {}) {
+    return this.apiClient.list('milestones', { page, per_page: perPage, type, status });
+  },
+
   listTags() {
     return this.apiClient.list('tags');
   },

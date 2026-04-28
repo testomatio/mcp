@@ -1,5 +1,9 @@
 import { ApiError } from '../core/errors.js';
 
+function isFormData(body) {
+  return typeof FormData !== 'undefined' && body instanceof FormData;
+}
+
 function buildUrl(baseUrl, path, query = {}) {
   const url = new URL(path, `${baseUrl}/`);
 
@@ -26,12 +30,13 @@ export class HttpClient {
     this.logger = logger;
   }
 
-  async request(method, path, { query, body } = {}) {
+  async request(method, path, { query, body, headers: requestHeaders = {} } = {}) {
     const url = buildUrl(this.baseUrl, path, query);
 
     const headers = {
       Accept: 'application/json',
       Authorization: `Bearer ${this.token}`,
+      ...requestHeaders,
     };
 
     const options = {
@@ -40,8 +45,12 @@ export class HttpClient {
     };
 
     if (body !== undefined) {
-      headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
+      if (isFormData(body)) {
+        options.body = body;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+      }
     }
 
     this.logger.debug('HTTP request', { method, url });

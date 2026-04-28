@@ -16,6 +16,7 @@ export class TestomatioMCPServer {
     registryOptions = {},
   }) {
     this.config = config;
+    this.apiClient = apiClient;
     this.logger = logger || createLogger();
     this.tools = tools;
     this.toolRegistry = new ToolRegistry({
@@ -25,6 +26,7 @@ export class TestomatioMCPServer {
       tools,
       ...registryOptions,
     });
+    this.cleanupStarted = false;
 
     this.server = new Server(
       {
@@ -58,6 +60,33 @@ export class TestomatioMCPServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
+    this.installSessionCleanup();
     this.logger.info('Testomatio MCP server started');
+  }
+
+  installSessionCleanup() {
+    const cleanup = async () => {
+      if (this.cleanupStarted) {
+        return;
+      }
+
+      this.cleanupStarted = true;
+      await this.apiClient?.stopSession?.();
+    };
+
+    this.server.onclose = () => {
+      void cleanup();
+    };
+
+    process.once('beforeExit', () => {
+      void cleanup();
+    });
+
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+      process.once(signal, async () => {
+        await cleanup();
+        process.exit(0);
+      });
+    }
   }
 }

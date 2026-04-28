@@ -15,8 +15,10 @@ Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server
 - [Snippet Management](#snippet-management)
 - [Label Management](#label-management)
 - [Tag Management](#tag-management)
+- [Milestone Management](#milestone-management)
 - [Issue Management](#issue-management)
 - [Enterprise Analytics](#enterprise-analytics)
+- [Requirement Management](#requirement-management)
 
 ---
 
@@ -48,17 +50,17 @@ Check server status and active configuration.
 
 List all tests in the project with filtering.
 
-Use `tql` first for search/filtering.
-Prefer known-safe expressions such as `priority == high` and `state == automated`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+Use `tql` for search/filtering.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax such as `==`, `!=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
+For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number (min: 1) |
 | per_page | integer | No | Items per page (min: 1, max: 100) |
-| tql | string | No | Universal TQL filter for tests. Safe examples: `priority == high`, `state == automated` |
+| tql | string | No | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
 
 **Example:**
 ```json
@@ -67,7 +69,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
   "arguments": {
     "page": 1,
     "per_page": 50,
-    "tql": "priority == high"
+    "tql": "priority == 'high'"
   }
 }
 ```
@@ -211,10 +213,8 @@ Delete a test.
 
 Search tests (delegates to `tests_list`).
 
-Use `tql` first.
-Prefer known-safe expressions such as `priority == high` and `state == automated`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:** Same as `tests_list`
 
@@ -223,7 +223,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
 {
   "name": "tests_search",
   "arguments": {
-    "tql": "state == automated",
+    "tql": "state == 'automated'",
     "page": 1,
     "per_page": 20
   }
@@ -433,17 +433,17 @@ Same pattern as test issue operations, but for suites.
 
 List all test runs.
 
-Use `tql` first for search/filtering.
-Prefer known-safe expressions such as `size == 5` and `size > 1`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+Use `tql` for search/filtering.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax such as `==`, `!=`, `>`, `<`, `>=`, `<=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
+For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| tql | string | No | Universal TQL filter for runs. Safe examples: `size == 5`, `size > 1` |
+| tql | string | No | TQL filter for runs. Examples: `title % 'Manual tests'`, `plan == '{PLAN_ID}'`, `finished and with_defect` |
 
 **Example:**
 ```json
@@ -452,7 +452,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
   "arguments": {
     "page": 1,
     "per_page": 10,
-    "tql": "size > 1"
+    "tql": "failed and has_test_tag == 'regression'"
   }
 }
 ```
@@ -575,10 +575,22 @@ Delete a run.
 
 Search runs (delegates to `runs_list`).
 
-Use `tql` first.
-Prefer known-safe expressions such as `size == 5` and `size > 1`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
+
+**Parameters:** Same as `runs_list`
+
+**Example:**
+```json
+{
+  "name": "runs_search",
+  "arguments": {
+    "tql": "finished and with_defect",
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
 
 ---
 
@@ -1160,6 +1172,37 @@ Search by tag title (delegates to tags_get).
 
 ---
 
+## Milestone Management
+
+### milestones_list
+
+List milestones.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| type | string | No | Filter by milestone type title, e.g. `Sprint` or `Release` |
+| status | string | No | `created`, `active`, or `closed` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones`
+
+---
+
+### milestones_get
+
+Get a milestone by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| milestone_id | string | Yes | Milestone slug |
+
+**API Endpoint:** `GET /api/v2/{project_id}/milestones/{id}`
+
+---
+
 ## Issue Management (Global)
 
 ### issues_list
@@ -1226,7 +1269,104 @@ Search issues (delegates to issues_list with filters).
 
 ---
 
+## Requirement Management
+
+### requirements_list
+
+List requirements with optional filters.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page |
+| source | string | No | Filter by source type: `jira`, `confluence`, `file`, `text` |
+| scope | string | No | Filter by scope: `global`, `attached`, `detached`, `without_suites` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/requirements`
+
+---
+
+### requirements_get
+
+Get a requirement by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+
+**API Endpoint:** `GET /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_create
+
+Create a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| title | string | Yes | Requirement title |
+| source_type | string | Yes | `jira`, `confluence`, `file`, or `text` |
+| description | string | No | Required for text requirements; must be at least 500 characters |
+| details | string | No | Extended details or raw content |
+| active | boolean | No | Active flag |
+| global | boolean | No | Project-level requirement flag |
+| confluence_url | string | No | Required for confluence requirements |
+| files | array | No | Local file paths to upload for file requirements |
+
+**API Endpoint:** `POST /api/v2/{project_id}/requirements`
+
+---
+
+### requirements_update
+
+Update a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+| title | string | No | New title |
+| description | string | No | Text requirement description |
+| details | string | No | Extended details or raw content |
+| active | boolean | No | Active flag |
+| global | boolean | No | Project-level requirement flag |
+| files | array | No | Local file paths to upload for file requirements |
+
+**API Endpoint:** `PATCH /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_delete
+
+Delete a requirement.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| requirement_id | string | Yes | Requirement ID (8-char) |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/requirements/{id}`
+
+---
+
+### requirements_search
+
+Search requirements by delegating to `requirements_list` with filters.
+
+**Parameters:** Same as `requirements_list`
+
+**Note:** File uploads use local file paths readable by the MCP server process.
+
+---
+
 ## Common Patterns
+
+### API Sessions
+
+The MCP server automatically starts a Testomat.io API session before the first mutating request (`POST`, `PUT`, or `DELETE`) and sends the returned session hash as `X-Session-Hash` on subsequent mutating requests. The session is stopped when the MCP server shuts down. Read-only `GET` requests do not start or use sessions.
 
 ### Link Parameter Structure
 
@@ -1244,7 +1384,7 @@ Most entities support linking via the `link` parameter:
 }
 ```
 
-`requirement` is only applicable to suites.
+`requirement` is only applicable to suites. Use the requirement ID (8-char) as the link value.
 
 ### Pagination
 
