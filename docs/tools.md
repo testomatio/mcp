@@ -47,17 +47,17 @@ Check server status and active configuration.
 
 List all tests in the project with filtering.
 
-Use `tql` first for search/filtering.
-Prefer known-safe expressions such as `priority == high` and `state == automated`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+Use `tql` for search/filtering.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax such as `==`, `!=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
+For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number (min: 1) |
 | per_page | integer | No | Items per page (min: 1, max: 100) |
-| tql | string | No | Universal TQL filter for tests. Safe examples: `priority == high`, `state == automated` |
+| tql | string | No | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
 
 **Example:**
 ```json
@@ -66,7 +66,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
   "arguments": {
     "page": 1,
     "per_page": 50,
-    "tql": "priority == high"
+    "tql": "priority == 'high'"
   }
 }
 ```
@@ -210,10 +210,8 @@ Delete a test.
 
 Search tests (delegates to `tests_list`).
 
-Use `tql` first.
-Prefer known-safe expressions such as `priority == high` and `state == automated`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:** Same as `tests_list`
 
@@ -222,7 +220,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
 {
   "name": "tests_search",
   "arguments": {
-    "tql": "state == automated",
+    "tql": "state == 'automated'",
     "page": 1,
     "per_page": 20
   }
@@ -432,17 +430,17 @@ Same pattern as test issue operations, but for suites.
 
 List all test runs.
 
-Use `tql` first for search/filtering.
-Prefer known-safe expressions such as `size == 5` and `size > 1`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+Use `tql` for search/filtering.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax such as `==`, `!=`, `>`, `<`, `>=`, `<=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
+For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| tql | string | No | Universal TQL filter for runs. Safe examples: `size == 5`, `size > 1` |
+| tql | string | No | TQL filter for runs. Examples: `title % 'Manual tests'`, `plan == '{PLAN_ID}'`, `finished and with_defect` |
 
 **Example:**
 ```json
@@ -451,7 +449,7 @@ Fall back to other tools or extra analysis only if the API rejects the TQL expre
   "arguments": {
     "page": 1,
     "per_page": 10,
-    "tql": "size > 1"
+    "tql": "failed and has_test_tag == 'regression'"
   }
 }
 ```
@@ -574,10 +572,22 @@ Delete a run.
 
 Search runs (delegates to `runs_list`).
 
-Use `tql` first.
-Prefer known-safe expressions such as `size == 5` and `size > 1`.
-Do not guess undocumented TQL syntax.
-Fall back to other tools or extra analysis only if the API rejects the TQL expression or the needed field is not supported by TQL.
+TQL means `Testomat.io Query Language`.
+Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
+
+**Parameters:** Same as `runs_list`
+
+**Example:**
+```json
+{
+  "name": "runs_search",
+  "arguments": {
+    "tql": "finished and with_defect",
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
 
 ---
 
