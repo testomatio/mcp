@@ -60,14 +60,27 @@ export class TestomatioApiClient {
   }
 
   async mutate(method, path, options = {}) {
-    const sessionHash = await this.ensureSession();
-    return this.http.request(method, path, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'X-Session-Hash': sessionHash,
-      },
-    });
+    const runRequest = async () => {
+      const sessionHash = await this.ensureSession();
+      return this.http.request(method, path, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'X-Session-Hash': sessionHash,
+        },
+      });
+    };
+
+    try {
+      return await runRequest();
+    } catch (error) {
+      if (!this.shouldRefreshSession(error)) {
+        throw error;
+      }
+
+      await this.refreshSession();
+      return runRequest();
+    }
   }
 
   async ensureSession() {
@@ -123,5 +136,14 @@ export class TestomatioApiClient {
         });
       }
     }
+  }
+
+  shouldRefreshSession(error) {
+    return error?.status === 403 && Boolean(this.sessionHash);
+  }
+
+  async refreshSession() {
+    this.sessionHash = null;
+    return this.ensureSession();
   }
 }

@@ -1,3 +1,5 @@
+import { PLANS_TQL_INPUT_DESCRIPTION, PLANS_TQL_REFERENCE } from './tql-reference.js';
+
 export const PLANS_TOOLS = [
   {
     "name": "plans_list",
@@ -56,7 +58,7 @@ export const PLANS_TOOLS = [
   },
   {
     "name": "plans_create",
-    "description": "Create plan (/api/v2/{project_id}/plans)",
+    "description": `Create plan (/api/v2/{project_id}/plans). ${PLANS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -93,6 +95,10 @@ export const PLANS_TOOLS = [
             "type": "string"
           },
           "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
+        },
+        "tql": {
+          "type": "string",
+          "description": PLANS_TQL_INPUT_DESCRIPTION
         },
         "link": {
           "type": "array",
@@ -138,7 +144,7 @@ export const PLANS_TOOLS = [
   },
   {
     "name": "plans_update",
-    "description": "Update plan (/api/v2/{project_id}/plans/{id})",
+    "description": `Update plan (/api/v2/{project_id}/plans/{id}). ${PLANS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -178,6 +184,10 @@ export const PLANS_TOOLS = [
             "type": "string"
           },
           "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
+        },
+        "tql": {
+          "type": "string",
+          "description": PLANS_TQL_INPUT_DESCRIPTION
         },
         "link": {
           "type": "array",

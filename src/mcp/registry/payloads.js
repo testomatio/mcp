@@ -316,6 +316,7 @@ export const payloadMethods = {
     as_manual: asManual,
     test_ids: testIds,
     suite_ids: suiteIds,
+    tql,
     link,
   } = {}) {
     return {
@@ -326,6 +327,7 @@ export const payloadMethods = {
       as_manual: asManual,
       test_ids: testIds,
       suite_ids: suiteIds,
+      tql,
       link,
     };
   },

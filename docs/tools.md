@@ -775,6 +775,7 @@ Create a new test plan.
 | as_manual | boolean | No | Treat as manual |
 | test_ids | array | No | List of test IDs (8-char) to include |
 | suite_ids | array | No | List of suite IDs (8-char) to include |
+| tql | string | No | TQL query expression to filter tests for the plan |
 | link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `POST /api/v2/{project_id}/plans`
@@ -796,6 +797,7 @@ Update an existing plan.
 | as_manual | boolean | No | Manual flag |
 | test_ids | array | No | List of test IDs (8-char) to include |
 | suite_ids | array | No | List of suite IDs (8-char) to include |
+| tql | string | No | TQL query expression to filter tests for the plan |
 | link | array | No | Link updates for labels, tags, milestones, issues, or jira |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/plans/{id}`
