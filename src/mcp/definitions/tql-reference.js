@@ -15,6 +15,8 @@ const TESTS_TQL_VARIABLES = [
   'assigned_to',
   'suite',
   'test',
+  'shared',
+  'milestone',
 ];
 
 const RUNS_TQL_VARIABLES = [
@@ -57,16 +59,20 @@ const RUNS_TQL_VARIABLES = [
   'updated_at',
   'launched_at',
   'finished_at',
+  'milestone',
 ];
 
 const TESTS_TQL_EXAMPLES = [
   "priority == 'high'",
+  "priority >= 'normal'",
   "state == 'automated'",
   "tag in ['smoke', 'stage1'] and status == 'failed'",
   "suite % 'Checkout'",
   "test % 'User login'",
+  "custom_status % 'issue'",
   "created_at < 1.month_ago",
   "jira in ['JST-1', 'JST-2']",
+  "milestone == 'Sprint 1'",
 ];
 
 const RUNS_TQL_EXAMPLES = [
@@ -81,7 +87,7 @@ const RUNS_TQL_EXAMPLES = [
 ];
 
 const COMMON_TQL_SYNTAX =
-  "Supported syntax includes `==`, `!=`, `>`, `<`, `>=`, `<=`, `in [...]`, `%` for partial text match, `and`, `or`, `not`, and parentheses for grouping. Use quotes for string values, for example `state == 'automated'`.";
+  "Supported syntax includes logical operators `and`, `or`, `not`, equality operators `==` and `!=`, list membership `in [...]`, `%` for partial text match on supported text fields, and parentheses for grouping. Ordered comparisons `>`, `<`, `>=`, `<=` are for ordered fields such as `priority`, dates, and numeric counters/durations. Use quotes for string values, for example `state == 'automated'`.";
 
 export const TESTS_TQL_REFERENCE =
   `TQL (Testomat.io Query Language) is a string expression passed in \`tql\` to filter tests. ${COMMON_TQL_SYNTAX} ` +
@@ -103,6 +109,17 @@ export const RUNS_TQL_REFERENCE =
 export const RUNS_TQL_INPUT_DESCRIPTION =
   `TQL filter for runs. Documented variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
   `Examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
+
+export const PLANS_TQL_REFERENCE =
+  `TQL (Testomat.io Query Language) is a string expression passed in \`tql\` to select tests included in a plan. ${COMMON_TQL_SYNTAX} ` +
+  `Plan TQL uses documented test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Documented examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  'Use `tql` when you want the API to resolve matching tests automatically instead of sending explicit `test_ids`. Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
+
+export const PLANS_TQL_INPUT_DESCRIPTION =
+  'TQL filter for selecting tests included in the plan. ' +
+  `Documented test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
+  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
 
 export const ANALYTICS_TESTS_TQL_REFERENCE =
   `TQL (Testomat.io Query Language) is a string expression passed in \`q\` to filter enterprise analytics test reports. ${COMMON_TQL_SYNTAX} ` +
