@@ -62,7 +62,8 @@ export const RUNGROUPS_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         }
       },
       "required": [
@@ -102,7 +103,8 @@ export const RUNGROUPS_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         }
       },
       "required": [

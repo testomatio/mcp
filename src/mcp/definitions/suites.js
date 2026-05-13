@@ -78,7 +78,8 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         },
         "link": {
           "type": "array",
@@ -154,7 +155,8 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         },
         "link": {
           "type": "array",
