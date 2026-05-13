@@ -1,6 +1,6 @@
 {
   "name": "@testomatio/mcp-enterprise",
-  "version": "2.1.0",
+  "version": "2.1.1-beta",
   "description": "Enterprise Model Context Protocol server for Testomat.io API with analytics tools",
   "main": "index.js",
   "bin": {
@@ -27,7 +27,7 @@
     "directory": "packages/enterprise"
   },
   "dependencies": {
-    "@testomatio/mcp": "2.1.0",
+    "@testomatio/mcp": "2.1.1-beta",
     "commander": "^12.0.0"
   },
   "files": [
