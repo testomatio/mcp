@@ -3,6 +3,7 @@ import { ApiError, NotImplementedToolError } from '../core/errors.js';
 import { textResponse } from '../helpers/mcp-response.js';
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
 import { handlerMethods } from './registry/handlers.js';
+import { attachmentMethods } from './registry/attachments.js';
 import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
@@ -38,6 +39,7 @@ export class ToolRegistry {
 
     this.registerEntityCrudHandlers(handlers);
     this.registerScopedIssueHandlers(handlers);
+    this.registerScopedAttachmentHandlers(handlers);
     this.registerGlobalHandlers(handlers);
     for (const registerHandlers of this.handlerRegistrars) {
       registerHandlers.call(this, handlers);
@@ -80,6 +82,7 @@ export class ToolRegistry {
 Object.assign(
   ToolRegistry.prototype,
   handlerMethods,
+  attachmentMethods,
   listingMethods,
   issueMethods,
   payloadMethods

@@ -12,6 +12,7 @@ import { MILESTONES_TOOLS } from './definitions/milestones.js';
 import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
 import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
+import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
 
 export const TOOL_DEFINITIONS = [
   ...SYSTEM_TOOLS,
@@ -26,6 +27,7 @@ export const TOOL_DEFINITIONS = [
   ...TAGS_TOOLS,
   ...MILESTONES_TOOLS,
   ...ISSUES_TOOLS,
+  ...ATTACHMENT_TOOLS,
   ...PLANS_TOOLS,
   ...REQUIREMENTS_TOOLS,
 ];
