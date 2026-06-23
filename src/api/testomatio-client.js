@@ -31,8 +31,8 @@ export class TestomatioApiClient {
     return this.mutate('POST', this.buildPath(resource), { body });
   }
 
-  async createMultipart(resource, formData) {
-    return this.mutate('POST', this.buildPath(resource), { body: formData });
+  async createMultipart(resource, formData, query = {}) {
+    return this.mutate('POST', this.buildPath(resource), { query, body: formData });
   }
 
   async createWithQuery(resource, { query = {}, body = {} } = {}) {

@@ -1,4 +1,5 @@
 import { ENTITY_CRUD_CONFIGS } from '../configs/entity-crud-config.js';
+import { ATTACHMENT_SCOPED_TOOL_CONFIGS } from '../configs/attachments-config.js';
 import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
 
 export const handlerMethods = {
@@ -51,6 +52,36 @@ export const handlerMethods = {
 
       handlers[`${toolPrefix}_issues_unlink`] = async ({ issue_id: issueId, type }) =>
         this.asText(await this.apiClient.delete('issues', issueId, { type }));
+    }
+  },
+
+  registerScopedAttachmentHandlers(handlers) {
+    for (const { toolPrefix, resourceKey } of ATTACHMENT_SCOPED_TOOL_CONFIGS) {
+      handlers[`${toolPrefix}_attachments_list`] = async (args = {}) =>
+        this.asText(
+          await this.listAttachmentsForKey({
+            resourceKey,
+            resourceId: this.pickRequiredArg(args, resourceKey),
+          })
+        );
+
+      handlers[`${toolPrefix}_attachments_upload`] = async (args = {}) =>
+        this.asText(
+          await this.uploadAttachmentForKey({
+            resourceKey,
+            resourceId: this.pickRequiredArg(args, resourceKey),
+            filePath: this.pickRequiredArg(args, 'file_path'),
+          })
+        );
+
+      handlers[`${toolPrefix}_attachments_delete`] = async (args = {}) =>
+        this.asText(
+          await this.deleteAttachmentForKey({
+            resourceKey,
+            resourceId: this.pickRequiredArg(args, resourceKey),
+            attachmentId: this.pickRequiredArg(args, 'attachment_id'),
+          })
+        );
     }
   },
 

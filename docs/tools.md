@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server.
+Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
@@ -16,9 +16,10 @@ Complete reference for all 80+ MCP tools available in the Testomat.io MCP Server
 - [Label Management](#label-management)
 - [Tag Management](#tag-management)
 - [Milestone Management](#milestone-management)
-- [Issue Management](#issue-management)
-- [Enterprise Analytics](#enterprise-analytics)
+- [Issue Management](#issue-management-global)
+- [Attachment Management](#attachment-management)
 - [Requirement Management](#requirement-management)
+- [Enterprise Analytics](#enterprise-analytics)
 
 ---
 
@@ -1271,6 +1272,133 @@ Search issues (delegates to issues_list with filters).
 
 ---
 
+## Attachment Management
+
+Attachments are scoped to tests, suites, and testruns. Each operation requires exactly one entity ID through the matching scoped tool.
+
+### tests_attachments_list
+
+List attachments for a test.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| test_id | string | Yes | Test ID |
+
+**API Endpoint:** `GET /api/v2/{project_id}/attachments?test_id=...`
+
+---
+
+### tests_attachments_upload
+
+Upload one attachment to a test.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| test_id | string | Yes | Test ID |
+| file_path | string | Yes | Local path to the file readable by the MCP server |
+
+**API Endpoint:** `POST /api/v2/{project_id}/attachments?test_id=...`
+
+---
+
+### tests_attachments_delete
+
+Delete an attachment from a test.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| test_id | string | Yes | Test ID |
+| attachment_id | string | Yes | Attachment ID |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?test_id=...`
+
+---
+
+### suites_attachments_list
+
+List attachments for a suite.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| suite_id | string | Yes | Suite ID |
+
+**API Endpoint:** `GET /api/v2/{project_id}/attachments?suite_id=...`
+
+---
+
+### suites_attachments_upload
+
+Upload one attachment to a suite.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| suite_id | string | Yes | Suite ID |
+| file_path | string | Yes | Local path to the file readable by the MCP server |
+
+**API Endpoint:** `POST /api/v2/{project_id}/attachments?suite_id=...`
+
+---
+
+### suites_attachments_delete
+
+Delete an attachment from a suite.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| suite_id | string | Yes | Suite ID |
+| attachment_id | string | Yes | Attachment ID |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?suite_id=...`
+
+---
+
+### testruns_attachments_list
+
+List attachments for a testrun.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| testrun_id | integer | Yes | TestRun ID |
+
+**API Endpoint:** `GET /api/v2/{project_id}/attachments?testrun_id=...`
+
+---
+
+### testruns_attachments_upload
+
+Upload one attachment to a testrun.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| testrun_id | integer | Yes | TestRun ID |
+| file_path | string | Yes | Local path to the file readable by the MCP server |
+
+**API Endpoint:** `POST /api/v2/{project_id}/attachments?testrun_id=...`
+
+---
+
+### testruns_attachments_delete
+
+Delete an attachment from a testrun.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| testrun_id | integer | Yes | TestRun ID |
+| attachment_id | string | Yes | Attachment ID |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?testrun_id=...`
+
+---
+
 ## Requirement Management
 
 ### requirements_list
@@ -1399,6 +1527,10 @@ All list operations support:
 Two ways to link issues:
 1. **Generic issues** - via `url` parameter
 2. **Jira issues** - via `jira_id` parameter
+
+### Attachments
+
+Attachment uploads use local file paths readable by the MCP server process and send one multipart/form-data field named `file`. Multiple files per request are not supported by the Public API v2 endpoint.
 
 ### Search
 

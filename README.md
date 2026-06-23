@@ -8,6 +8,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
   - Tags and Milestones (read-only access)
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
+  - Attachments (scoped helpers for tests/suites/testruns)
   - Requirements (including file uploads from local file paths)
 - **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding
 - **Issue Linking** - link/unlink issues to any resource
@@ -178,6 +179,17 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
 }
 ```
 
+**Upload attachment to a test:**
+```json
+{
+  "name": "tests_attachments_upload",
+  "arguments": {
+    "test_id": "123",
+    "file_path": "/path/to/screenshot.png"
+  }
+}
+```
+
 ## Documentation
 
 Complete tool reference: [docs/tools.md](./docs/tools.md)
@@ -247,6 +259,7 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 - **TQL Syntax** - For user-facing syntax details and more examples, see the official TQL docs: https://docs.testomat.io/advanced/tql/
 - **TQL Scope** - The full agent-oriented whitelist of documented fields lives inside MCP tool descriptions for `tests` and `runs`
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
+- **Attachments** - Scoped helpers available for tests, suites, and testruns: `{entity}_attachments_list/upload/delete`. Upload sends one local file path as multipart field `file`.
 - **Enterprise Package** - Analytics tools are intentionally exposed only by `@testomatio/mcp-enterprise`, not by the standard `@testomatio/mcp` package
 - **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 
