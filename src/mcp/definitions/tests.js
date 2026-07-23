@@ -59,7 +59,14 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "priority": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -135,7 +142,14 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "priority": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
         },
         "assigned_to": {
           "type": "string"

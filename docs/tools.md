@@ -113,7 +113,7 @@ Create a new test.
 | suite_id | string | Yes | Parent suite ID |
 | description | string | No | Test description |
 | emoji | string | No | Test emoji icon |
-| priority | string | No | Test priority |
+| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code/automation reference |
 | state | string | No | Test state |
@@ -164,7 +164,7 @@ Update an existing test.
 | suite_id | string | No | New parent suite ID |
 | description | string | No | Updated description |
 | emoji | string | No | Test emoji |
-| priority | string | No | Test priority |
+| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code |
 | state | string | No | Test state |
@@ -619,7 +619,7 @@ List test runs (individual test results within a run).
 | filter_status | string | No | `passed`, `failed`, `skipped`, `pending` |
 | filter_kind | string | No | `manual` or `automated` |
 | filter_user | integer\|string | No | Assigned user ID |
-| filter_priority | string | No | Test priority |
+| filter_priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | filter_substatus | string | No | Custom substatus filter |
 | filter_search | string | No | Text search across test title |
 | filter_message | boolean | No | Only testruns with a message |
@@ -657,7 +657,7 @@ Create a new test run result.
 |------|------|----------|-------------|
 | run_id | string | Yes | Parent run ID |
 | test_id | string | No | Test ID |
-| status | string | No | Test status (passed, failed, skipped, etc.) |
+| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
 | message | string | No | Status message |
 | run_time | number | No | Execution time in seconds |
 | assigned_to | string | No | Assignee ID |
@@ -691,7 +691,7 @@ Update a test run.
 | testrun_id | integer | Yes | Test run ID |
 | run_id | string | No | Parent run ID |
 | test_id | string | No | Test ID |
-| status | string | No | Test status |
+| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
 | message | string | No | Status message |
 | run_time | number | No | Execution time |
 | assigned_to | string | No | Assignee ID |
