@@ -4,6 +4,7 @@ import { ConfigurationError } from './core/errors.js';
 import { createLogger } from './core/logger.js';
 import { TestomatioMCPServer } from './mcp/server.js';
 import { TOOL_DEFINITIONS } from './mcp/tool-definitions.js';
+import { slimList, withListOptions } from './mcp/list-projection.js';
 import {
   ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
   ANALYTICS_STATS_TQL_REFERENCE,
@@ -19,6 +20,8 @@ export {
   ANALYTICS_TESTS_TQL_REFERENCE,
   ConfigurationError,
   TOOL_DEFINITIONS,
+  slimList,
+  withListOptions,
 };
 
 export function createApplication(argvOptions = {}, serverOptions = {}) {

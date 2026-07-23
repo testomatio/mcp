@@ -4,6 +4,8 @@ import {
   ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION,
   ANALYTICS_TESTS_TQL_REFERENCE,
   TOOL_DEFINITIONS,
+  slimList,
+  withListOptions,
 } from './load-core.js';
 
 const ANALYTICS_TEST_KINDS = [
@@ -47,7 +49,7 @@ const commonAnalyticsProperties = {
   },
 };
 
-export const ANALYTICS_TOOLS = [
+export const ANALYTICS_TOOLS = withListOptions([
   {
     name: 'analytics_tests',
     description:
@@ -127,7 +129,7 @@ export const ANALYTICS_TOOLS = [
       additionalProperties: false,
     },
   },
-];
+], { extraNames: ['analytics_tests'] });
 
 export const ENTERPRISE_TOOL_DEFINITIONS = [
   ...TOOL_DEFINITIONS,
@@ -135,7 +137,13 @@ export const ENTERPRISE_TOOL_DEFINITIONS = [
 ];
 
 export function registerAnalyticsHandlers(handlers) {
-  handlers.analytics_tests = async (args = {}) => this.asText(await analyticsTests.call(this, args));
+  handlers.analytics_tests = async (args = {}) =>
+    this.asText(
+      slimList(await analyticsTests.call(this, args), {
+        verbose: args.verbose,
+        fields: args.fields,
+      })
+    );
   handlers.analytics_stats = async (args = {}) => this.asText(await analyticsStats.call(this, args));
 }
 
