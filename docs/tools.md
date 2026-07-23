@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
+Complete reference for all 83 MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
@@ -210,29 +210,6 @@ Delete a test.
 
 ---
 
-### tests_search
-
-Search tests (delegates to `tests_list`).
-
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
-
-**Parameters:** Same as `tests_list`
-
-**Example:**
-```json
-{
-  "name": "tests_search",
-  "arguments": {
-    "tql": "state == 'automated'",
-    "page": 1,
-    "per_page": 20
-  }
-}
-```
-
----
-
 ### tests_issues_list
 
 List linked issues for a test.
@@ -412,14 +389,6 @@ Delete a suite.
 
 ---
 
-### suites_search
-
-Search suites by title (delegates to suites_list with search_text).
-
-**Parameters:** Similar to `suites_list`
-
----
-
 ### Suite Issue Operations
 
 **suites_issues_list**, **suites_issues_link**, **suites_issues_unlink**
@@ -572,29 +541,6 @@ Delete a run.
 
 ---
 
-### runs_search
-
-Search runs (delegates to `runs_list`).
-
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
-
-**Parameters:** Same as `runs_list`
-
-**Example:**
-```json
-{
-  "name": "runs_search",
-  "arguments": {
-    "tql": "finished and with_defect",
-    "page": 1,
-    "per_page": 20
-  }
-}
-```
-
----
-
 ### Run Issue Operations
 
 **runs_issues_list**, **runs_issues_link**, **runs_issues_unlink**
@@ -715,12 +661,6 @@ Delete a test run.
 
 ---
 
-### testruns_search
-
-Search testruns (delegates to `testruns_list` with the same filters).
-
----
-
 ### TestRun Issue Operations
 
 **testruns_issues_list**, **testruns_issues_link**, **testruns_issues_unlink**
@@ -815,12 +755,6 @@ Delete a plan.
 | plan_id | string | Yes | Plan ID |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/plans/{id}`
-
----
-
-### plans_search
-
-Search plans (delegates to `plans_list` with the same filters).
 
 ---
 
@@ -1264,14 +1198,6 @@ Unlink an issue.
 
 ---
 
-### issues_search
-
-Search issues (delegates to issues_list with filters).
-
-**Parameters:** Same as `issues_list`
-
----
-
 ## Attachment Management
 
 Attachments are scoped to tests, suites, and testruns. Each operation requires exactly one entity ID through the matching scoped tool.
@@ -1479,16 +1405,6 @@ Delete a requirement.
 | requirement_id | string | Yes | Requirement ID (8-char) |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/requirements/{id}`
-
----
-
-### requirements_search
-
-Search requirements by delegating to `requirements_list` with filters.
-
-**Parameters:** Same as `requirements_list`
-
-**Note:** File uploads use local file paths readable by the MCP server process.
 
 ---
 

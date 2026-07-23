@@ -11,10 +11,6 @@ export const issueMethods = {
     });
   },
 
-  searchIssues(args = {}) {
-    return this.listIssues(args);
-  },
-
   createIssue({ url, jira_id: jiraId, ...resourceQuery } = {}) {
     this.validateIssueResourceQuery(resourceQuery, { allowEmpty: false, allowMany: false });
     return this.linkIssueToResource({
