@@ -4,6 +4,7 @@ Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
+- [Tool Surface Profiles](#tool-surface-profiles)
 - [System Tools](#system-tools)
 - [Test Management](#test-management)
 - [Suite Management](#suite-management)
@@ -20,6 +21,24 @@ Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
 - [Attachment Management](#attachment-management)
 - [Requirement Management](#requirement-management)
 - [Enterprise Analytics](#enterprise-analytics)
+
+---
+
+## Tool Surface Profiles
+
+Every tool's schema is sent to the model on each call (~14k tokens for the full ~90-tool set). Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
+
+| Profile | ~Tools | Description |
+|---------|--------|-------------|
+| `full` (default) | 90 | All tools |
+| `core` | 61 | Core entities + CRUD. Excludes steps, snippets, labels, rungroups, attachments |
+| `read` | 23 | Core entities, read-only (list/get) |
+
+```bash
+testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+```
+
+Values are case-insensitive; unknown values fall back to `full`. The profile is chosen at launch (pass it in your AI client's MCP `args`) and applies to every call in that session. The reference below documents the full (`full`) set.
 
 ---
 

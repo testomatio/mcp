@@ -17,6 +17,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 - **Run Management** - status transitions via `status_event` parameter
 - **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
 - **Built-In TQL Reference** - MCP tool descriptions include exact TQL fields, syntax, and examples for agents
+- **Tool Surface Profiles** - expose only the tools a session needs via `--tools full|core|read` (default `full`); cuts the per-call schema cost for long agentic sessions
 
 ## Quick Start
 
@@ -50,6 +51,22 @@ testomatio-mcp
 ```bash
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
+
+**Optional: tool surface profile**
+
+By default the server exposes all tools. For long, token-sensitive sessions you can expose a smaller set with `--tools`:
+
+```bash
+testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+```
+
+| Profile | ~Tools | What's exposed |
+|---------|--------|----------------|
+| `full` (default) | 90 | Everything |
+| `core` | 61 | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
+| `read` | 23 | Core entities, read-only (list/get) |
+
+Values are case-insensitive; an unknown value falls back to `full`. Set it at launch (in your AI client's MCP `args`) — it can't be changed mid-session.
 
 ## Usage with AI Assistants
 

@@ -1,4 +1,4 @@
-import { DEFAULT_BASE_URL } from './constants.js';
+import { DEFAULT_BASE_URL, DEFAULT_PROFILE, TOOL_PROFILES } from './constants.js';
 import { ConfigurationError } from '../core/errors.js';
 
 function normalizeString(value) {
@@ -16,6 +16,8 @@ export function loadConfig(argvOptions = {}) {
   );
   const projectId = normalizeString(argvOptions.project || process.env.TESTOMATIO_PROJECT_ID);
   const baseUrl = normalizeBaseUrl(argvOptions.baseUrl || process.env.TESTOMATIO_BASE_URL || DEFAULT_BASE_URL);
+  const rawToolsProfile = normalizeString(argvOptions.tools).toLowerCase();
+  const toolsProfile = TOOL_PROFILES.includes(rawToolsProfile) ? rawToolsProfile : DEFAULT_PROFILE;
 
   if (!token) {
     throw new ConfigurationError(
@@ -33,5 +35,6 @@ export function loadConfig(argvOptions = {}) {
     token,
     projectId,
     baseUrl,
+    toolsProfile,
   };
 }
