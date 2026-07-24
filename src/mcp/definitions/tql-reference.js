@@ -89,10 +89,6 @@ const RUNS_TQL_EXAMPLES = [
 const COMMON_TQL_SYNTAX =
   "Supported syntax includes logical operators `and`, `or`, `not`, equality operators `==` and `!=`, list membership `in [...]`, `%` for partial text match on supported text fields, and parentheses for grouping. Ordered comparisons `>`, `<`, `>=`, `<=` are for ordered fields such as `priority`, dates, and numeric counters/durations. Use quotes for string values, for example `state == 'automated'`.";
 
-/**
- * Complete TQL reference, returned by the `tql_help` tool. The full spec lives in ONE
- * place; per-tool text only points here plus 2-3 examples on the `tql`/`q` param.
- */
 export const TQL_FULL_REFERENCE = [
   'TQL (Testomat.io Query Language) is a string expression used to filter tests and runs.',
   COMMON_TQL_SYNTAX,
@@ -108,7 +104,6 @@ export const TQL_FULL_REFERENCE = [
   'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.',
 ].join('\n');
 
-// Per-tool one-liners — point the model at `tql_help` for the full reference.
 export const TESTS_TQL_REFERENCE =
   'Filter tests with `tql` (TQL); call `tql_help` for the syntax and full field list.';
 export const RUNS_TQL_REFERENCE =
@@ -120,7 +115,6 @@ export const ANALYTICS_TESTS_TQL_REFERENCE =
 export const ANALYTICS_STATS_TQL_REFERENCE =
   'Filter analytics aggregated reports with `q` (TQL; tests or runs variables). Call `tql_help` for the syntax and full field list.';
 
-// Per-param short descriptions — 2-3 examples, full list in `tql_help`.
 export const TESTS_TQL_INPUT_DESCRIPTION =
   "TQL filter for tests. Only documented fields — call `tql_help` for the full list. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'`.";
 export const RUNS_TQL_INPUT_DESCRIPTION =
