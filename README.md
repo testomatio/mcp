@@ -10,6 +10,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
   - Attachments (scoped helpers for tests/suites/testruns)
   - Requirements (including file uploads from local file paths)
+- **Project Information** - fetch project configuration, metadata, features, and CI profiles
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions

@@ -1,10 +1,11 @@
 # Tools Reference
 
-Complete reference for all 83 MCP tools available in the Testomat.io MCP Server.
+Complete reference for all 84 MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
 - [System Tools](#system-tools)
+- [Project Tools](#project-tools)
 - [Test Management](#test-management)
 - [Suite Management](#suite-management)
 - [Run Management](#run-management)
@@ -42,6 +43,22 @@ Check server status and active configuration.
   "apiVersion": "v2"
 }
 ```
+
+---
+
+## Project Tools
+
+### project_info
+
+Get configuration and metadata for the configured project.
+
+**Parameters:** None
+
+**Returns:** Project title and ID, framework, language, status, repository URL,
+timestamps, artifact storage status, environments, labels, tags, subscription,
+enabled features, and CI profiles.
+
+**API Endpoint:** `GET /api/v2/{project_id}/info`
 
 ---
 
