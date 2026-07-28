@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
+Complete reference for the MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
@@ -26,19 +26,19 @@ Complete reference for all 90 MCP tools available in the Testomat.io MCP Server.
 
 ## Tool Surface Profiles
 
-Every tool's schema is sent to the model on each call (~14k tokens for the full ~90-tool set). Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
+Every exposed tool's schema is sent to the model on each call, so the full tool set has a significant token cost. Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
 
-| Profile | ~Tools | Description |
-|---------|--------|-------------|
-| `full` (default) | 90 | All tools |
-| `core` | 61 | Core entities + CRUD. Excludes steps, snippets, labels, rungroups, attachments |
-| `read` | 23 | Core entities, read-only (list/get) |
+| Profile | Description |
+|---------|-------------|
+| `full` (default) | All tools |
+| `core` | Core entities + CRUD. Excludes steps, snippets, labels, rungroups, attachments |
+| `read` | Core entities, read-only (list/get) |
 
 ```bash
 testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
 ```
 
-Values are case-insensitive; unknown values fall back to `full`. The profile is chosen at launch (pass it in your AI client's MCP `args`) and applies to every call in that session. The reference below documents the full (`full`) set.
+Values are case-insensitive; an unknown value prevents the server from starting. The profile is chosen at launch with `--tools` or the `TESTOMATIO_TOOLS` environment variable and applies to every call in that session. The CLI flag takes precedence when both are set. The reference below documents the full (`full`) set.
 
 ---
 

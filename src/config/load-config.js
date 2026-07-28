@@ -16,8 +16,8 @@ export function loadConfig(argvOptions = {}) {
   );
   const projectId = normalizeString(argvOptions.project || process.env.TESTOMATIO_PROJECT_ID);
   const baseUrl = normalizeBaseUrl(argvOptions.baseUrl || process.env.TESTOMATIO_BASE_URL || DEFAULT_BASE_URL);
-  const rawToolsProfile = normalizeString(argvOptions.tools).toLowerCase();
-  const toolsProfile = TOOL_PROFILES.includes(rawToolsProfile) ? rawToolsProfile : DEFAULT_PROFILE;
+  const rawToolsProfile = normalizeString(argvOptions.tools || process.env.TESTOMATIO_TOOLS).toLowerCase();
+  const toolsProfile = rawToolsProfile || DEFAULT_PROFILE;
 
   if (!token) {
     throw new ConfigurationError(
@@ -28,6 +28,12 @@ export function loadConfig(argvOptions = {}) {
   if (!projectId) {
     throw new ConfigurationError(
       'Project ID is required. Use --project <project_id> or set TESTOMATIO_PROJECT_ID'
+    );
+  }
+
+  if (!TOOL_PROFILES.includes(toolsProfile)) {
+    throw new ConfigurationError(
+      `Unknown tools profile "${toolsProfile}". Use one of: ${TOOL_PROFILES.join(', ')}.`
     );
   }
 

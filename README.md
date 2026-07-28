@@ -60,13 +60,13 @@ By default the server exposes all tools. For long, token-sensitive sessions you 
 testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
 ```
 
-| Profile | ~Tools | What's exposed |
-|---------|--------|----------------|
-| `full` (default) | 90 | Everything |
-| `core` | 61 | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
-| `read` | 23 | Core entities, read-only (list/get) |
+| Profile | What's exposed |
+|---------|----------------|
+| `full` (default) | Everything |
+| `core` | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
+| `read` | Core entities, read-only (list/get) |
 
-Values are case-insensitive; an unknown value falls back to `full`. Set it at launch (in your AI client's MCP `args`) — it can't be changed mid-session.
+Values are case-insensitive; an unknown value prevents the server from starting. Set the profile at launch with the flag or the `TESTOMATIO_TOOLS` environment variable — it can't be changed mid-session. The CLI flag takes precedence when both are set.
 
 ## Usage with AI Assistants
 
@@ -233,6 +233,7 @@ src/
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
 | `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
+| `TESTOMATIO_TOOLS` | No | `full` | Tool profile: `full`, `core`, or `read` |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 
