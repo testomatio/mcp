@@ -5,14 +5,10 @@ import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
 export const handlerMethods = {
   registerEntityCrudHandlers(handlers) {
     for (const spec of ENTITY_CRUD_CONFIGS) {
-      const { toolPrefix, resource, idArg, listMethod, searchMethod } = spec;
+      const { toolPrefix, resource, idArg, listMethod } = spec;
 
       handlers[`${toolPrefix}_list`] = async (args = {}) =>
         this.asText(await this[listMethod](args));
-      if (searchMethod) {
-        handlers[`${toolPrefix}_search`] = async (args = {}) =>
-          this.asText(await this[searchMethod](args));
-      }
       handlers[`${toolPrefix}_get`] = async (args = {}) =>
         this.asText(await this.apiClient.get(resource, this.pickRequiredArg(args, idArg)));
       handlers[`${toolPrefix}_create`] = async (args = {}) =>
@@ -95,7 +91,6 @@ export const handlerMethods = {
       this.asText(await this.apiClient.get('milestones', milestoneId));
 
     handlers.issues_list = async (args = {}) => this.asText(await this.listIssues(args));
-    handlers.issues_search = async (args = {}) => this.asText(await this.searchIssues(args));
     handlers.issues_create = async (args = {}) => this.asText(await this.createIssue(args));
     handlers.issues_delete = async ({ issue_id: issueId, type }) =>
       this.asText(await this.apiClient.delete('issues', issueId, { type }));
