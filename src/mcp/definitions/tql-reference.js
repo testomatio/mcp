@@ -89,6 +89,9 @@ const RUNS_TQL_EXAMPLES = [
 const COMMON_TQL_SYNTAX =
   "Supported syntax includes logical operators `and`, `or`, `not`, equality operators `==` and `!=`, list membership `in [...]`, `%` for partial text match on supported text fields, and parentheses for grouping. Ordered comparisons `>`, `<`, `>=`, `<=` are for ordered fields such as `priority`, dates, and numeric counters/durations. Use quotes for string values, for example `state == 'automated'`.";
 
+const TESTS_TQL_FIELDS = TESTS_TQL_VARIABLES.join(', ');
+const RUNS_TQL_FIELDS = RUNS_TQL_VARIABLES.join(', ');
+
 export const TQL_FULL_REFERENCE = [
   'TQL (Testomat.io Query Language) is a string expression used to filter tests and runs.',
   COMMON_TQL_SYNTAX,
@@ -116,12 +119,12 @@ export const ANALYTICS_STATS_TQL_REFERENCE =
   'Filter analytics aggregated reports with `q` (TQL; tests or runs variables). Call `tql_help` for the syntax and full field list.';
 
 export const TESTS_TQL_INPUT_DESCRIPTION =
-  "TQL filter for tests. Only documented fields — call `tql_help` for the full list. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'`.";
+  `TQL filter for tests. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`state == 'automated'\`, \`suite % 'Checkout'\`.`;
 export const RUNS_TQL_INPUT_DESCRIPTION =
-  "TQL filter for runs. Only documented fields — call `tql_help` for the full list. Examples: `finished and with_defect`, `env in ['Windows', 'Linux']`, `has_retries > 2`.";
+  `TQL filter for runs. Fields: ${RUNS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`finished and with_defect\`, \`env in ['Windows', 'Linux']\`, \`has_retries > 2\`.`;
 export const PLANS_TQL_INPUT_DESCRIPTION =
-  "TQL to select tests for the plan. Only documented fields — call `tql_help` for the full list. Examples: `priority == 'high'`, `tag in ['smoke', 'stage1']`.";
+  `TQL to select tests for the plan. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`tag in ['smoke', 'stage1']\`.`;
 export const ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION =
-  "TQL filter (param `q`) for analytics test reports. Only documented fields — call `tql_help` for the full list. Examples: `priority == 'high'`, `state == 'automated'`.";
+  `TQL filter (param \`q\`) for analytics test reports. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`state == 'automated'\`.`;
 export const ANALYTICS_STATS_TQL_INPUT_DESCRIPTION =
-  "TQL filter (param `q`) for analytics aggregated reports. Only documented fields — call `tql_help` for the full list. Examples: `priority == 'high'`, `finished_at >= '2025-07-01' and failed`.";
+  `TQL filter (param \`q\`) for analytics reports. Test fields: ${TESTS_TQL_FIELDS}. Run fields: ${RUNS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`finished_at >= '2025-07-01' and failed\`.`;

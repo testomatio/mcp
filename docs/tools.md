@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for all 91 MCP tools available in the Testomat.io MCP Server.
+Complete reference for the MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
