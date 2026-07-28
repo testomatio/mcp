@@ -149,7 +149,13 @@ export const TESTRUNS_TOOLS = [
           "type": "string"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped",
+            "pending"
+          ]
         },
         "message": {
           "type": "string"
@@ -189,7 +195,13 @@ export const TESTRUNS_TOOLS = [
           "type": "string"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped",
+            "pending"
+          ]
         },
         "message": {
           "type": "string"
