@@ -8,27 +8,8 @@ import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
 
-function isEmptyValue(value) {
-  return value === null || value === undefined || value === '';
-}
-
-function stripEmpty(value) {
-  if (Array.isArray(value)) {
-    return value.map(stripEmpty);
-  }
-  if (value && typeof value === 'object') {
-    const result = {};
-    for (const [key, v] of Object.entries(value)) {
-      if (isEmptyValue(v)) continue;
-      result[key] = stripEmpty(v);
-    }
-    return result;
-  }
-  return value;
-}
-
 function formatJson(payload) {
-  return JSON.stringify(stripEmpty(payload));
+  return JSON.stringify(payload);
 }
 
 export class ToolRegistry {
