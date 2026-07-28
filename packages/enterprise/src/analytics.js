@@ -142,6 +142,7 @@ export function registerAnalyticsHandlers(handlers) {
       slimList(await analyticsTests.call(this, args), {
         verbose: args.verbose,
         fields: args.fields,
+        entity: 'analytics_tests',
       })
     );
   handlers.analytics_stats = async (args = {}) => this.asText(await analyticsStats.call(this, args));
