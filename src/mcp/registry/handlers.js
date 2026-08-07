@@ -82,6 +82,8 @@ export const handlerMethods = {
   },
 
   registerGlobalHandlers(handlers) {
+    handlers.project_info = async () => this.asText(await this.apiClient.get('info'));
+
     handlers.tags_list = async () => this.asText(await this.listTags());
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
     handlers.tags_search = async (args = {}) => this.asText(await this.searchTags(args));
