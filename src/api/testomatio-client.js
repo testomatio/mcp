@@ -55,10 +55,6 @@ export class TestomatioApiClient {
     return this.mutate('DELETE', this.buildPath(resource, id), { query });
   }
 
-  search(resource, query = {}) {
-    return this.list(resource, query);
-  }
-
   async mutate(method, path, options = {}) {
     const runRequest = async () => {
       const sessionHash = await this.ensureSession();

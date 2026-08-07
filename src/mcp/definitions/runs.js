@@ -265,29 +265,6 @@ export const RUNS_TOOLS = [
     }
   },
   {
-    "name": "runs_search",
-    "description": `Search runs using TQL (delegates to runs_list). ${RUNS_TQL_REFERENCE}`,
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "tql": {
-          "type": "string",
-          "description": RUNS_TQL_INPUT_DESCRIPTION
-        }
-      },
-      "additionalProperties": false
-    }
-  },
-  {
     "name": "runs_issues_list",
     "description": "List linked issues for a run (/api/v2/{project_id}/issues?run_id=...)",
     "inputSchema": {

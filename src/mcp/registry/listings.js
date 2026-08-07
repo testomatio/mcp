@@ -11,14 +11,6 @@ export const listingMethods = {
     });
   },
 
-  searchTests({ page, per_page: perPage, tql } = {}) {
-    return this.listTests({
-      page,
-      per_page: perPage,
-      tql,
-    });
-  },
-
   listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText } = {}) {
     return this.apiClient.list('suites', {
       page,
@@ -26,13 +18,6 @@ export const listingMethods = {
       file_type: fileType,
       tag,
       labels,
-      search_text: searchText,
-    });
-  },
-
-  searchSuites({ search_text: searchText, ...rest } = {}) {
-    return this.listSuites({
-      ...rest,
       search_text: searchText,
     });
   },
@@ -47,10 +32,6 @@ export const listingMethods = {
       per_page: perPage,
       tql,
     });
-  },
-
-  searchRuns({ page, per_page: perPage, tql } = {}) {
-    return this.listRuns({ page, per_page: perPage, tql });
   },
 
   listTestruns({
@@ -95,16 +76,6 @@ export const listingMethods = {
     });
   },
 
-  searchTestruns({ page, per_page: perPage, run_id: runId, filter_search: filterSearch, ...rest } = {}) {
-    return this.listTestruns({
-      page,
-      per_page: perPage,
-      run_id: runId,
-      filter_search: filterSearch,
-      ...rest,
-    });
-  },
-
   listRungroups({ page, per_page: perPage } = {}) {
     return this.apiClient.list('rungroups', { page, per_page: perPage });
   },
@@ -132,16 +103,8 @@ export const listingMethods = {
     });
   },
 
-  searchPlans({ page, per_page: perPage, search_text: searchText, ...rest } = {}) {
-    return this.listPlans({ page, per_page: perPage, search_text: searchText, ...rest });
-  },
-
   listRequirements({ page, per_page: perPage, source, scope } = {}) {
     return this.apiClient.list('requirements', { page, per_page: perPage, source, scope });
-  },
-
-  searchRequirements({ page, per_page: perPage, source, scope } = {}) {
-    return this.listRequirements({ page, per_page: perPage, source, scope });
   },
 
   listMilestones({ page, per_page: perPage, type, status } = {}) {

@@ -133,31 +133,4 @@ export const REQUIREMENTS_TOOLS = [
       additionalProperties: false,
     },
   },
-  {
-    name: 'requirements_search',
-    description: 'Search requirements (delegates to requirements list with filters)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        page: {
-          type: 'integer',
-          minimum: 1,
-        },
-        per_page: {
-          type: 'integer',
-          minimum: 1,
-          maximum: 100,
-        },
-        source: {
-          type: 'string',
-          enum: ['jira', 'confluence', 'file', 'text'],
-        },
-        scope: {
-          type: 'string',
-          enum: ['global', 'attached', 'detached', 'without_suites'],
-        },
-      },
-      additionalProperties: false,
-    },
-  },
 ];

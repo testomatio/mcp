@@ -69,7 +69,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -146,7 +150,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -214,41 +222,6 @@ export const SUITES_TOOLS = [
       "required": [
         "suite_id"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "suites_search",
-    "description": "Search suites by title (delegates to suites list with search_text)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "search_text": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "file_type": {
-          "type": "string",
-          "enum": [
-            "file",
-            "folder"
-          ]
-        },
-        "tag": {
-          "type": "string"
-        },
-        "labels": {
-          "type": "string"
-        }
-      },
       "additionalProperties": false
     }
   },
