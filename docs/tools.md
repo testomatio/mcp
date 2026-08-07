@@ -116,7 +116,7 @@ Create a new test.
 | priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code/automation reference |
-| state | string | No | Test state |
+| state | string | No | One of: `manual`, `detached`, `automated` |
 | link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **Link Array Format:**
@@ -167,7 +167,7 @@ Update an existing test.
 | priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code |
-| state | string | No | Test state |
+| state | string | No | One of: `manual`, `detached`, `automated` |
 | sync | boolean | No | Sync with automation |
 | link | array | No | Link updates |
 
@@ -344,7 +344,7 @@ Create a new suite.
 | description | string | No | Suite description |
 | emoji | string | No | Suite emoji |
 | parent_id | string | No | Parent suite ID |
-| file_type | string | No | File type |
+| file_type | string | No | One of: `file`, `folder` |
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
@@ -366,7 +366,7 @@ Update an existing suite.
 | description | string | No | Description |
 | emoji | string | No | Emoji |
 | parent_id | string | No | Parent suite ID |
-| file_type | string | No | File type |
+| file_type | string | No | One of: `file`, `folder` |
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
