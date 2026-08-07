@@ -10,13 +10,14 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
   - Attachments (scoped helpers for tests/suites/testruns)
   - Requirements (including file uploads from local file paths)
-- **Smart Search** - delegates to list endpoints with OpenAPI-aligned query/filter forwarding
+- **Project Information** - fetch project configuration, metadata, features, and CI profiles
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
-- **TQL-Only Search** - `tests_list/tests_search` and `runs_list/runs_search` use `tql` as the single search/filter input
-- **Built-In TQL Reference** - MCP tool descriptions include exact TQL fields, syntax, and examples for agents
+- **TQL-Only Search** - `tests_list` and `runs_list` use `tql` as the single search/filter input
+- **Built-In TQL Reference** - TQL parameters include the exact field whitelist and examples; `tql_help` provides syntax details on demand
+- **Tool Surface Profiles** - expose only the tools a session needs via `--tools full|core|read` (default `full`); cuts the per-call schema cost for long agentic sessions
 
 ## Quick Start
 
@@ -50,6 +51,22 @@ testomatio-mcp
 ```bash
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
+
+**Optional: tool surface profile**
+
+By default the server exposes all tools. For long, token-sensitive sessions you can expose a smaller set with `--tools`:
+
+```bash
+testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+```
+
+| Profile | What's exposed |
+|---------|----------------|
+| `full` (default) | Everything |
+| `core` | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
+| `read` | Core entities, read-only (list/get) |
+
+Values are case-insensitive; an unknown value prevents the server from starting. Set the profile at launch with the flag or the `TESTOMATIO_TOOLS` environment variable — it can't be changed mid-session. The CLI flag takes precedence when both are set.
 
 ## Usage with AI Assistants
 
@@ -216,6 +233,7 @@ src/
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
 | `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
+| `TESTOMATIO_TOOLS` | No | `full` | Tool profile: `full`, `core`, or `read` |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 
@@ -254,10 +272,10 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 ## Important Notes
 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
-- **Search** - No dedicated `/search` endpoints. MCP search tools delegate to list tools; for `tests` and `runs` the MCP interface is intentionally simplified to `tql`, while other entities stay closer to Public API v2 filters
-- **TQL** - Use `tql` as the single search/filter input for `tests_list/tests_search` and `runs_list/runs_search`
+- **Search/Filter** - No dedicated `/search` endpoints; filtering is done via the `*_list` tools (`tql` for tests and runs, OpenAPI-aligned filters for other entities)
+- **TQL** - Use `tql` as the single search/filter input for `tests_list` and `runs_list`
 - **TQL Syntax** - For user-facing syntax details and more examples, see the official TQL docs: https://docs.testomat.io/advanced/tql/
-- **TQL Scope** - The full agent-oriented whitelist of documented fields lives inside MCP tool descriptions for `tests` and `runs`
+- **TQL Scope** - TQL parameter descriptions keep the documented field whitelist in-band; call `tql_help` for syntax details and additional examples
 - **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
 - **Attachments** - Scoped helpers available for tests, suites, and testruns: `{entity}_attachments_list/upload/delete`. Upload sends one local file path as multipart field `file`.
 - **Enterprise Package** - Analytics tools are intentionally exposed only by `@testomatio/mcp-enterprise`, not by the standard `@testomatio/mcp` package
