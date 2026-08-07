@@ -9,7 +9,7 @@ import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
 
 function formatJson(payload) {
-  return JSON.stringify(payload, null, 2);
+  return JSON.stringify(payload);
 }
 
 export class ToolRegistry {
