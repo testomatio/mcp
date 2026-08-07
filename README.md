@@ -17,6 +17,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 - **Run Management** - status transitions via `status_event` parameter
 - **TQL-Only Search** - `tests_list` and `runs_list` use `tql` as the single search/filter input
 - **Built-In TQL Reference** - TQL parameters include the exact field whitelist and examples; `tql_help` provides syntax details on demand
+- **Tool Surface Profiles** - expose only the tools a session needs via `--tools full|core|read` (default `full`); cuts the per-call schema cost for long agentic sessions
 
 ## Quick Start
 
@@ -50,6 +51,22 @@ testomatio-mcp
 ```bash
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
+
+**Optional: tool surface profile**
+
+By default the server exposes all tools. For long, token-sensitive sessions you can expose a smaller set with `--tools`:
+
+```bash
+testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+```
+
+| Profile | What's exposed |
+|---------|----------------|
+| `full` (default) | Everything |
+| `core` | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
+| `read` | Core entities, read-only (list/get) |
+
+Values are case-insensitive; an unknown value prevents the server from starting. Set the profile at launch with the flag or the `TESTOMATIO_TOOLS` environment variable — it can't be changed mid-session. The CLI flag takes precedence when both are set.
 
 ## Usage with AI Assistants
 
@@ -216,6 +233,7 @@ src/
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
 | `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
+| `TESTOMATIO_TOOLS` | No | `full` | Tool profile: `full`, `core`, or `read` |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 

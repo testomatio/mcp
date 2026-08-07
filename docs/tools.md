@@ -4,6 +4,7 @@ Complete reference for the MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
+- [Tool Surface Profiles](#tool-surface-profiles)
 - [System Tools](#system-tools)
 - [Project Tools](#project-tools)
 - [Test Management](#test-management)
@@ -21,6 +22,24 @@ Complete reference for the MCP tools available in the Testomat.io MCP Server.
 - [Attachment Management](#attachment-management)
 - [Requirement Management](#requirement-management)
 - [Enterprise Analytics](#enterprise-analytics)
+
+---
+
+## Tool Surface Profiles
+
+Every exposed tool's schema is sent to the model on each call, so the full tool set has a significant token cost. Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
+
+| Profile | Description |
+|---------|-------------|
+| `full` (default) | All tools |
+| `core` | Core entities + CRUD. Excludes steps, snippets, labels, rungroups, attachments |
+| `read` | Core entities, read-only (list/get) |
+
+```bash
+testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+```
+
+Values are case-insensitive; an unknown value prevents the server from starting. The profile is chosen at launch with `--tools` or the `TESTOMATIO_TOOLS` environment variable and applies to every call in that session. The CLI flag takes precedence when both are set. The reference below documents the full (`full`) set.
 
 ---
 

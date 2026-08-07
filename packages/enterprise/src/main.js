@@ -15,6 +15,10 @@ export function parseArgs(argv = process.argv) {
     .option('-t, --token <token>', 'Testomatio Project token')
     .option('-p, --project <project>', 'Project ID')
     .option('--base-url <url>', 'Base URL for Testomat.io API')
+    .option(
+      '--tools <profile>',
+      'Tool surface: full (default, all tools), core (common entities only), read (read-only)'
+    )
     .parse(argv);
 
   return command.opts();
