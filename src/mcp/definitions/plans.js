@@ -248,45 +248,6 @@ export const PLANS_TOOLS = [
     }
   },
   {
-    "name": "plans_search",
-    "description": "Search plans (delegates to plans list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "search_text": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "manual",
-            "automated",
-            "mixed"
-          ]
-        },
-        "hidden": {
-          "type": "boolean"
-        },
-        "labels": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "additionalProperties": false
-    }
-  },
-  {
     "name": "plans_issues_list",
     "description": "List linked issues for a plan (/api/v2/{project_id}/issues?plan_id=...)",
     "inputSchema": {

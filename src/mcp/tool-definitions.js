@@ -1,4 +1,5 @@
 import { SYSTEM_TOOLS } from './definitions/system.js';
+import { PROJECT_TOOLS } from './definitions/projects.js';
 import { TESTS_TOOLS } from './definitions/tests.js';
 import { SUITES_TOOLS } from './definitions/suites.js';
 import { RUNS_TOOLS } from './definitions/runs.js';
@@ -16,6 +17,7 @@ import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
 
 export const TOOL_DEFINITIONS = [
   ...SYSTEM_TOOLS,
+  ...PROJECT_TOOLS,
   ...TESTS_TOOLS,
   ...SUITES_TOOLS,
   ...RUNS_TOOLS,

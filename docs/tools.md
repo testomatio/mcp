@@ -5,6 +5,7 @@ Complete reference for the MCP tools available in the Testomat.io MCP Server.
 ## Table of Contents
 
 - [System Tools](#system-tools)
+- [Project Tools](#project-tools)
 - [Test Management](#test-management)
 - [Suite Management](#suite-management)
 - [Run Management](#run-management)
@@ -54,6 +55,22 @@ Full TQL (Testomat.io Query Language) reference — syntax, filter variables (te
 **Parameters:** None
 
 **Returns:** the complete TQL reference (syntax, tests variables, runs variables, examples).
+
+---
+
+## Project Tools
+
+### project_info
+
+Get configuration and metadata for the configured project.
+
+**Parameters:** None
+
+**Returns:** Project title and ID, framework, language, status, repository URL,
+timestamps, artifact storage status, environments, labels, tags, subscription,
+enabled features, and CI profiles.
+
+**API Endpoint:** `GET /api/v2/{project_id}/info`
 
 ---
 
@@ -125,10 +142,10 @@ Create a new test.
 | suite_id | string | Yes | Parent suite ID |
 | description | string | No | Test description |
 | emoji | string | No | Test emoji icon |
-| priority | string | No | Test priority |
+| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code/automation reference |
-| state | string | No | Test state |
+| state | string | No | One of: `manual`, `detached`, `automated` |
 | link | array | No | Links to labels, tags, milestones, issues, or jira |
 
 **Link Array Format:**
@@ -176,10 +193,10 @@ Update an existing test.
 | suite_id | string | No | New parent suite ID |
 | description | string | No | Updated description |
 | emoji | string | No | Test emoji |
-| priority | string | No | Test priority |
+| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | assigned_to | string | No | Assignee ID |
 | code | string | No | Test code |
-| state | string | No | Test state |
+| state | string | No | One of: `manual`, `detached`, `automated` |
 | sync | boolean | No | Sync with automation |
 | link | array | No | Link updates |
 
@@ -219,29 +236,6 @@ Delete a test.
 ```
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/tests/{id}`
-
----
-
-### tests_search
-
-Search tests (delegates to `tests_list`).
-
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
-
-**Parameters:** Same as `tests_list`
-
-**Example:**
-```json
-{
-  "name": "tests_search",
-  "arguments": {
-    "tql": "state == 'automated'",
-    "page": 1,
-    "per_page": 20
-  }
-}
-```
 
 ---
 
@@ -379,7 +373,7 @@ Create a new suite.
 | description | string | No | Suite description |
 | emoji | string | No | Suite emoji |
 | parent_id | string | No | Parent suite ID |
-| file_type | string | No | File type |
+| file_type | string | No | One of: `file`, `folder` |
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
@@ -401,7 +395,7 @@ Update an existing suite.
 | description | string | No | Description |
 | emoji | string | No | Emoji |
 | parent_id | string | No | Parent suite ID |
-| file_type | string | No | File type |
+| file_type | string | No | One of: `file`, `folder` |
 | assigned_to | string | No | Assignee ID |
 | file | string | No | File reference |
 | children | array | No | Child suites |
@@ -421,14 +415,6 @@ Delete a suite.
 | suite_id | string | Yes | Suite ID |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/suites/{id}`
-
----
-
-### suites_search
-
-Search suites by title (delegates to suites_list with search_text).
-
-**Parameters:** Similar to `suites_list`
 
 ---
 
@@ -584,29 +570,6 @@ Delete a run.
 
 ---
 
-### runs_search
-
-Search runs (delegates to `runs_list`).
-
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax. For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
-
-**Parameters:** Same as `runs_list`
-
-**Example:**
-```json
-{
-  "name": "runs_search",
-  "arguments": {
-    "tql": "finished and with_defect",
-    "page": 1,
-    "per_page": 20
-  }
-}
-```
-
----
-
 ### Run Issue Operations
 
 **runs_issues_list**, **runs_issues_link**, **runs_issues_unlink**
@@ -631,7 +594,7 @@ List test runs (individual test results within a run).
 | filter_status | string | No | `passed`, `failed`, `skipped`, `pending` |
 | filter_kind | string | No | `manual` or `automated` |
 | filter_user | integer\|string | No | Assigned user ID |
-| filter_priority | string | No | Test priority |
+| filter_priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
 | filter_substatus | string | No | Custom substatus filter |
 | filter_search | string | No | Text search across test title |
 | filter_message | boolean | No | Only testruns with a message |
@@ -669,7 +632,7 @@ Create a new test run result.
 |------|------|----------|-------------|
 | run_id | string | Yes | Parent run ID |
 | test_id | string | No | Test ID |
-| status | string | No | Test status (passed, failed, skipped, etc.) |
+| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
 | message | string | No | Status message |
 | run_time | number | No | Execution time in seconds |
 | assigned_to | string | No | Assignee ID |
@@ -703,7 +666,7 @@ Update a test run.
 | testrun_id | integer | Yes | Test run ID |
 | run_id | string | No | Parent run ID |
 | test_id | string | No | Test ID |
-| status | string | No | Test status |
+| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
 | message | string | No | Status message |
 | run_time | number | No | Execution time |
 | assigned_to | string | No | Assignee ID |
@@ -724,12 +687,6 @@ Delete a test run.
 | testrun_id | integer | Yes | Test run ID |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/testruns/{id}`
-
----
-
-### testruns_search
-
-Search testruns (delegates to `testruns_list` with the same filters).
 
 ---
 
@@ -827,12 +784,6 @@ Delete a plan.
 | plan_id | string | Yes | Plan ID |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/plans/{id}`
-
----
-
-### plans_search
-
-Search plans (delegates to `plans_list` with the same filters).
 
 ---
 
@@ -1276,14 +1227,6 @@ Unlink an issue.
 
 ---
 
-### issues_search
-
-Search issues (delegates to issues_list with filters).
-
-**Parameters:** Same as `issues_list`
-
----
-
 ## Attachment Management
 
 Attachments are scoped to tests, suites, and testruns. Each operation requires exactly one entity ID through the matching scoped tool.
@@ -1491,16 +1434,6 @@ Delete a requirement.
 | requirement_id | string | Yes | Requirement ID (8-char) |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/requirements/{id}`
-
----
-
-### requirements_search
-
-Search requirements by delegating to `requirements_list` with filters.
-
-**Parameters:** Same as `requirements_list`
-
-**Note:** File uploads use local file paths readable by the MCP server process.
 
 ---
 

@@ -9,8 +9,34 @@ import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
 
+function withPagination(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return payload;
+  }
+  const meta = payload.meta;
+  if (!Array.isArray(payload.data) || !meta || typeof meta !== 'object') {
+    return payload;
+  }
+  const { total, page, per_page: perPage } = meta;
+  if (
+    typeof total !== 'number' ||
+    typeof page !== 'number' ||
+    typeof perPage !== 'number' ||
+    perPage <= 0
+  ) {
+    return payload;
+  }
+  if (page * perPage < total) {
+    return {
+      ...payload,
+      _note: `Showing ${payload.data.length} of ${total} (page ${page}). More available — refine the filter or request the next page.`,
+    };
+  }
+  return payload;
+}
+
 function formatJson(payload) {
-  return JSON.stringify(payload, null, 2);
+  return JSON.stringify(payload);
 }
 
 export class ToolRegistry {
@@ -24,7 +50,7 @@ export class ToolRegistry {
   }
 
   asText(payload) {
-    return textResponse(formatJson(payload));
+    return textResponse(formatJson(withPagination(payload)));
   }
 
   buildHandlers() {
