@@ -89,62 +89,42 @@ const RUNS_TQL_EXAMPLES = [
 const COMMON_TQL_SYNTAX =
   "Supported syntax includes logical operators `and`, `or`, `not`, equality operators `==` and `!=`, list membership `in [...]`, `%` for partial text match on supported text fields, and parentheses for grouping. Ordered comparisons `>`, `<`, `>=`, `<=` are for ordered fields such as `priority`, dates, and numeric counters/durations. Use quotes for string values, for example `state == 'automated'`.";
 
+const TESTS_TQL_FIELDS = TESTS_TQL_VARIABLES.join(', ');
+const RUNS_TQL_FIELDS = RUNS_TQL_VARIABLES.join(', ');
+
+export const TQL_FULL_REFERENCE = [
+  'TQL (Testomat.io Query Language) is a string expression used to filter tests and runs.',
+  COMMON_TQL_SYNTAX,
+  '',
+  `Tests filter variables: ${TESTS_TQL_VARIABLES.map((v) => `\`${v}\``).join(', ')}.`,
+  `Tests examples: ${TESTS_TQL_EXAMPLES.map((e) => `\`${e}\``).join(', ')}.`,
+  '',
+  `Runs filter variables: ${RUNS_TQL_VARIABLES.map((v) => `\`${v}\``).join(', ')}.`,
+  'Runs also support boolean flags used without comparison, e.g. `failed`, `finished`, `automated`, `with_defect`.',
+  `Runs examples: ${RUNS_TQL_EXAMPLES.map((e) => `\`${e}\``).join(', ')}.`,
+  '',
+  'Parameter name: tests/runs/plans use `tql`; analytics tools use `q`.',
+  'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.',
+].join('\n');
+
 export const TESTS_TQL_REFERENCE =
-  `TQL (Testomat.io Query Language) is a string expression passed in \`tql\` to filter tests. ${COMMON_TQL_SYNTAX} ` +
-  `Documented test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
+  'Filter tests with `tql` (TQL); call `tql_help` for the syntax and full field list.';
+export const RUNS_TQL_REFERENCE =
+  'Filter runs with `tql` (TQL); runs also accept boolean flags. Call `tql_help` for the syntax and full field list.';
+export const PLANS_TQL_REFERENCE =
+  'Select tests for the plan with `tql` (TQL); the API resolves matching tests. Call `tql_help` for the syntax and full field list.';
+export const ANALYTICS_TESTS_TQL_REFERENCE =
+  'Filter analytics test reports with `q` (TQL). Call `tql_help` for the syntax and full field list.';
+export const ANALYTICS_STATS_TQL_REFERENCE =
+  'Filter analytics aggregated reports with `q` (TQL; tests or runs variables). Call `tql_help` for the syntax and full field list.';
 
 export const TESTS_TQL_INPUT_DESCRIPTION =
-  `TQL filter for tests. Documented variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
-
-export const RUNS_TQL_REFERENCE =
-  `TQL (Testomat.io Query Language) is a string expression passed in \`tql\` to filter runs. ${COMMON_TQL_SYNTAX} ` +
-  'Runs also support boolean flags without comparison such as `failed`, `finished`, `automated`, or `with_defect`. ' +
-  `Documented run variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
-
+  `TQL filter for tests. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`state == 'automated'\`, \`suite % 'Checkout'\`.`;
 export const RUNS_TQL_INPUT_DESCRIPTION =
-  `TQL filter for runs. Documented variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
-
-export const PLANS_TQL_REFERENCE =
-  `TQL (Testomat.io Query Language) is a string expression passed in \`tql\` to select tests included in a plan. ${COMMON_TQL_SYNTAX} ` +
-  `Plan TQL uses documented test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  'Use `tql` when you want the API to resolve matching tests automatically instead of sending explicit `test_ids`. Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
-
+  `TQL filter for runs. Fields: ${RUNS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`finished and with_defect\`, \`env in ['Windows', 'Linux']\`, \`has_retries > 2\`.`;
 export const PLANS_TQL_INPUT_DESCRIPTION =
-  'TQL filter for selecting tests included in the plan. ' +
-  `Documented test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
-
-export const ANALYTICS_TESTS_TQL_REFERENCE =
-  `TQL (Testomat.io Query Language) is a string expression passed in \`q\` to filter enterprise analytics test reports. ${COMMON_TQL_SYNTAX} ` +
-  'For analytics tools, the API parameter name is `q`, not `tql`. ' +
-  `Documented analytics test variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  'Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
-
+  `TQL to select tests for the plan. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`tag in ['smoke', 'stage1']\`.`;
 export const ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION =
-  'TQL filter for analytics test reports. The API parameter name is `q`, not `tql`. ' +
-  `Documented variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
-
-export const ANALYTICS_STATS_TQL_REFERENCE =
-  `TQL (Testomat.io Query Language) is a string expression passed in \`q\` to filter enterprise analytics aggregated reports. ${COMMON_TQL_SYNTAX} ` +
-  'For analytics tools, the API parameter name is `q`, not `tql`. ' +
-  'According to the official Analytics docs, analytics queries are configured using supported query variables for two data sources: `Tests Variables` and `Runs Variables`. ' +
-  `Documented Tests Variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented Runs Variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented Tests examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented Runs examples: ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  'Use Tests Variables for test-centric filters and Runs Variables for run-centric filters such as `plan`, `rungroup`, `env`, `finished_at`, or `has_test_tag`. Do not invent undocumented fields or syntax. If a query fails, simplify it to one documented predicate.';
-
+  `TQL filter (param \`q\`) for analytics test reports. Fields: ${TESTS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`state == 'automated'\`.`;
 export const ANALYTICS_STATS_TQL_INPUT_DESCRIPTION =
-  'TQL filter for analytics aggregated reports. The API parameter name is `q`, not `tql`. ' +
-  `Documented Tests Variables: ${TESTS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Documented Runs Variables: ${RUNS_TQL_VARIABLES.map((item) => `\`${item}\``).join(', ')}. ` +
-  `Examples: ${TESTS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}, ${RUNS_TQL_EXAMPLES.map((item) => `\`${item}\``).join(', ')}.`;
+  `TQL filter (param \`q\`) for analytics reports. Test fields: ${TESTS_TQL_FIELDS}. Run fields: ${RUNS_TQL_FIELDS}. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`finished_at >= '2025-07-01' and failed\`.`;

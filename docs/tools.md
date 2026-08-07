@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for all 84 MCP tools available in the Testomat.io MCP Server.
+Complete reference for the MCP tools available in the Testomat.io MCP Server.
 
 ## Table of Contents
 
@@ -43,6 +43,18 @@ Check server status and active configuration.
   "apiVersion": "v2"
 }
 ```
+
+---
+
+### tql_help
+
+Full TQL (Testomat.io Query Language) reference — syntax, filter variables (tests + runs), and examples.
+
+**Usage:** Look up TQL syntax and the available filter fields before composing a `tql`/`q` filter for tests, runs, plans, or analytics.
+
+**Parameters:** None
+
+**Returns:** the complete TQL reference (syntax, tests variables, runs variables, examples).
 
 ---
 

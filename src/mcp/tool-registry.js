@@ -2,6 +2,7 @@ import { DEFAULT_TOOL_RESPONSE } from '../config/constants.js';
 import { ApiError, NotImplementedToolError } from '../core/errors.js';
 import { textResponse } from '../helpers/mcp-response.js';
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
+import { TQL_FULL_REFERENCE } from './definitions/tql-reference.js';
 import { handlerMethods } from './registry/handlers.js';
 import { attachmentMethods } from './registry/attachments.js';
 import { issueMethods } from './registry/issues.js';
@@ -61,6 +62,7 @@ export class ToolRegistry {
           baseUrl: this.config.baseUrl,
           apiVersion: 'v2',
         }),
+      tql_help: async () => textResponse(TQL_FULL_REFERENCE),
     };
 
     this.registerEntityCrudHandlers(handlers);

@@ -6,5 +6,13 @@ export const SYSTEM_TOOLS = [
       "type": "object",
       "properties": {}
     }
+  },
+  {
+    "name": "tql_help",
+    "description": "Full TQL (Testomat.io Query Language) reference — syntax, filter variables (tests + runs), and examples. Call this before writing a `tql` or `q` filter.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
   }
 ];
