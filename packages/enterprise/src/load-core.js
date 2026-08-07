@@ -26,4 +26,6 @@ export const {
   ConfigurationError,
   TOOL_DEFINITIONS,
   createApplication,
+  slimList,
+  withListOptions,
 } = coreModule;

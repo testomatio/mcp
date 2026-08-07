@@ -1,14 +1,23 @@
 import { ENTITY_CRUD_CONFIGS } from '../configs/entity-crud-config.js';
 import { ATTACHMENT_SCOPED_TOOL_CONFIGS } from '../configs/attachments-config.js';
 import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
+import { slimList } from '../list-projection.js';
 
 export const handlerMethods = {
   registerEntityCrudHandlers(handlers) {
     for (const spec of ENTITY_CRUD_CONFIGS) {
       const { toolPrefix, resource, idArg, listMethod } = spec;
 
-      handlers[`${toolPrefix}_list`] = async (args = {}) =>
-        this.asText(await this[listMethod](args));
+      handlers[`${toolPrefix}_list`] = async (args = {}) => {
+        const { verbose, fields, ...listArgs } = args;
+        return this.asText(
+          slimList(await this[listMethod](listArgs), {
+            verbose,
+            fields,
+            entity: toolPrefix,
+          })
+        );
+      };
       handlers[`${toolPrefix}_get`] = async (args = {}) =>
         this.asText(await this.apiClient.get(resource, this.pickRequiredArg(args, idArg)));
       handlers[`${toolPrefix}_create`] = async (args = {}) =>
@@ -27,13 +36,16 @@ export const handlerMethods = {
     for (const { toolPrefix, resourceKey } of ISSUE_SCOPED_TOOL_CONFIGS) {
       handlers[`${toolPrefix}_issues_list`] = async (args = {}) =>
         this.asText(
-          await this.listIssuesForKey({
-            resourceKey,
-            resourceId: this.pickRequiredArg(args, resourceKey),
-            page: args.page,
-            per_page: args.per_page,
-            source: args.source,
-          })
+          slimList(
+            await this.listIssuesForKey({
+              resourceKey,
+              resourceId: this.pickRequiredArg(args, resourceKey),
+              page: args.page,
+              per_page: args.per_page,
+              source: args.source,
+            }),
+            { verbose: args.verbose, fields: args.fields, entity: 'issues' }
+          )
         );
 
       handlers[`${toolPrefix}_issues_link`] = async (args = {}) =>
@@ -55,10 +67,13 @@ export const handlerMethods = {
     for (const { toolPrefix, resourceKey } of ATTACHMENT_SCOPED_TOOL_CONFIGS) {
       handlers[`${toolPrefix}_attachments_list`] = async (args = {}) =>
         this.asText(
-          await this.listAttachmentsForKey({
-            resourceKey,
-            resourceId: this.pickRequiredArg(args, resourceKey),
-          })
+          slimList(
+            await this.listAttachmentsForKey({
+              resourceKey,
+              resourceId: this.pickRequiredArg(args, resourceKey),
+            }),
+            { verbose: args.verbose, fields: args.fields, entity: 'attachments' }
+          )
         );
 
       handlers[`${toolPrefix}_attachments_upload`] = async (args = {}) =>
@@ -84,15 +99,25 @@ export const handlerMethods = {
   registerGlobalHandlers(handlers) {
     handlers.project_info = async () => this.asText(await this.apiClient.get('info'));
 
-    handlers.tags_list = async () => this.asText(await this.listTags());
+    handlers.tags_list = async (args = {}) =>
+      this.asText(slimList(await this.listTags(), { ...args, entity: 'tags' }));
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
-    handlers.tags_search = async (args = {}) => this.asText(await this.searchTags(args));
 
-    handlers.milestones_list = async (args = {}) => this.asText(await this.listMilestones(args));
+    handlers.milestones_list = async (args = {}) => {
+      const { verbose, fields, ...listArgs } = args;
+      return this.asText(
+        slimList(await this.listMilestones(listArgs), { verbose, fields, entity: 'milestones' })
+      );
+    };
     handlers.milestones_get = async ({ milestone_id: milestoneId }) =>
       this.asText(await this.apiClient.get('milestones', milestoneId));
 
-    handlers.issues_list = async (args = {}) => this.asText(await this.listIssues(args));
+    handlers.issues_list = async (args = {}) => {
+      const { verbose, fields, ...listArgs } = args;
+      return this.asText(
+        slimList(await this.listIssues(listArgs), { verbose, fields, entity: 'issues' })
+      );
+    };
     handlers.issues_create = async (args = {}) => this.asText(await this.createIssue(args));
     handlers.issues_delete = async ({ issue_id: issueId, type }) =>
       this.asText(await this.apiClient.delete('issues', issueId, { type }));

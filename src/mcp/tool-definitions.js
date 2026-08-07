@@ -14,8 +14,9 @@ import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
 import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
 import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
+import { withListOptions } from './list-projection.js';
 
-export const TOOL_DEFINITIONS = [
+export const TOOL_DEFINITIONS = withListOptions([
   ...SYSTEM_TOOLS,
   ...PROJECT_TOOLS,
   ...TESTS_TOOLS,
@@ -32,4 +33,4 @@ export const TOOL_DEFINITIONS = [
   ...ATTACHMENT_TOOLS,
   ...PLANS_TOOLS,
   ...REQUIREMENTS_TOOLS,
-];
+]);
