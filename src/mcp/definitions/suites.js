@@ -69,7 +69,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -146,7 +150,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"

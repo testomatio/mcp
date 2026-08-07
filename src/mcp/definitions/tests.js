@@ -75,7 +75,12 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "manual",
+            "detached",
+            "automated"
+          ]
         },
         "link": {
           "type": "array",
@@ -158,7 +163,12 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "manual",
+            "detached",
+            "automated"
+          ]
         },
         "sync": {
           "type": "boolean"
