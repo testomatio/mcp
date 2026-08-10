@@ -4,6 +4,7 @@ import {
   ANALYTICS_TESTS_TQL_INPUT_DESCRIPTION,
   ANALYTICS_TESTS_TQL_REFERENCE,
   TOOL_DEFINITIONS,
+  backendSlimQuery,
   slimList,
   withListOptions,
 } from './load-core.js';
@@ -139,7 +140,7 @@ export const ENTERPRISE_TOOL_DEFINITIONS = [
 export function registerAnalyticsHandlers(handlers) {
   handlers.analytics_tests = async (args = {}) =>
     this.asText(
-      slimList(await analyticsTests.call(this, args), {
+      slimList(await analyticsTests.call(this, { ...args, ...backendSlimQuery(args) }), {
         verbose: args.verbose,
         fields: args.fields,
         entity: 'analytics_tests',
@@ -162,6 +163,7 @@ function analyticsTests({
   threshold_ms: thresholdMs,
   maturity_days: maturityDays,
   run,
+  slim,
 } = {}) {
   return this.apiClient.list(`analytics/tests/${this.pickRequiredArg({ kind }, 'kind')}`, {
     q,
@@ -176,6 +178,7 @@ function analyticsTests({
     threshold_ms: thresholdMs,
     maturity_days: maturityDays,
     run,
+    slim,
   });
 }
 

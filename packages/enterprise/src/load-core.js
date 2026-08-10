@@ -27,5 +27,6 @@ export const {
   TOOL_DEFINITIONS,
   createApplication,
   slimList,
+  backendSlimQuery,
   withListOptions,
 } = coreModule;

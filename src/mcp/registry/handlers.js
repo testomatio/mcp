@@ -1,7 +1,7 @@
 import { ENTITY_CRUD_CONFIGS } from '../configs/entity-crud-config.js';
 import { ATTACHMENT_SCOPED_TOOL_CONFIGS } from '../configs/attachments-config.js';
 import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
-import { slimList } from '../list-projection.js';
+import { backendSlimQuery, slimList } from '../list-projection.js';
 
 export const handlerMethods = {
   registerEntityCrudHandlers(handlers) {
@@ -10,6 +10,7 @@ export const handlerMethods = {
 
       handlers[`${toolPrefix}_list`] = async (args = {}) => {
         const { verbose, fields, ...listArgs } = args;
+        Object.assign(listArgs, backendSlimQuery({ verbose, fields }));
         return this.asText(
           slimList(await this[listMethod](listArgs), {
             verbose,
@@ -43,6 +44,7 @@ export const handlerMethods = {
               page: args.page,
               per_page: args.per_page,
               source: args.source,
+              ...backendSlimQuery(args),
             }),
             { verbose: args.verbose, fields: args.fields, entity: 'issues' }
           )
@@ -71,6 +73,7 @@ export const handlerMethods = {
             await this.listAttachmentsForKey({
               resourceKey,
               resourceId: this.pickRequiredArg(args, resourceKey),
+              ...backendSlimQuery(args),
             }),
             { verbose: args.verbose, fields: args.fields, entity: 'attachments' }
           )
@@ -100,11 +103,14 @@ export const handlerMethods = {
     handlers.project_info = async () => this.asText(await this.apiClient.get('info'));
 
     handlers.tags_list = async (args = {}) =>
-      this.asText(slimList(await this.listTags(), { ...args, entity: 'tags' }));
+      this.asText(
+        slimList(await this.listTags(backendSlimQuery(args)), { ...args, entity: 'tags' })
+      );
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
 
     handlers.milestones_list = async (args = {}) => {
       const { verbose, fields, ...listArgs } = args;
+      Object.assign(listArgs, backendSlimQuery({ verbose, fields }));
       return this.asText(
         slimList(await this.listMilestones(listArgs), { verbose, fields, entity: 'milestones' })
       );
@@ -114,6 +120,7 @@ export const handlerMethods = {
 
     handlers.issues_list = async (args = {}) => {
       const { verbose, fields, ...listArgs } = args;
+      Object.assign(listArgs, backendSlimQuery({ verbose, fields }));
       return this.asText(
         slimList(await this.listIssues(listArgs), { verbose, fields, entity: 'issues' })
       );
