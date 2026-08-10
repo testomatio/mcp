@@ -4,9 +4,9 @@ import path from 'node:path';
 import { ATTACHMENT_RESOURCE_KEYS } from '../configs/attachments-config.js';
 
 export const attachmentMethods = {
-  listAttachmentsForKey({ resourceKey, resourceId }) {
+  listAttachmentsForKey({ resourceKey, resourceId, slim }) {
     this.assertSupportedAttachmentResourceKey(resourceKey);
-    return this.apiClient.list('attachments', { [resourceKey]: resourceId });
+    return this.apiClient.list('attachments', { [resourceKey]: resourceId, slim });
   },
 
   async uploadAttachmentForKey({ resourceKey, resourceId, filePath }) {

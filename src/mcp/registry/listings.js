@@ -3,15 +3,17 @@ export const listingMethods = {
     page,
     per_page: perPage,
     tql,
+    slim,
   } = {}) {
     return this.apiClient.list('tests', {
       page,
       per_page: perPage,
       tql,
+      slim,
     });
   },
 
-  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText } = {}) {
+  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText, slim } = {}) {
     return this.apiClient.list('suites', {
       page,
       per_page: perPage,
@@ -19,6 +21,7 @@ export const listingMethods = {
       tag,
       labels,
       search_text: searchText,
+      slim,
     });
   },
 
@@ -26,11 +29,13 @@ export const listingMethods = {
     page,
     per_page: perPage,
     tql,
+    slim,
   } = {}) {
     return this.apiClient.list('runs', {
       page,
       per_page: perPage,
       tql,
+      slim,
     });
   },
 
@@ -53,6 +58,7 @@ export const listingMethods = {
     envs,
     rungroups,
     defects,
+    slim,
   } = {}) {
     return this.apiClient.list('testruns', {
       page,
@@ -73,26 +79,27 @@ export const listingMethods = {
       envs: Array.isArray(envs) ? envs.join(',') : envs,
       rungroups: Array.isArray(rungroups) ? rungroups.join(',') : rungroups,
       defects,
+      slim,
     });
   },
 
-  listRungroups({ page, per_page: perPage } = {}) {
-    return this.apiClient.list('rungroups', { page, per_page: perPage });
+  listRungroups({ page, per_page: perPage, slim } = {}) {
+    return this.apiClient.list('rungroups', { page, per_page: perPage, slim });
   },
 
-  listSteps({ page, per_page: perPage } = {}) {
-    return this.apiClient.list('steps', { page, per_page: perPage });
+  listSteps({ page, per_page: perPage, slim } = {}) {
+    return this.apiClient.list('steps', { page, per_page: perPage, slim });
   },
 
-  listSnippets({ page, per_page: perPage } = {}) {
-    return this.apiClient.list('snippets', { page, per_page: perPage });
+  listSnippets({ page, per_page: perPage, slim } = {}) {
+    return this.apiClient.list('snippets', { page, per_page: perPage, slim });
   },
 
-  listLabels({ page, per_page: perPage } = {}) {
-    return this.apiClient.list('labels', { page, per_page: perPage });
+  listLabels({ page, per_page: perPage, slim } = {}) {
+    return this.apiClient.list('labels', { page, per_page: perPage, slim });
   },
 
-  listPlans({ page, per_page: perPage, kind, hidden, labels, search_text: searchText } = {}) {
+  listPlans({ page, per_page: perPage, kind, hidden, labels, search_text: searchText, slim } = {}) {
     return this.apiClient.list('plans', {
       page,
       per_page: perPage,
@@ -100,19 +107,20 @@ export const listingMethods = {
       hidden,
       'labels[]': labels,
       search_text: searchText,
+      slim,
     });
   },
 
-  listRequirements({ page, per_page: perPage, source, scope } = {}) {
-    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope });
+  listRequirements({ page, per_page: perPage, source, scope, slim } = {}) {
+    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope, slim });
   },
 
-  listMilestones({ page, per_page: perPage, type, status } = {}) {
-    return this.apiClient.list('milestones', { page, per_page: perPage, type, status });
+  listMilestones({ page, per_page: perPage, type, status, slim } = {}) {
+    return this.apiClient.list('milestones', { page, per_page: perPage, type, status, slim });
   },
 
-  listTags() {
-    return this.apiClient.list('tags');
+  listTags({ slim } = {}) {
+    return this.apiClient.list('tags', { slim });
   },
 
   getTagByTitle(tagId) {

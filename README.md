@@ -273,6 +273,7 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 
 - **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
 - **Search/Filter** - No dedicated `/search` endpoints; filtering is done via the `*_list` tools (`tql` for tests and runs, OpenAPI-aligned filters for other entities)
+- **Slim List Responses** - List tools request compact API responses by default and omit heavy entity fields and null values. Pass `verbose: true` to return full objects, or `fields: ["id", "title", "description"]` to return only selected fields. Both options disable the backend `slim=true` request so heavy fields remain available when requested.
 - **TQL** - Use `tql` as the single search/filter input for `tests_list` and `runs_list`
 - **TQL Syntax** - For user-facing syntax details and more examples, see the official TQL docs: https://docs.testomat.io/advanced/tql/
 - **TQL Scope** - TQL parameter descriptions keep the documented field whitelist in-band; call `tql_help` for syntax details and additional examples

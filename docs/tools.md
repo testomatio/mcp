@@ -1486,6 +1486,16 @@ All list operations support:
 - `page` (integer, min: 1)
 - `per_page` (integer, min: 1, max: 100)
 
+### List Response Projection
+
+List operations request slim responses from the API by default. Heavy entity fields such as `description` and `code`, duplicate title fields, and null values are omitted from the result.
+
+- `verbose: true` disables the backend slim request and returns full objects.
+- `fields: ["id", "title", "description"]` disables the backend slim request and returns only the selected non-null fields.
+- If both are provided, `verbose: true` takes precedence and returns full objects.
+
+The backend `slim` parameter is managed internally by MCP; callers should use `verbose` or `fields` rather than pass `slim` directly.
+
 ### Issue Linking
 
 Two ways to link issues:

@@ -96,6 +96,14 @@ export function slimList(payload, { verbose = false, fields, entity } = {}) {
   return withViewMarker(applyToEnvelope(payload, (item) => stripHeavy(item, heavyFields)));
 }
 
+/**
+ * Ask the API to omit heavy list fields only when MCP does not need them for a
+ * full or custom projection.
+ */
+export function backendSlimQuery({ verbose = false, fields } = {}) {
+  return !verbose && !(Array.isArray(fields) && fields.length) ? { slim: true } : {};
+}
+
 const LIST_OPTION_PROPERTIES = {
   verbose: {
     type: 'boolean',
