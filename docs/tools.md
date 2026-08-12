@@ -1496,6 +1496,32 @@ List operations request slim responses from the API by default. Heavy entity fie
 
 The backend `slim` parameter is managed internally by MCP; callers should use `verbose` or `fields` rather than pass `slim` directly.
 
+### Counts & Aggregation
+
+List operations accept `count` (and `group_by` where supported) to fetch totals and aggregated breakdowns without transferring the entity list — useful for "how many" questions instead of pulling full pages.
+
+- `count: true` returns only `meta` with `total` (no `data`). Example response:
+  ```json
+  { "meta": { "total": 59, "page": 1, "per_page": 30 } }
+  ```
+- `group_by: <field>` (used with `count: true`) adds a `meta.group_by` breakdown. Example:
+  ```json
+  { "meta": { "total": 59, "page": 1, "per_page": 30, "group_by": { "passed": 30, "failed": 8 } } }
+  ```
+
+`group_by` is supported only by these list tools, with these field values:
+
+| Tool | `group_by` values |
+|------|-------------------|
+| `tests_list` | `state`, `priority`, `created_by` |
+| `testruns_list` | `status` |
+| `runs_list` | `status`, `created_by` |
+| `requirements_list` | `status`, `created_by` |
+
+When grouping by `created_by`, the breakdown is keyed by **user email** (e.g. `{"alice@example.com": 12}`), not by user ID.
+
+When `count: true` is set, MCP omits `slim` — the response is meta-only, so field projection does not apply.
+
 ### Issue Linking
 
 Two ways to link issues:

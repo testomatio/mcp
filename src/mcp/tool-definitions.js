@@ -14,9 +14,9 @@ import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
 import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
 import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
-import { withListOptions } from './list-projection.js';
+import { withListOptions, withCountGroupOptions } from './list-projection.js';
 
-export const TOOL_DEFINITIONS = withListOptions([
+export const TOOL_DEFINITIONS = withCountGroupOptions(withListOptions([
   ...SYSTEM_TOOLS,
   ...PROJECT_TOOLS,
   ...TESTS_TOOLS,
@@ -33,4 +33,4 @@ export const TOOL_DEFINITIONS = withListOptions([
   ...ATTACHMENT_TOOLS,
   ...PLANS_TOOLS,
   ...REQUIREMENTS_TOOLS,
-]);
+]));

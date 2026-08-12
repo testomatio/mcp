@@ -98,9 +98,13 @@ export function slimList(payload, { verbose = false, fields, entity } = {}) {
 
 /**
  * Ask the API to omit heavy list fields only when MCP does not need them for a
- * full or custom projection.
+ * full or custom projection. When `count` is requested the response is meta only,
+ * so `slim` is irrelevant and must not be sent alongside `count`.
  */
-export function backendSlimQuery({ verbose = false, fields } = {}) {
+export function backendSlimQuery({ verbose = false, fields, count = false } = {}) {
+  if (count) {
+    return {};
+  }
   return !verbose && !(Array.isArray(fields) && fields.length) ? { slim: true } : {};
 }
 
@@ -144,5 +148,58 @@ export function withListOptions(tools, { extraNames = [] } = {}) {
         properties,
       },
     };
+  });
+}
+
+// Backend-supported `group_by` fields per primary entity (count=true&group_by=...).
+const GROUPABLE_FIELDS = {
+  tests: ['state', 'priority', 'created_by'],
+  testruns: ['status'],
+  runs: ['status', 'created_by'],
+  requirements: ['status', 'created_by'],
+};
+
+// Scoped list tools (*_issues_list, *_attachments_list) are filtered to one entity,
+// so count/group_by aggregation does not apply there.
+const SCOPED_LIST_INFIXES = ['_issues_', '_attachments_'];
+
+function isPrimaryListToolName(name) {
+  return (
+    typeof name === 'string' &&
+    name.endsWith('_list') &&
+    !SCOPED_LIST_INFIXES.some((infix) => name.includes(infix))
+  );
+}
+
+const COUNT_PROPERTY = {
+  type: 'boolean',
+  description:
+    'Return only metadata with total counts instead of the entity list. Pair with group_by (where supported) for an aggregated breakdown.',
+};
+
+/**
+ * Inject `count` into every primary list tool and `group_by` (enum) into the entities
+ * the backend can aggregate. Scoped list tools are left untouched.
+ *
+ * @param {Array} tools
+ */
+export function withCountGroupOptions(tools) {
+  return tools.map((tool) => {
+    if (!tool || !isPrimaryListToolName(tool.name)) return tool;
+    const inputSchema = tool.inputSchema || { type: 'object', properties: {} };
+    const properties = { ...(inputSchema.properties || {}), count: COUNT_PROPERTY };
+    const entity = tool.name.replace(/_list$/, '');
+    const groupable = GROUPABLE_FIELDS[entity];
+    if (Array.isArray(groupable) && groupable.length) {
+      const createdByNote = groupable.includes('created_by')
+        ? ' When grouping by created_by, counts are keyed by user email, not ID.'
+        : '';
+      properties.group_by = {
+        type: 'string',
+        enum: groupable,
+        description: `Aggregate counts by this field (use with count=true). One of: ${groupable.join(', ')}.${createdByNote}`,
+      };
+    }
+    return { ...tool, inputSchema: { ...inputSchema, properties } };
   });
 }

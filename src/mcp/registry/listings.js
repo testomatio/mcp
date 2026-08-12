@@ -3,17 +3,21 @@ export const listingMethods = {
     page,
     per_page: perPage,
     tql,
+    count,
+    group_by: groupBy,
     slim,
   } = {}) {
     return this.apiClient.list('tests', {
       page,
       per_page: perPage,
       tql,
+      count,
+      group_by: groupBy,
       slim,
     });
   },
 
-  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText, slim } = {}) {
+  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText, count, slim } = {}) {
     return this.apiClient.list('suites', {
       page,
       per_page: perPage,
@@ -21,6 +25,7 @@ export const listingMethods = {
       tag,
       labels,
       search_text: searchText,
+      count,
       slim,
     });
   },
@@ -29,12 +34,16 @@ export const listingMethods = {
     page,
     per_page: perPage,
     tql,
+    count,
+    group_by: groupBy,
     slim,
   } = {}) {
     return this.apiClient.list('runs', {
       page,
       per_page: perPage,
       tql,
+      count,
+      group_by: groupBy,
       slim,
     });
   },
@@ -58,6 +67,8 @@ export const listingMethods = {
     envs,
     rungroups,
     defects,
+    count,
+    group_by: groupBy,
     slim,
   } = {}) {
     return this.apiClient.list('testruns', {
@@ -79,27 +90,29 @@ export const listingMethods = {
       envs: Array.isArray(envs) ? envs.join(',') : envs,
       rungroups: Array.isArray(rungroups) ? rungroups.join(',') : rungroups,
       defects,
+      count,
+      group_by: groupBy,
       slim,
     });
   },
 
-  listRungroups({ page, per_page: perPage, slim } = {}) {
-    return this.apiClient.list('rungroups', { page, per_page: perPage, slim });
+  listRungroups({ page, per_page: perPage, count, slim } = {}) {
+    return this.apiClient.list('rungroups', { page, per_page: perPage, count, slim });
   },
 
-  listSteps({ page, per_page: perPage, slim } = {}) {
-    return this.apiClient.list('steps', { page, per_page: perPage, slim });
+  listSteps({ page, per_page: perPage, count, slim } = {}) {
+    return this.apiClient.list('steps', { page, per_page: perPage, count, slim });
   },
 
-  listSnippets({ page, per_page: perPage, slim } = {}) {
-    return this.apiClient.list('snippets', { page, per_page: perPage, slim });
+  listSnippets({ page, per_page: perPage, count, slim } = {}) {
+    return this.apiClient.list('snippets', { page, per_page: perPage, count, slim });
   },
 
-  listLabels({ page, per_page: perPage, slim } = {}) {
-    return this.apiClient.list('labels', { page, per_page: perPage, slim });
+  listLabels({ page, per_page: perPage, count, slim } = {}) {
+    return this.apiClient.list('labels', { page, per_page: perPage, count, slim });
   },
 
-  listPlans({ page, per_page: perPage, kind, hidden, labels, search_text: searchText, slim } = {}) {
+  listPlans({ page, per_page: perPage, kind, hidden, labels, search_text: searchText, count, slim } = {}) {
     return this.apiClient.list('plans', {
       page,
       per_page: perPage,
@@ -107,20 +120,21 @@ export const listingMethods = {
       hidden,
       'labels[]': labels,
       search_text: searchText,
+      count,
       slim,
     });
   },
 
-  listRequirements({ page, per_page: perPage, source, scope, slim } = {}) {
-    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope, slim });
+  listRequirements({ page, per_page: perPage, source, scope, count, group_by: groupBy, slim } = {}) {
+    return this.apiClient.list('requirements', { page, per_page: perPage, source, scope, count, group_by: groupBy, slim });
   },
 
-  listMilestones({ page, per_page: perPage, type, status, slim } = {}) {
-    return this.apiClient.list('milestones', { page, per_page: perPage, type, status, slim });
+  listMilestones({ page, per_page: perPage, type, status, count, slim } = {}) {
+    return this.apiClient.list('milestones', { page, per_page: perPage, type, status, count, slim });
   },
 
-  listTags({ slim } = {}) {
-    return this.apiClient.list('tags', { slim });
+  listTags({ count, slim } = {}) {
+    return this.apiClient.list('tags', { count, slim });
   },
 
   getTagByTitle(tagId) {
