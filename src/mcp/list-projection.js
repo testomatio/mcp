@@ -151,14 +151,6 @@ export function withListOptions(tools, { extraNames = [] } = {}) {
   });
 }
 
-// Backend-supported `group_by` fields per primary entity (count=true&group_by=...).
-const GROUPABLE_FIELDS = {
-  tests: ['state', 'priority', 'created_by'],
-  testruns: ['status'],
-  runs: ['status', 'created_by'],
-  requirements: ['status', 'created_by'],
-};
-
 // Scoped list tools (*_issues_list, *_attachments_list) are filtered to one entity,
 // so count/group_by aggregation does not apply there.
 const SCOPED_LIST_INFIXES = ['_issues_', '_attachments_'];
@@ -174,12 +166,19 @@ function isPrimaryListToolName(name) {
 const COUNT_PROPERTY = {
   type: 'boolean',
   description:
-    'Return only metadata with total counts instead of the entity list. Pair with group_by (where supported) for an aggregated breakdown.',
+    'Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.',
+};
+
+const GROUP_BY_PROPERTY = {
+  type: 'string',
+  description:
+    'Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.',
 };
 
 /**
- * Inject `count` into every primary list tool and `group_by` (enum) into the entities
- * the backend can aggregate. Scoped list tools are left untouched.
+ * Inject `count` and `group_by` into every primary list tool. `group_by` is a
+ * free-form string — the backend is the source of truth for which fields each
+ * resource accepts. Scoped list tools (*_issues_list, *_attachments_list) are skipped.
  *
  * @param {Array} tools
  */
@@ -187,19 +186,11 @@ export function withCountGroupOptions(tools) {
   return tools.map((tool) => {
     if (!tool || !isPrimaryListToolName(tool.name)) return tool;
     const inputSchema = tool.inputSchema || { type: 'object', properties: {} };
-    const properties = { ...(inputSchema.properties || {}), count: COUNT_PROPERTY };
-    const entity = tool.name.replace(/_list$/, '');
-    const groupable = GROUPABLE_FIELDS[entity];
-    if (Array.isArray(groupable) && groupable.length) {
-      const createdByNote = groupable.includes('created_by')
-        ? ' When grouping by created_by, counts are keyed by user email, not ID.'
-        : '';
-      properties.group_by = {
-        type: 'string',
-        enum: groupable,
-        description: `Aggregate counts by this field (use with count=true). One of: ${groupable.join(', ')}.${createdByNote}`,
-      };
-    }
+    const properties = {
+      ...(inputSchema.properties || {}),
+      count: COUNT_PROPERTY,
+      group_by: GROUP_BY_PROPERTY,
+    };
     return { ...tool, inputSchema: { ...inputSchema, properties } };
   });
 }
