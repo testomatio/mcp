@@ -98,9 +98,13 @@ export function slimList(payload, { verbose = false, fields, entity } = {}) {
 
 /**
  * Ask the API to omit heavy list fields only when MCP does not need them for a
- * full or custom projection.
+ * full or custom projection. When `count` is requested the response is meta only,
+ * so `slim` is irrelevant and must not be sent alongside `count`.
  */
-export function backendSlimQuery({ verbose = false, fields } = {}) {
+export function backendSlimQuery({ verbose = false, fields, count = false } = {}) {
+  if (count) {
+    return {};
+  }
   return !verbose && !(Array.isArray(fields) && fields.length) ? { slim: true } : {};
 }
 
@@ -144,5 +148,49 @@ export function withListOptions(tools, { extraNames = [] } = {}) {
         properties,
       },
     };
+  });
+}
+
+// Scoped list tools (*_issues_list, *_attachments_list) are filtered to one entity,
+// so count/group_by aggregation does not apply there.
+const SCOPED_LIST_INFIXES = ['_issues_', '_attachments_'];
+
+function isPrimaryListToolName(name) {
+  return (
+    typeof name === 'string' &&
+    name.endsWith('_list') &&
+    !SCOPED_LIST_INFIXES.some((infix) => name.includes(infix))
+  );
+}
+
+const COUNT_PROPERTY = {
+  type: 'boolean',
+  description:
+    'Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.',
+};
+
+const GROUP_BY_PROPERTY = {
+  type: 'string',
+  description:
+    'Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.',
+};
+
+/**
+ * Inject `count` and `group_by` into every primary list tool. `group_by` is a
+ * free-form string — the backend is the source of truth for which fields each
+ * resource accepts. Scoped list tools (*_issues_list, *_attachments_list) are skipped.
+ *
+ * @param {Array} tools
+ */
+export function withCountGroupOptions(tools) {
+  return tools.map((tool) => {
+    if (!tool || !isPrimaryListToolName(tool.name)) return tool;
+    const inputSchema = tool.inputSchema || { type: 'object', properties: {} };
+    const properties = {
+      ...(inputSchema.properties || {}),
+      count: COUNT_PROPERTY,
+      group_by: GROUP_BY_PROPERTY,
+    };
+    return { ...tool, inputSchema: { ...inputSchema, properties } };
   });
 }
