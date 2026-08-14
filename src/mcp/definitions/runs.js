@@ -1,4 +1,5 @@
 import { RUNS_TQL_INPUT_DESCRIPTION, RUNS_TQL_REFERENCE } from './tql-reference.js';
+import { BRANCH_PARAM } from './branches.js';
 
 export const RUNS_TOOLS = [
   {
@@ -19,7 +20,8 @@ export const RUNS_TOOLS = [
         "tql": {
           "type": "string",
           "description": RUNS_TQL_INPUT_DESCRIPTION
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -32,7 +34,8 @@ export const RUNS_TOOLS = [
       "properties": {
         "run_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"
@@ -135,7 +138,8 @@ export const RUNS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title"
@@ -240,7 +244,8 @@ export const RUNS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"
@@ -256,7 +261,8 @@ export const RUNS_TOOLS = [
       "properties": {
         "run_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"

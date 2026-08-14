@@ -1,4 +1,5 @@
 import { TESTS_TQL_INPUT_DESCRIPTION, TESTS_TQL_REFERENCE } from './tql-reference.js';
+import { BRANCH_PARAM } from './branches.js';
 
 export const TESTS_TOOLS = [
   {
@@ -19,7 +20,8 @@ export const TESTS_TOOLS = [
         "tql": {
           "type": "string",
           "description": TESTS_TQL_INPUT_DESCRIPTION
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -32,7 +34,8 @@ export const TESTS_TOOLS = [
       "properties": {
         "test_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"
@@ -116,7 +119,8 @@ export const TESTS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title",
@@ -207,7 +211,8 @@ export const TESTS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"
@@ -223,7 +228,8 @@ export const TESTS_TOOLS = [
       "properties": {
         "test_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"

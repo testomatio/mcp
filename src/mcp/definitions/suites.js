@@ -1,3 +1,4 @@
+import { BRANCH_PARAM } from './branches.js';
 export const SUITES_TOOLS = [
   {
     "name": "suites_list",
@@ -29,7 +30,8 @@ export const SUITES_TOOLS = [
         },
         "search_text": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -42,7 +44,8 @@ export const SUITES_TOOLS = [
       "properties": {
         "suite_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
@@ -120,7 +123,8 @@ export const SUITES_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title"
@@ -201,7 +205,8 @@ export const SUITES_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
@@ -217,7 +222,8 @@ export const SUITES_TOOLS = [
       "properties": {
         "suite_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
