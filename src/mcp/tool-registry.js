@@ -17,7 +17,7 @@ function withPagination(payload) {
   if (!Array.isArray(payload.data) || !meta || typeof meta !== 'object') {
     return payload;
   }
-  const { total, page, per_page: perPage } = meta;
+  const { total, page, per_page: perPage, has_more: backendHasMore } = meta;
   if (
     typeof total !== 'number' ||
     typeof page !== 'number' ||
@@ -26,7 +26,10 @@ function withPagination(payload) {
   ) {
     return payload;
   }
-  if (page * perPage < total) {
+  const hasMore =
+    typeof backendHasMore === 'boolean' ? backendHasMore : page * perPage < total;
+
+  if (hasMore) {
     return {
       ...payload,
       _note: `Showing ${payload.data.length} of ${total} (page ${page}). More available — refine the filter or request the next page.`,
