@@ -2,57 +2,58 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 export const payloadMethods = {
-  async createWrapped(resource, wrapperKey, payload) {
+  async createWrapped(resource, wrapperKey, payload, query = {}) {
     const wrappedBody = { [wrapperKey]: payload };
     try {
-      return await this.apiClient.create(resource, payload);
+      return await this.apiClient.create(resource, payload, query);
     } catch (error) {
       if (!this.shouldRetryWrappedBody(error, wrapperKey)) {
         throw error;
       }
-      return this.apiClient.create(resource, wrappedBody);
+      return this.apiClient.create(resource, wrappedBody, query);
     }
   },
 
-  async updateWrapped(resource, id, wrapperKey, payload) {
+  async updateWrapped(resource, id, wrapperKey, payload, query = {}) {
     const wrappedBody = { [wrapperKey]: payload };
     try {
-      return await this.apiClient.update(resource, id, payload);
+      return await this.apiClient.update(resource, id, payload, query);
     } catch (error) {
       if (!this.shouldRetryWrappedBody(error, wrapperKey)) {
         throw error;
       }
-      return this.apiClient.update(resource, id, wrappedBody);
+      return this.apiClient.update(resource, id, wrappedBody, query);
     }
   },
 
-  async patchWrapped(resource, id, wrapperKey, payload) {
+  async patchWrapped(resource, id, wrapperKey, payload, query = {}) {
     const wrappedBody = { [wrapperKey]: payload };
     try {
-      return await this.apiClient.patch(resource, id, payload);
+      return await this.apiClient.patch(resource, id, payload, query);
     } catch (error) {
       if (!this.shouldRetryWrappedBody(error, wrapperKey)) {
         throw error;
       }
-      return this.apiClient.patch(resource, id, wrappedBody);
+      return this.apiClient.patch(resource, id, wrappedBody, query);
     }
   },
 
-  async createRequirement(args = {}) {
+  async createRequirement(args = {}, query = {}) {
     const { files, ...payloadArgs } = args;
     const payload = this.buildRequirementPayload(payloadArgs);
 
     if (this.hasFiles(files)) {
       return this.apiClient.createMultipart(
         'requirements',
-        await this.buildRequirementFormData(payload, files)
+        await this.buildRequirementFormData(payload, files),
+        query
       );
     }
 
-    return this.createWrapped('requirements', 'requirement', payload);
+    return this.createWrapped('requirements', 'requirement', payload, query);
   },
 
-  async updateRequirement(requirementId, args = {}) {
+  async updateRequirement(requirementId, args = {}, query = {}) {
     const { files, ...payloadArgs } = args;
     const payload = this.buildRequirementPayload(payloadArgs);
 
@@ -60,11 +61,12 @@ export const payloadMethods = {
       return this.apiClient.patchMultipart(
         'requirements',
         requirementId,
-        await this.buildRequirementFormData(payload, files)
+        await this.buildRequirementFormData(payload, files),
+        query
       );
     }
 
-    return this.patchWrapped('requirements', requirementId, 'requirement', payload);
+    return this.patchWrapped('requirements', requirementId, 'requirement', payload, query);
   },
 
   hasFiles(files) {
@@ -198,27 +200,27 @@ export const payloadMethods = {
     };
   },
 
-  async createRunWithFallback(args = {}) {
+  async createRunWithFallback(args = {}, query = {}) {
     const payload = this.buildRunCreatePayload(args);
     try {
-      return await this.apiClient.create('runs', payload);
+      return await this.apiClient.create('runs', payload, query);
     } catch (error) {
       if (!this.shouldRetryWrappedBody(error, 'run')) {
         throw error;
       }
-      return this.apiClient.create('runs', { run: payload });
+      return this.apiClient.create('runs', { run: payload }, query);
     }
   },
 
-  async updateRunWithFallback(runId, args = {}) {
+  async updateRunWithFallback(runId, args = {}, query = {}) {
     const payload = this.buildRunUpdatePayload(args);
     try {
-      return await this.apiClient.update('runs', runId, payload);
+      return await this.apiClient.update('runs', runId, payload, query);
     } catch (error) {
       if (!this.shouldRetryWrappedBody(error, 'run')) {
         throw error;
       }
-      return this.apiClient.update('runs', runId, { run: payload });
+      return this.apiClient.update('runs', runId, { run: payload }, query);
     }
   },
 
@@ -350,5 +352,9 @@ export const payloadMethods = {
       global,
       confluence_url: confluenceUrl,
     };
+  },
+
+  buildBranchPayload({ title } = {}) {
+    return { title };
   },
 };

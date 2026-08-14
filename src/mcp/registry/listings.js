@@ -6,6 +6,7 @@ export const listingMethods = {
     count,
     group_by: groupBy,
     slim,
+    branch,
   } = {}) {
     return this.apiClient.list('tests', {
       page,
@@ -14,10 +15,11 @@ export const listingMethods = {
       count,
       group_by: groupBy,
       slim,
+      branch,
     });
   },
 
-  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText, count, group_by: groupBy, slim } = {}) {
+  listSuites({ page, per_page: perPage, file_type: fileType, tag, labels, search_text: searchText, count, group_by: groupBy, slim, branch } = {}) {
     return this.apiClient.list('suites', {
       page,
       per_page: perPage,
@@ -28,6 +30,7 @@ export const listingMethods = {
       count,
       group_by: groupBy,
       slim,
+      branch,
     });
   },
 
@@ -38,6 +41,7 @@ export const listingMethods = {
     count,
     group_by: groupBy,
     slim,
+    branch,
   } = {}) {
     return this.apiClient.list('runs', {
       page,
@@ -46,6 +50,7 @@ export const listingMethods = {
       count,
       group_by: groupBy,
       slim,
+      branch,
     });
   },
 
@@ -137,6 +142,26 @@ export const listingMethods = {
 
   listTags({ count, group_by: groupBy, slim } = {}) {
     return this.apiClient.list('tags', { count, group_by: groupBy, slim });
+  },
+
+  listBranches({
+    page,
+    per_page: perPage,
+    filter_state: filterState,
+    filter_title: filterTitle,
+    count,
+    group_by: groupBy,
+    slim,
+  } = {}) {
+    return this.apiClient.list('branches', {
+      page,
+      per_page: perPage,
+      'filter[state]': filterState,
+      'filter[title]': filterTitle,
+      count,
+      group_by: groupBy,
+      slim,
+    });
   },
 
   getTagByTitle(tagId) {

@@ -21,6 +21,7 @@ Complete reference for the MCP tools available in the Testomat.io MCP Server.
 - [Issue Management](#issue-management-global)
 - [Attachment Management](#attachment-management)
 - [Requirement Management](#requirement-management)
+- [Branch Management](#branch-management)
 - [Enterprise Analytics](#enterprise-analytics)
 
 ---
@@ -110,6 +111,7 @@ For the full syntax and field reference, see the official docs: https://docs.tes
 | page | integer | No | Page number (min: 1) |
 | per_page | integer | No | Items per page (min: 1, max: 100) |
 | tql | string | No | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -135,6 +137,7 @@ Get a specific test by ID.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | test_id | string | Yes | Test ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -166,6 +169,7 @@ Create a new test.
 | code | string | No | Test code/automation reference |
 | state | string | No | One of: `manual`, `detached`, `automated` |
 | link | array | No | Links to labels, tags, milestones, issues, or jira |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Link Array Format:**
 ```json
@@ -218,6 +222,7 @@ Update an existing test.
 | state | string | No | One of: `manual`, `detached`, `automated` |
 | sync | boolean | No | Sync with automation |
 | link | array | No | Link updates |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -243,6 +248,7 @@ Delete a test.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | test_id | string | Yes | Test ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -363,6 +369,7 @@ List suites as a tree structure.
 | tag | string | No | Filter by tag |
 | labels | string | No | Filter by labels |
 | search_text | string | No | Search text |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `GET /api/v2/{project_id}/suites`
 
@@ -376,6 +383,7 @@ Get a specific suite by ID.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | suite_id | string | Yes | Suite ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `GET /api/v2/{project_id}/suites/{id}`
 
@@ -397,6 +405,7 @@ Create a new suite.
 | file | string | No | File reference |
 | children | array | No | Child suites |
 | link | array | No | Links to labels, tags, milestones, issues, jira, or requirements |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `POST /api/v2/{project_id}/suites`
 
@@ -419,6 +428,7 @@ Update an existing suite.
 | file | string | No | File reference |
 | children | array | No | Child suites |
 | link | array | No | Link updates for labels, tags, milestones, issues, jira, or requirements |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `PUT /api/v2/{project_id}/suites/{id}`
 
@@ -432,6 +442,7 @@ Delete a suite.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | suite_id | string | Yes | Suite ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/suites/{id}`
 
@@ -462,6 +473,7 @@ For the full syntax and field reference, see the official docs: https://docs.tes
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
 | tql | string | No | TQL filter for runs. Examples: `title % 'Manual tests'`, `plan == '{PLAN_ID}'`, `finished and with_defect` |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -487,6 +499,7 @@ Get a specific run by ID.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | run_id | string | Yes | Run ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `GET /api/v2/{project_id}/runs/{id}`
 
@@ -511,6 +524,7 @@ Create a new test run.
 | suite_ids | array | No | Array of suite public UIDs whose tests to include |
 | envs | array | No | Array of environment names |
 | link | array | No | Links to labels, tags, milestones, issues, or jira |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Example:**
 ```json
@@ -560,6 +574,7 @@ Update an existing run.
 | test_ids | array | No | Test public UIDs |
 | suite_ids | array | No | Suite public UIDs whose tests to include |
 | link | array | No | Link updates for labels, tags, milestones, issues, or jira |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **Status Event Example:**
 ```json
@@ -584,6 +599,7 @@ Delete a run.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | run_id | string | Yes | Run ID |
+| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
 **API Endpoint:** `DELETE /api/v2/{project_id}/runs/{id}`
 
@@ -1456,7 +1472,102 @@ Delete a requirement.
 
 ---
 
+## Branch Management
+
+Requires the `branches` subscription feature (enterprise plan). Branches are identified by slug.
+
+### branches_list
+
+List project branches.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| page | integer | No | Page number (min: 1) |
+| per_page | integer | No | Items per page (min: 1, max: 100) |
+| filter_state | string | No | Filter by state: `active`, `merged` |
+| filter_title | string | No | Filter by title (partial substring match) |
+| count | boolean | No | Return only total counts |
+| group_by | string | No | Aggregate counts by field (use with count=true) |
+
+**API Endpoint:** `GET /api/v2/{project_id}/branches`
+
+---
+
+### branches_get
+
+Get a branch by slug.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| branch_id | string | Yes | Branch slug |
+
+**Returns:** Branch slug, title, state (`active`/`merged`), tests_count, suites_count.
+
+**API Endpoint:** `GET /api/v2/{project_id}/branches/{slug}`
+
+---
+
+### branches_create
+
+Create a branch.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| title | string | Yes | Branch title; a slug is generated from it |
+
+**API Endpoint:** `POST /api/v2/{project_id}/branches`
+
+---
+
+### branches_update
+
+Update a branch title.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| branch_id | string | Yes | Branch slug |
+| title | string | No | New branch title |
+
+**API Endpoint:** `PUT /api/v2/{project_id}/branches/{slug}`
+
+---
+
+### branches_delete
+
+Delete a branch.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| branch_id | string | Yes | Branch slug |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/branches/{slug}`
+
+---
+
 ## Common Patterns
+
+### Branch Scoping
+
+Tests, suites, and runs CRUD tools accept an optional `branch` parameter (branch slug).
+Omit it (or pass `main`) to operate on the main branch.
+
+- For **tests** and **suites**: a matching branch-local record is used when it exists, falling back to main; updating or deleting a main-only record creates an isolated branch-local copy rather than mutating main.
+- For **runs**: creating a run under a branch tags it with that branch (it is then only visible/reachable when the same `branch` is passed again), but updating or deleting an existing run always applies directly to whatever record was found — it is never forked.
+
+```json
+{
+  "name": "tests_list",
+  "arguments": {
+    "branch": "feature-login",
+    "tql": "priority == 'high'"
+  }
+}
+```
 
 ### API Sessions
 

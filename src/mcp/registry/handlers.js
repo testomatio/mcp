@@ -19,17 +19,27 @@ export const handlerMethods = {
           })
         );
       };
-      handlers[`${toolPrefix}_get`] = async (args = {}) =>
-        this.asText(await this.apiClient.get(resource, this.pickRequiredArg(args, idArg)));
-      handlers[`${toolPrefix}_create`] = async (args = {}) =>
-        this.asText(await this.executeCreate(spec, args));
+      handlers[`${toolPrefix}_get`] = async (args = {}) => {
+        const id = this.pickRequiredArg(args, idArg);
+        return this.asText(
+          await this.apiClient.get(resource, id, this.pickQueryArgs(spec, args))
+        );
+      };
+      handlers[`${toolPrefix}_create`] = async (args = {}) => {
+        const { query, payloadArgs } = this.splitQueryArgs(spec, args);
+        return this.asText(await this.executeCreate(spec, payloadArgs, query));
+      };
       handlers[`${toolPrefix}_update`] = async (args = {}) => {
         const id = this.pickRequiredArg(args, idArg);
-        const payloadArgs = this.omitArg(args, idArg);
-        return this.asText(await this.executeUpdate(spec, id, payloadArgs));
+        const { query, payloadArgs } = this.splitQueryArgs(spec, this.omitArgs(args, [idArg]));
+        return this.asText(await this.executeUpdate(spec, id, payloadArgs, query));
       };
-      handlers[`${toolPrefix}_delete`] = async (args = {}) =>
-        this.asText(await this.apiClient.delete(resource, this.pickRequiredArg(args, idArg)));
+      handlers[`${toolPrefix}_delete`] = async (args = {}) => {
+        const id = this.pickRequiredArg(args, idArg);
+        return this.asText(
+          await this.apiClient.delete(resource, id, this.pickQueryArgs(spec, args))
+        );
+      };
     }
   },
 
@@ -139,34 +149,58 @@ export const handlerMethods = {
     return value;
   },
 
-  omitArg(args = {}, key) {
+  omitArgs(args = {}, keys) {
     const payload = { ...args };
-    delete payload[key];
+    for (const key of keys) {
+      delete payload[key];
+    }
     return payload;
   },
 
-  executeCreate(spec, args = {}) {
-    if (spec.createMode === 'run') {
-      return this.createRunWithFallback(args);
+  /**
+   * Extract the entity's query args (spec.queryArgs, e.g. branch) from tool args
+   * without knowing their names in the handlers.
+   */
+  splitQueryArgs(spec, args = {}) {
+    const queryArgs = spec.queryArgs || [];
+    const query = {};
+    const payloadArgs = { ...args };
+    for (const key of queryArgs) {
+      if (args[key] !== undefined) {
+        query[key] = args[key];
+        delete payloadArgs[key];
+      }
     }
-    if (spec.createMode === 'requirement') {
-      return this.createRequirement(args);
-    }
-    const payload = this[spec.payloadBuilder](args);
-    return this.createWrapped(spec.resource, spec.wrapperKey, payload);
+    return { query, payloadArgs };
   },
 
-  executeUpdate(spec, id, args = {}) {
+  pickQueryArgs(spec, args = {}) {
+    const { query } = this.splitQueryArgs(spec, args);
+    return query;
+  },
+
+  executeCreate(spec, args = {}, query = {}) {
+    if (spec.createMode === 'run') {
+      return this.createRunWithFallback(args, query);
+    }
+    if (spec.createMode === 'requirement') {
+      return this.createRequirement(args, query);
+    }
+    const payload = this[spec.payloadBuilder](args);
+    return this.createWrapped(spec.resource, spec.wrapperKey, payload, query);
+  },
+
+  executeUpdate(spec, id, args = {}, query = {}) {
     if (spec.updateMode === 'run') {
-      return this.updateRunWithFallback(id, args);
+      return this.updateRunWithFallback(id, args, query);
     }
     if (spec.updateMode === 'requirement') {
-      return this.updateRequirement(id, args);
+      return this.updateRequirement(id, args, query);
     }
     const payload = this[spec.payloadBuilder](args);
     if (spec.updateMethod === 'patch') {
-      return this.patchWrapped(spec.resource, id, spec.wrapperKey, payload);
+      return this.patchWrapped(spec.resource, id, spec.wrapperKey, payload, query);
     }
-    return this.updateWrapped(spec.resource, id, spec.wrapperKey, payload);
+    return this.updateWrapped(spec.resource, id, spec.wrapperKey, payload, query);
   },
 };

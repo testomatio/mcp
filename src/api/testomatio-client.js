@@ -27,8 +27,8 @@ export class TestomatioApiClient {
     return this.http.request('GET', this.buildPath(resource, id), { query });
   }
 
-  async create(resource, body = {}) {
-    return this.mutate('POST', this.buildPath(resource), { body });
+  async create(resource, body = {}, query = {}) {
+    return this.mutate('POST', this.buildPath(resource), { query, body });
   }
 
   async createMultipart(resource, formData, query = {}) {
@@ -39,16 +39,16 @@ export class TestomatioApiClient {
     return this.mutate('POST', this.buildPath(resource), { query, body });
   }
 
-  async update(resource, id, body = {}) {
-    return this.mutate('PUT', this.buildPath(resource, id), { body });
+  async update(resource, id, body = {}, query = {}) {
+    return this.mutate('PUT', this.buildPath(resource, id), { query, body });
   }
 
-  async patch(resource, id, body = {}) {
-    return this.mutate('PATCH', this.buildPath(resource, id), { body });
+  async patch(resource, id, body = {}, query = {}) {
+    return this.mutate('PATCH', this.buildPath(resource, id), { query, body });
   }
 
-  async patchMultipart(resource, id, formData) {
-    return this.mutate('PATCH', this.buildPath(resource, id), { body: formData });
+  async patchMultipart(resource, id, formData, query = {}) {
+    return this.mutate('PATCH', this.buildPath(resource, id), { query, body: formData });
   }
 
   async delete(resource, id, query = {}) {

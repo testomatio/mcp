@@ -8,6 +8,7 @@ export const ENTITY_CRUD_CONFIGS = [
     wrapperKey: 'test',
     createMode: 'wrapped',
     updateMode: 'wrapped',
+    queryArgs: ['branch'],
   },
   {
     toolPrefix: 'suites',
@@ -18,6 +19,7 @@ export const ENTITY_CRUD_CONFIGS = [
     wrapperKey: 'suite',
     createMode: 'wrapped',
     updateMode: 'wrapped',
+    queryArgs: ['branch'],
   },
   {
     toolPrefix: 'runs',
@@ -26,6 +28,7 @@ export const ENTITY_CRUD_CONFIGS = [
     listMethod: 'listRuns',
     createMode: 'run',
     updateMode: 'run',
+    queryArgs: ['branch'],
   },
   {
     toolPrefix: 'testruns',
@@ -97,5 +100,15 @@ export const ENTITY_CRUD_CONFIGS = [
     createMode: 'requirement',
     updateMode: 'requirement',
     updateMethod: 'patch',
+  },
+  {
+    toolPrefix: 'branches',
+    resource: 'branches',
+    idArg: 'branch_id',
+    listMethod: 'listBranches',
+    payloadBuilder: 'buildBranchPayload',
+    wrapperKey: 'branch',
+    createMode: 'wrapped',
+    updateMode: 'wrapped',
   },
 ];
