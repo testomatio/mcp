@@ -18,6 +18,8 @@ const HEAVY_FIELDS_BY_ENTITY = {
   plans: new Set(['description']),
   requirements: new Set(['description']),
   analytics_tests: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
+  analytics_charts: new Set(['description']),
+  analytics_chart_results: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
 };
 
 function isNullish(value) {
