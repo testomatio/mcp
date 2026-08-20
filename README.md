@@ -322,6 +322,9 @@ Included tools:
 
 - `analytics_tests` - `GET /api/v2/{project_id}/analytics/tests/{kind}`
 - `analytics_stats` - `GET /api/v2/{project_id}/analytics/stats/{kind}`
+- `analytics_charts_list` - `GET /api/v2/{project_id}/analytics/charts`
+- `analytics_charts_get` - `GET /api/v2/{project_id}/analytics/charts/{id}`
+- `analytics_charts_results` - `GET /api/v2/{project_id}/analytics/charts/{id}/result`
 
 Analytics endpoints require the `api_analytics` subscription feature. Use `q` as the TQL filter parameter for analytics tools.
 
@@ -350,6 +353,22 @@ Example `analytics_stats` call:
     "q": "tag IN ['@smoke']",
     "from": "2026-04-01",
     "to": "2026-04-30"
+  }
+}
+```
+
+`analytics_charts_get` returns a chart definition with its TQL queries; `analytics_charts_results`
+returns per-query totals or the matching tests/runs of one query (by its zero-based `number`).
+
+Example `analytics_charts_results` call:
+
+```json
+{
+  "name": "analytics_charts_results",
+  "arguments": {
+    "chart_id": "abc123",
+    "number": 2,
+    "per_page": 50
   }
 }
 ```

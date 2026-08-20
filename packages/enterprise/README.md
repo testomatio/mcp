@@ -6,6 +6,9 @@ This package includes all tools from `@testomatio/mcp` plus enterprise analytics
 
 - `analytics_tests`
 - `analytics_stats`
+- `analytics_charts_list`
+- `analytics_charts_get`
+- `analytics_charts_results`
 
 ## Installation
 

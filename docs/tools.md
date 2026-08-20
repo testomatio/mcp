@@ -1715,3 +1715,106 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 ```
 
 **API Endpoint:** `GET /api/v2/{project_id}/analytics/stats/{kind}`
+
+---
+
+### analytics_charts_list
+
+List saved analytics charts and queries. Each item bundles one or more TQL queries under a single
+title, optionally rendered as a chart (e.g. "pie") or kept as a plain saved query.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| has_chart | boolean | No | `true` — only items with a chart type set; `false` — only plain saved queries |
+| kind | string | No | Filter by context: `tests` or `runs` |
+| my_charts | boolean | No | When `true`, only items created by the authenticated user |
+| only_widgets | boolean | No | When `true`, only items marked as dashboard widgets |
+| page | integer | No | Page number |
+| per_page | integer | No | Items per page (1–100) |
+
+**Example:**
+```json
+{
+  "name": "analytics_charts_list",
+  "arguments": {
+    "kind": "tests",
+    "has_chart": true,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+**API Endpoint:** `GET /api/v2/{project_id}/analytics/charts`
+
+---
+
+### analytics_charts_get
+
+Get a saved chart or query definition: title, chart type, context (tests/runs), and the ordered
+TQL queries that make it up.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| chart_id | string | Yes | Chart public UID |
+
+**Example:**
+```json
+{
+  "name": "analytics_charts_get",
+  "arguments": {
+    "chart_id": "abc123"
+  }
+}
+```
+
+**Returns:** chart `id`, `title`, `context`, `chart` display type (or null for a plain saved
+query), `queries: [{ number, query, title, label, color }]`, `options`, and the `url` to view
+the chart in Testomat.io.
+
+**API Endpoint:** `GET /api/v2/{project_id}/analytics/charts/{id}`
+
+---
+
+### analytics_charts_results
+
+Get the current results of a saved chart.
+
+Without `number`, returns the match count for every query in the chart — a cheap way to render
+a chart's totals. With `number` (zero-based query index), returns the matching tests or runs
+for that query, paginated.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| chart_id | string | Yes | Chart public UID |
+| number | integer | No | Zero-based query index to fetch full results for; omit for per-query totals |
+| page | integer | No | Page number (with `number`) |
+| per_page | integer | No | Items per page, 1–100 (with `number`) |
+
+**Example — totals for every query:**
+```json
+{
+  "name": "analytics_charts_results",
+  "arguments": {
+    "chart_id": "abc123"
+  }
+}
+```
+
+**Example — matching tests of the third query:**
+```json
+{
+  "name": "analytics_charts_results",
+  "arguments": {
+    "chart_id": "abc123",
+    "number": 2,
+    "page": 1,
+    "per_page": 50
+  }
+}
+```
+
+**API Endpoint:** `GET /api/v2/{project_id}/analytics/charts/{id}/result`
