@@ -13,7 +13,11 @@ function isAttachment(name) {
 }
 
 function isReadOp(name) {
-  return name === 'system_ping' || /_(list|get)$/.test(name) || name.endsWith('_issues_list');
+  return (
+    name === 'system_ping' ||
+    /_(list|get|results)$/.test(name) ||
+    name.endsWith('_issues_list')
+  );
 }
 
 /**
