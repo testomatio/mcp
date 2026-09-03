@@ -10,7 +10,6 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
-    "test": "node --test",
     "sync:enterprise-package": "node scripts/sync-enterprise-package.js"
   },
   "keywords": [
