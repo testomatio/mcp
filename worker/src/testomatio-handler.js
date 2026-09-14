@@ -10,6 +10,16 @@ function randomState() {
   return crypto.randomUUID().replace(/-/g, '');
 }
 
+function projectFromResource(resource) {
+  const value = Array.isArray(resource) ? resource[0] : resource;
+  if (!value) {
+    return '';
+  }
+
+  const match = /\/mcp\/([^/?#]+)/.exec(String(value));
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
 async function handleAuthorize(request, env) {
   const oauthReqInfo = await env.OAUTH_PROVIDER.parseAuthRequest(request);
 
@@ -22,9 +32,20 @@ async function handleAuthorize(request, env) {
     expirationTtl: AUTH_REQUEST_TTL_SECONDS,
   });
 
+  const client = await env.OAUTH_PROVIDER.lookupClient(oauthReqInfo.clientId).catch(() => null);
+  const project = projectFromResource(oauthReqInfo.resource);
+
   const { baseUrl } = loadServerConfig({}, env);
   const redirect = new URL('/mcp/authorize', `${baseUrl}/`);
   redirect.searchParams.set('state', state);
+
+  if (client?.clientName) {
+    redirect.searchParams.set('client_name', client.clientName);
+  }
+
+  if (project) {
+    redirect.searchParams.set('project', project);
+  }
 
   return Response.redirect(redirect.toString(), 302);
 }

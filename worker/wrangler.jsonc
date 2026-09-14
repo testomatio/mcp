@@ -15,5 +15,19 @@
       "binding": "OAUTH_KV",
       "id": "replace-with-your-kv-namespace-id"
     }
-  ]
+  ],
+  "env": {
+    "beta": {
+      "name": "testomatio-mcp-beta",
+      "vars": {
+        "TESTOMATIO_BASE_URL": "https://beta.testomat.io"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "OAUTH_KV",
+          "id": "replace-with-your-beta-kv-namespace-id"
+        }
+      ]
+    }
+  }
 }
