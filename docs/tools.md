@@ -354,6 +354,36 @@ Unlink an issue from a test.
 
 ---
 
+### tests_bulk_upsert
+
+Bulk create/update tests from a [classical tests markdown](https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/) document. Tests with an `id: @T...` in their metadata are updated; tests without an id are created. Suites are resolved by `id: @S...` or title, and created when missing.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| markdown | string | Yes | Markdown document in the testomat.io classical tests format |
+| dry_run | boolean | No | Parse the document and report planned actions without writing (default: false) |
+| create_missing_suites | boolean | No | Create suites that cannot be resolved by id or title (default: true) |
+| branch | string | No | Branch name |
+
+**Example:**
+```json
+{
+  "name": "tests_bulk_upsert",
+  "arguments": {
+    "markdown": "<!-- suite\nid: @S380c64db\n-->\n# Login Functionality\n<!-- test\nid: @T12345678\npriority: high\n-->\n# Successful Login\n## Steps\n* Navigate to the login page\n  *Expected*: Login form is displayed\n<!-- test -->\n# Failed Login\n## Steps\n* Enter invalid credentials\n  *Expected*: Error message is displayed"
+  }
+}
+```
+
+**Response:** summary with `stats` (suites created/reused, tests created/updated, errors), per-test `created`/`updated` lists, and per-test `errors` (failures do not block the rest of the document).
+
+**Notes:** limits are 100 tests and 25 suites per call; all writes share one API session (single entry in the change history).
+
+**API Endpoint:** `POST /api/v2/{project_id}/tests/bulk` (falls back to sequential `POST /tests` + `PUT /tests/{id}` when the bulk endpoint is unavailable)
+
+---
+
 ## Suite Management
 
 ### suites_list

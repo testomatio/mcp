@@ -11,6 +11,7 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
   - Attachments (scoped helpers for tests/suites/testruns)
   - Requirements (including file uploads from local file paths)
 - **Project Information** - fetch project configuration, metadata, features, and CI profiles
+- **Bulk Test Upsert** - `tests_bulk_upsert` creates/updates many tests from one classical tests markdown document (with `dry_run` preview)
 - **Issue Linking** - link/unlink issues to any resource
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
@@ -206,6 +207,19 @@ Add this config to `opencode.json` in your project root, or to `~/.config/openco
   }
 }
 ```
+
+**Bulk create/update tests from markdown:**
+```json
+{
+  "name": "tests_bulk_upsert",
+  "arguments": {
+    "markdown": "<!-- suite\nid: @S380c64db\n-->\n# Login Functionality\n<!-- test\nid: @T12345678\ntype: manual\npriority: high\n-->\n# Successful Login\n## Steps\n* Navigate to the login page\n  *Expected*: Login form is displayed\n<!-- test -->\n# Failed Login\n## Steps\n* Enter invalid credentials\n  *Expected*: Error message is displayed",
+    "dry_run": true
+  }
+}
+```
+
+`tests_bulk_upsert` accepts a document in the [classical tests markdown format](https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/) (the same format used by markdown export/sync). Tests with an `id: @T...` in their metadata are updated; tests without an id are created. Suites are resolved by `id: @S...` or title, and created when missing (`create_missing_suites: false` disables this). Use `dry_run: true` to parse the document and preview the planned actions without writing anything. Limits: up to 100 tests and 25 suites per call. All writes are grouped in a single API session; per-test errors are reported without blocking the rest of the document.
 
 ## Documentation
 
