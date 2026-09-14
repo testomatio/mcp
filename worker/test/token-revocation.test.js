@@ -43,8 +43,8 @@ describe('revoked tokens', () => {
     vi.unstubAllGlobals();
   });
 
-  it('maps a backend 403 to 401 with WWW-Authenticate', async () => {
-    stubApi(403, { message: 'Token is paused' });
+  it('maps a revoked-token 403 to 401 with WWW-Authenticate', async () => {
+    stubApi(403, { error: 'Invalid or paused token', code: 'token_invalid' });
 
     const response = await callTool();
 
@@ -74,6 +74,24 @@ describe('revoked tokens', () => {
 
   it('does not mask other upstream failures as authentication failures', async () => {
     stubApi(422, { message: 'Invalid filter' });
+
+    const response = await callTool();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('WWW-Authenticate')).toBeNull();
+  });
+
+  it('leaves an uncoded 403 alone so authorization failures do not loop', async () => {
+    stubApi(403, { error: 'Read-only users cannot access this API' });
+
+    const response = await callTool();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('WWW-Authenticate')).toBeNull();
+  });
+
+  it('leaves a permission 403 alone even though the token itself is valid', async () => {
+    stubApi(403, { error: 'Token does not have permission' });
 
     const response = await callTool();
 

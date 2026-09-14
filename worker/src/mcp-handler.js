@@ -28,7 +28,9 @@ export function unauthorizedResponse(request, description) {
   });
 }
 
-function isForbiddenToolResult(payload) {
+const REAUTH_CODES = ['token_invalid', 'authorization_missing'];
+
+function needsReauthorization(payload) {
   const results = Array.isArray(payload) ? payload : [payload];
 
   return results.some((entry) => {
@@ -43,7 +45,8 @@ function isForbiddenToolResult(payload) {
       }
 
       try {
-        return JSON.parse(item.text).status === 403;
+        const parsed = JSON.parse(item.text);
+        return parsed.status === 403 && REAUTH_CODES.includes(parsed.details?.code);
       } catch {
         return false;
       }
@@ -57,7 +60,7 @@ async function mapRevokedToken(request, response) {
   }
 
   const payload = await response.clone().json().catch(() => null);
-  if (!payload || !isForbiddenToolResult(payload)) {
+  if (!payload || !needsReauthorization(payload)) {
     return response;
   }
 
