@@ -7,7 +7,7 @@ import { createLogger } from '../core/logger.js';
 import { getPackageVersion } from '../config/package-version.js';
 
 export class TestomatioMCPServer {
-  constructor({ config, apiClient, logger }) {
+  constructor({ config, apiClient, logger, version, jsonSchemaValidator }) {
     this.config = config;
     this.logger = logger || createLogger();
     this.toolRegistry = new ToolRegistry({ config, apiClient, logger: this.logger });
@@ -15,12 +15,13 @@ export class TestomatioMCPServer {
     this.server = new Server(
       {
         name: 'testomatio-mcp-server',
-        version: getPackageVersion(),
+        version: version || getPackageVersion(),
       },
       {
         capabilities: {
           tools: {},
         },
+        jsonSchemaValidator,
       }
     );
 
@@ -41,9 +42,12 @@ export class TestomatioMCPServer {
     });
   }
 
-  async run() {
-    const transport = new StdioServerTransport();
+  async connect(transport) {
     await this.server.connect(transport);
+  }
+
+  async run() {
+    await this.connect(new StdioServerTransport());
     this.logger.info('Testomatio MCP server started');
   }
 }

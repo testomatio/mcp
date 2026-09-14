@@ -10,12 +10,27 @@ function normalizeBaseUrl(value) {
   return normalized.replace(/\/+$/, '');
 }
 
-export function loadConfig(argvOptions = {}) {
+export function resolveBaseUrl(argvOptions = {}, env = process.env) {
+  const explicitBaseUrl = normalizeBaseUrl(argvOptions.baseUrl || env.TESTOMATIO_BASE_URL);
+  if (explicitBaseUrl) {
+    return explicitBaseUrl;
+  }
+
+  return DEFAULT_BASE_URL;
+}
+
+export function loadServerConfig(argvOptions = {}, env = process.env) {
+  return {
+    baseUrl: resolveBaseUrl(argvOptions, env),
+  };
+}
+
+export function loadConfig(argvOptions = {}, env = process.env) {
   const token = normalizeString(
-    argvOptions.token || process.env.TESTOMATIO_PROJECT_TOKEN || process.env.TESTOMATIO_API_TOKEN
+    argvOptions.token || env.TESTOMATIO_PROJECT_TOKEN || env.TESTOMATIO_API_TOKEN
   );
-  const projectId = normalizeString(argvOptions.project || process.env.TESTOMATIO_PROJECT_ID);
-  const baseUrl = normalizeBaseUrl(argvOptions.baseUrl || process.env.TESTOMATIO_BASE_URL || DEFAULT_BASE_URL);
+  const projectId = normalizeString(argvOptions.project || env.TESTOMATIO_PROJECT_ID);
+  const baseUrl = resolveBaseUrl(argvOptions, env);
 
   if (!token) {
     throw new ConfigurationError(
