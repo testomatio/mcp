@@ -43,6 +43,10 @@ jspm_packages/
 dist/
 build/
 
+# Cloudflare Worker local state
+.wrangler/
+.dev.vars
+
 # IDE files
 .vscode/
 .idea/
