@@ -1,0 +1,2424 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tools/list > returns the full tool catalog 1`] = `
+{
+  "tools": [
+    {
+      "description": "Check server status and active configuration",
+      "inputSchema": {
+        "properties": {},
+        "type": "object",
+      },
+      "name": "system_ping",
+    },
+    {
+      "description": "List tests (/api/v2/{project_id}/tests)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "priority": {
+            "type": "string",
+          },
+          "query": {
+            "type": "string",
+          },
+          "search_text": {
+            "type": "string",
+          },
+          "state": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "tests_list",
+    },
+    {
+      "description": "Get test by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "test_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_get",
+    },
+    {
+      "description": "Create test (/api/v2/{project_id}/tests)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "code": {
+            "type": "string",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "priority": {
+            "type": "string",
+          },
+          "state": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_create",
+    },
+    {
+      "description": "Update test (/api/v2/{project_id}/tests/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "code": {
+            "type": "string",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "priority": {
+            "type": "string",
+          },
+          "state": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "sync": {
+            "type": "boolean",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_update",
+    },
+    {
+      "description": "Delete test",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "test_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_delete",
+    },
+    {
+      "description": "Search tests by text (delegates to tests list with search_text)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "priority": {
+            "type": "string",
+          },
+          "query": {
+            "type": "string",
+          },
+          "search_text": {
+            "type": "string",
+          },
+          "state": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "tests_search",
+    },
+    {
+      "description": "List linked issues for a test (/api/v2/{project_id}/issues?test_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "source": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_issues_list",
+    },
+    {
+      "description": "Link issue to a test (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_issues_link",
+    },
+    {
+      "description": "Unlink issue from a test (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "tests_issues_unlink",
+    },
+    {
+      "description": "List suites as tree (/api/v2/{project_id}/suites)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_type": {
+            "enum": [
+              "file",
+              "folder",
+            ],
+            "type": "string",
+          },
+          "labels": {
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+          "search_text": {
+            "type": "string",
+          },
+          "tag": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "suites_list",
+    },
+    {
+      "description": "Get suite by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_get",
+    },
+    {
+      "description": "Create suite (/api/v2/{project_id}/suites)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "children": {
+            "type": "array",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "file": {
+            "type": "string",
+          },
+          "file_type": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "parent_id": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "suites_create",
+    },
+    {
+      "description": "Update suite (/api/v2/{project_id}/suites/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "children": {
+            "type": "array",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "file": {
+            "type": "string",
+          },
+          "file_type": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "parent_id": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_update",
+    },
+    {
+      "description": "Delete suite",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_delete",
+    },
+    {
+      "description": "Search suites by title (delegates to suites list with search_text)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_type": {
+            "enum": [
+              "file",
+              "folder",
+            ],
+            "type": "string",
+          },
+          "labels": {
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+          "search_text": {
+            "type": "string",
+          },
+          "tag": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "suites_search",
+    },
+    {
+      "description": "List linked issues for a suite (/api/v2/{project_id}/issues?suite_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "source": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_issues_list",
+    },
+    {
+      "description": "Link issue to a suite (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_issues_link",
+    },
+    {
+      "description": "Unlink issue from a suite (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "suites_issues_unlink",
+    },
+    {
+      "description": "List runs (/api/v2/{project_id}/runs)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "runs_list",
+    },
+    {
+      "description": "Get run by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "run_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "runs_get",
+    },
+    {
+      "description": "Create run (/api/v2/{project_id}/runs)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assign_strategy": {
+            "enum": [
+              "test",
+              "random",
+              "none",
+            ],
+            "type": "string",
+          },
+          "assigned_to": {
+            "type": "string",
+          },
+          "configuration": {
+            "type": "object",
+          },
+          "description": {
+            "type": "string",
+          },
+          "env": {
+            "type": "string",
+          },
+          "envs": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "mixed",
+            ],
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "rungroup_id": {
+            "type": "string",
+          },
+          "suite_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "test_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "runs_create",
+    },
+    {
+      "description": "Update run (/api/v2/{project_id}/runs/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assign_strategy": {
+            "enum": [
+              "test",
+              "random",
+              "none",
+            ],
+            "type": "string",
+          },
+          "assigned_to": {
+            "type": "string",
+          },
+          "configuration": {
+            "type": "object",
+          },
+          "description": {
+            "type": "string",
+          },
+          "env": {
+            "type": "string",
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "mixed",
+            ],
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "rungroup_id": {
+            "type": "string",
+          },
+          "status_event": {
+            "enum": [
+              "finish",
+              "finish_manual",
+              "launch",
+              "rerun",
+              "scheduled",
+              "terminate",
+            ],
+            "type": "string",
+          },
+          "suite_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "test_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "runs_update",
+    },
+    {
+      "description": "Delete run (/api/v2/{project_id}/runs/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "run_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "runs_delete",
+    },
+    {
+      "description": "Search runs (delegates to runs list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "runs_search",
+    },
+    {
+      "description": "List linked issues for a run (/api/v2/{project_id}/issues?run_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "source": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "runs_issues_list",
+    },
+    {
+      "description": "Link issue to a run (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "runs_issues_link",
+    },
+    {
+      "description": "Unlink issue from a run (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "runs_issues_unlink",
+    },
+    {
+      "description": "List testruns (/api/v2/{project_id}/testruns)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "testruns_list",
+    },
+    {
+      "description": "Get testrun by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_get",
+    },
+    {
+      "description": "Create testrun (/api/v2/{project_id}/testruns)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "automated": {
+            "type": "boolean",
+          },
+          "message": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "run_time": {
+            "type": "number",
+          },
+          "status": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "test_title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_create",
+    },
+    {
+      "description": "Update testrun (/api/v2/{project_id}/testruns/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "assigned_to": {
+            "type": "string",
+          },
+          "automated": {
+            "type": "boolean",
+          },
+          "message": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "run_time": {
+            "type": "number",
+          },
+          "status": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "test_title": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_update",
+    },
+    {
+      "description": "Delete testrun (/api/v2/{project_id}/testruns/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_delete",
+    },
+    {
+      "description": "Search testruns (delegates to testruns list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "testruns_search",
+    },
+    {
+      "description": "List linked issues for a testrun (/api/v2/{project_id}/issues?testrun_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "source": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_issues_list",
+    },
+    {
+      "description": "Link issue to a testrun (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_issues_link",
+    },
+    {
+      "description": "Unlink issue from a testrun (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_issues_unlink",
+    },
+    {
+      "description": "List run groups as tree (/api/v2/{project_id}/rungroups)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "rungroups_list",
+    },
+    {
+      "description": "Get run group by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "rungroup_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "rungroup_id",
+        ],
+        "type": "object",
+      },
+      "name": "rungroups_get",
+    },
+    {
+      "description": "Create run group (/api/v2/{project_id}/rungroups)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "type": "array",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "kind": {
+            "type": "string",
+          },
+          "parent_id": {
+            "type": "string",
+          },
+          "pin": {
+            "type": "boolean",
+          },
+          "status": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "rungroups_create",
+    },
+    {
+      "description": "Update run group (/api/v2/{project_id}/rungroups/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "type": "array",
+          },
+          "description": {
+            "type": "string",
+          },
+          "emoji": {
+            "type": "string",
+          },
+          "kind": {
+            "type": "string",
+          },
+          "parent_id": {
+            "type": "string",
+          },
+          "pin": {
+            "type": "boolean",
+          },
+          "rungroup_id": {
+            "type": "string",
+          },
+          "status": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "rungroup_id",
+        ],
+        "type": "object",
+      },
+      "name": "rungroups_update",
+    },
+    {
+      "description": "Delete run group (/api/v2/{project_id}/rungroups/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "rungroup_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "rungroup_id",
+        ],
+        "type": "object",
+      },
+      "name": "rungroups_delete",
+    },
+    {
+      "description": "Search run groups (delegates to rungroups list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "rungroups_search",
+    },
+    {
+      "description": "List steps (/api/v2/{project_id}/steps)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "steps_list",
+    },
+    {
+      "description": "Get step by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "step_id",
+        ],
+        "type": "object",
+      },
+      "name": "steps_get",
+    },
+    {
+      "description": "Create step (/api/v2/{project_id}/steps)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "steps_create",
+    },
+    {
+      "description": "Update step (/api/v2/{project_id}/steps/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "step_id": {
+            "type": "integer",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "step_id",
+        ],
+        "type": "object",
+      },
+      "name": "steps_update",
+    },
+    {
+      "description": "Delete step (/api/v2/{project_id}/steps/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "step_id",
+        ],
+        "type": "object",
+      },
+      "name": "steps_delete",
+    },
+    {
+      "description": "Search steps (delegates to steps list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "steps_search",
+    },
+    {
+      "description": "List snippets (/api/v2/{project_id}/snippets)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "snippets_list",
+    },
+    {
+      "description": "Get snippet by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "snippet_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "snippet_id",
+        ],
+        "type": "object",
+      },
+      "name": "snippets_get",
+    },
+    {
+      "description": "Create snippet (/api/v2/{project_id}/snippets)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "snippets_create",
+    },
+    {
+      "description": "Update snippet (/api/v2/{project_id}/snippets/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "snippet_id": {
+            "type": "integer",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "snippet_id",
+        ],
+        "type": "object",
+      },
+      "name": "snippets_update",
+    },
+    {
+      "description": "Delete snippet (/api/v2/{project_id}/snippets/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "snippet_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "snippet_id",
+        ],
+        "type": "object",
+      },
+      "name": "snippets_delete",
+    },
+    {
+      "description": "Search snippets (delegates to snippets list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "snippets_search",
+    },
+    {
+      "description": "List labels (/api/v2/{project_id}/labels)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "labels_list",
+    },
+    {
+      "description": "Get label by slug",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "label_id",
+        ],
+        "type": "object",
+      },
+      "name": "labels_get",
+    },
+    {
+      "description": "Create label (/api/v2/{project_id}/labels)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "type": "string",
+          },
+          "field": {
+            "type": "object",
+          },
+          "scope": {
+            "items": {
+              "enum": [
+                "tests",
+                "suites",
+                "runs",
+                "plans",
+                "steps",
+                "templates",
+              ],
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+          "visibility": {
+            "items": {
+              "enum": [
+                "filter",
+                "list",
+              ],
+              "type": "string",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "labels_create",
+    },
+    {
+      "description": "Update label (/api/v2/{project_id}/labels/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "type": "string",
+          },
+          "field": {
+            "type": "object",
+          },
+          "label_id": {
+            "type": "string",
+          },
+          "scope": {
+            "items": {
+              "enum": [
+                "tests",
+                "suites",
+                "runs",
+                "plans",
+                "steps",
+                "templates",
+              ],
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "type": "string",
+          },
+          "visibility": {
+            "items": {
+              "enum": [
+                "filter",
+                "list",
+              ],
+              "type": "string",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "label_id",
+        ],
+        "type": "object",
+      },
+      "name": "labels_update",
+    },
+    {
+      "description": "Delete label (/api/v2/{project_id}/labels/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "label_id",
+        ],
+        "type": "object",
+      },
+      "name": "labels_delete",
+    },
+    {
+      "description": "Search labels (delegates to labels list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "labels_search",
+    },
+    {
+      "description": "List tags with counts (/api/v2/{project_id}/tags)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object",
+      },
+      "name": "tags_list",
+    },
+    {
+      "description": "Get tests by tag title (/api/v2/{project_id}/tags/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "tag_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "tag_id",
+        ],
+        "type": "object",
+      },
+      "name": "tags_get",
+    },
+    {
+      "description": "Search by tag title (delegates to tags_get)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string",
+          },
+          "tag_id": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "tags_search",
+    },
+    {
+      "description": "List linked issues (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "source": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "type": "object",
+      },
+      "name": "issues_list",
+    },
+    {
+      "description": "Link issue to resource (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "issues_create",
+    },
+    {
+      "description": "Unlink issue (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "issues_delete",
+    },
+    {
+      "description": "Search issues (delegates to issues_list filters)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "source": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "type": "object",
+      },
+      "name": "issues_search",
+    },
+    {
+      "description": "List plans (/api/v2/{project_id}/plans)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "plans_list",
+    },
+    {
+      "description": "Get plan by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plan_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "plan_id",
+        ],
+        "type": "object",
+      },
+      "name": "plans_get",
+    },
+    {
+      "description": "Create plan (/api/v2/{project_id}/plans)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "as_manual": {
+            "type": "boolean",
+          },
+          "description": {
+            "type": "string",
+          },
+          "hidden": {
+            "type": "boolean",
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "mixed",
+            ],
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "test_plan": {
+            "type": "object",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "plans_create",
+    },
+    {
+      "description": "Update plan (/api/v2/{project_id}/plans/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "as_manual": {
+            "type": "boolean",
+          },
+          "description": {
+            "type": "string",
+          },
+          "hidden": {
+            "type": "boolean",
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "mixed",
+            ],
+            "type": "string",
+          },
+          "link": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "remove",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "enum": [
+                    "label",
+                    "custom_field",
+                    "tag",
+                    "issue",
+                    "jira",
+                  ],
+                  "type": "string",
+                },
+                "value": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "test_plan": {
+            "type": "object",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "plan_id",
+        ],
+        "type": "object",
+      },
+      "name": "plans_update",
+    },
+    {
+      "description": "Delete plan",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plan_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "plan_id",
+        ],
+        "type": "object",
+      },
+      "name": "plans_delete",
+    },
+    {
+      "description": "Search plans (delegates to plans list; docs has no dedicated search parameter)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "query": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "plans_search",
+    },
+    {
+      "description": "List linked issues for a plan (/api/v2/{project_id}/issues?plan_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "source": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "plan_id",
+        ],
+        "type": "object",
+      },
+      "name": "plans_issues_list",
+    },
+    {
+      "description": "Link issue to a plan (/api/v2/{project_id}/issues)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "jira_id": {
+            "type": "string",
+          },
+          "plan_id": {
+            "type": "string",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "plan_id",
+        ],
+        "type": "object",
+      },
+      "name": "plans_issues_link",
+    },
+    {
+      "description": "Unlink issue from a plan (/api/v2/{project_id}/issues/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+          },
+          "type": {
+            "enum": [
+              "issue",
+              "jira_issue",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "issue_id",
+          "type",
+        ],
+        "type": "object",
+      },
+      "name": "plans_issues_unlink",
+    },
+  ],
+}
+`;
