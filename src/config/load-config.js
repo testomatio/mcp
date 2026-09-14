@@ -10,10 +10,25 @@ function normalizeBaseUrl(value) {
   return normalized.replace(/\/+$/, '');
 }
 
+function hostToBaseUrl(value) {
+  const host = normalizeBaseUrl(value);
+
+  if (!host) {
+    return '';
+  }
+
+  return /^https?:\/\//i.test(host) ? host : `https://${host}`;
+}
+
 export function resolveBaseUrl(argvOptions = {}, env = process.env) {
   const explicitBaseUrl = normalizeBaseUrl(argvOptions.baseUrl || env.TESTOMATIO_BASE_URL);
   if (explicitBaseUrl) {
     return explicitBaseUrl;
+  }
+
+  const hostBaseUrl = hostToBaseUrl(argvOptions.host || env.TESTOMATIO_HOST);
+  if (hostBaseUrl) {
+    return hostBaseUrl;
   }
 
   return DEFAULT_BASE_URL;

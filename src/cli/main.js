@@ -15,6 +15,7 @@ export function parseArgs(argv = process.argv) {
     .option('-t, --token <token>', 'Testomatio Project token')
     .option('-p, --project <project>', 'Project ID')
     .option('--base-url <url>', 'Base URL for Testomatio API')
+    .option('--host <host>', 'Testomatio host, e.g. beta.testomat.io')
     .parse(argv);
 
   return command.opts();
