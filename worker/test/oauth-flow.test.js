@@ -30,6 +30,20 @@ async function startAuthorization(clientId) {
   return SELF.fetch(url.toString(), { redirect: 'manual' });
 }
 
+describe('protected resource metadata', () => {
+  it('is served path scoped for the project endpoint', async () => {
+    const response = await SELF.fetch(
+      'https://mcp.testomat.test/.well-known/oauth-protected-resource/mcp/demo-project'
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      resource: 'https://mcp.testomat.test/mcp/demo-project',
+      authorization_servers: ['https://mcp.testomat.test'],
+    });
+  });
+});
+
 describe('oauth authorize', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

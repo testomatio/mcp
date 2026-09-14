@@ -56,6 +56,11 @@ describe('revoked tokens', () => {
     expect(challenge).toContain(
       'resource_metadata="https://mcp.testomat.test/.well-known/oauth-protected-resource/mcp/demo-project"'
     );
+
+    const metadata = await SELF.fetch(
+      challenge.match(/resource_metadata="([^"]+)"/)[1]
+    );
+    expect(metadata.status).toBe(200);
   });
 
   it('leaves a successful tool call untouched', async () => {
