@@ -39,7 +39,15 @@ export TESTOMATIO_PROJECT_ID=<PROJECT_ID>
 testomatio-mcp
 ```
 
-**Optional: custom base URL**
+**Optional: custom host**
+```bash
+export TESTOMATIO_HOST=beta.testomat.io
+testomatio-mcp --host beta.testomat.io
+```
+
+A bare hostname is expanded to `https://<host>`. For full control use
+`--base-url` / `TESTOMATIO_BASE_URL`, which takes precedence over the host option:
+
 ```bash
 export TESTOMATIO_BASE_URL=https://beta.testomat.io
 ```
@@ -77,6 +85,48 @@ Add to `.cursorrules` or settings.json:
   }
 }
 ```
+
+## HTTP Transport
+
+Besides stdio, the server runs over Streamable HTTP on a Cloudflare Worker hosted by
+Testomat.io. The project is part of the URL, so every tool signature stays the same:
+
+```
+https://mcp.testomat.io/mcp/<project_id>
+```
+
+Point an MCP client at that URL with a project token:
+
+```json
+{
+  "mcpServers": {
+    "testomatio": {
+      "url": "https://mcp.testomat.io/mcp/<PROJECT_ID>",
+      "headers": {
+        "Authorization": "Bearer <PROJECT_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+Web connectors such as claude.ai have nowhere to put a static token and instead run
+OAuth 2.1 with PKCE and Dynamic Client Registration against the same URL. Tokens
+starting with `testomat_` or `tstmt_` always bypass OAuth and are passed straight
+through, so IDE clients and CI keep working.
+
+The endpoint is POST only; `GET` returns `405`, because the server never initiates
+traffic. Testing with `curl` requires both media types in `Accept`:
+
+```bash
+curl -sS https://mcp.testomat.io/mcp/<PROJECT_ID> \
+  -H "Authorization: Bearer <PROJECT_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+Self-hosted installations keep using stdio.
 
 ## Quick Examples
 
@@ -148,7 +198,8 @@ src/
 | `TESTOMATIO_PROJECT_TOKEN` | Yes* | - | Project token (preferred) |
 | `TESTOMATIO_API_TOKEN` | Yes* | - | Alternative token |
 | `TESTOMATIO_PROJECT_ID` | Yes | - | Project ID |
-| `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL |
+| `TESTOMATIO_HOST` | No | - | API host, e.g. `beta.testomat.io` |
+| `TESTOMATIO_BASE_URL` | No | `https://app.testomat.io` | API base URL, wins over `TESTOMATIO_HOST` |
 
 *Either `TESTOMATIO_PROJECT_TOKEN` or `TESTOMATIO_API_TOKEN`
 
@@ -163,4 +214,23 @@ src/
 ```bash
 npm install
 npm run start -- --token <TOKEN> --project <PROJECT_ID>
+npm test
 ```
+
+### Worker deployment
+
+The `worker/` directory holds the Cloudflare Worker and is excluded from the npm
+package. Deploy it from that directory:
+
+```bash
+cd worker
+npx wrangler kv namespace create OAUTH_KV
+npx wrangler secret put TESTOMATIO_MCP_WORKER_SECRET
+npx wrangler deploy
+```
+
+Put the namespace id returned by the first command into `kv_namespaces` in
+`worker/wrangler.jsonc`. `TESTOMATIO_MCP_WORKER_SECRET` is the shared secret used to
+redeem authorization codes against Testomat.io server-to-server and is never
+committed. A staging worker is the same code with `TESTOMATIO_BASE_URL` set to
+`https://beta.testomat.io` in its own `vars` block.
