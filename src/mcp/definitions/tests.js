@@ -310,5 +310,33 @@ export const TESTS_TOOLS = [
       ],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "tests_bulk_upsert",
+    "description": "Bulk create/update tests from a testomat.io classical tests markdown document (/api/v2/{project_id}/tests). Tests with an id (@T...) in their metadata are updated, tests without id are created. Suites are resolved by id (@S...) or title, and created when missing. Recommended batch size: up to 100 tests per call.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "markdown": {
+          "type": "string",
+          "description": "Markdown document in the testomat.io classical tests format: suite blocks (<!-- suite ... -->) containing test blocks (<!-- test ... -->), each followed by a title heading and a description. See https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": false,
+          "description": "Parse the document and report the planned actions without writing anything"
+        },
+        "create_missing_suites": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create suites that cannot be resolved by id or title. When false, tests of unresolved suites are reported as errors"
+        },
+        "branch": BRANCH_PARAM
+      },
+      "required": [
+        "markdown"
+      ],
+      "additionalProperties": false
+    }
   }
 ];

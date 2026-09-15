@@ -2,6 +2,7 @@ import { ENTITY_CRUD_CONFIGS } from '../configs/entity-crud-config.js';
 import { ATTACHMENT_SCOPED_TOOL_CONFIGS } from '../configs/attachments-config.js';
 import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
 import { backendSlimQuery, slimList } from '../list-projection.js';
+import { parseTestsMarkdown, TESTS_BULK_LIMITS } from '../markdown/parse-tests-markdown.js';
 
 export const handlerMethods = {
   registerEntityCrudHandlers(handlers) {
@@ -139,6 +140,61 @@ export const handlerMethods = {
     handlers.issues_create = async (args = {}) => this.asText(await this.createIssue(args));
     handlers.issues_delete = async ({ issue_id: issueId, type }) =>
       this.asText(await this.apiClient.delete('issues', issueId, { type }));
+
+    handlers.tests_bulk_upsert = async (args = {}) => {
+      const {
+        markdown,
+        branch,
+        dry_run: dryRun = false,
+        create_missing_suites: createMissingSuites = true,
+      } = args;
+
+      if (typeof markdown !== 'string' || !markdown.trim()) {
+        return this.asText({ error: 'Argument "markdown" is required and must be a non-empty string' });
+      }
+
+      const parsed = parseTestsMarkdown(markdown);
+      const totalTests = parsed.suites.reduce((sum, suite) => sum + suite.tests.length, 0);
+      const totalSuites = parsed.suites.length;
+
+      if (parsed.errors.length || !totalTests) {
+        return this.asText({
+          error: 'Markdown could not be parsed; nothing was written',
+          errors: parsed.errors,
+        });
+      }
+      if (totalTests > TESTS_BULK_LIMITS.maxTests) {
+        return this.asText({
+          error: `Document contains ${totalTests} tests; the limit is ${TESTS_BULK_LIMITS.maxTests}. Split the markdown into smaller documents.`,
+        });
+      }
+      if (totalSuites > TESTS_BULK_LIMITS.maxSuites) {
+        return this.asText({
+          error: `Document contains ${totalSuites} suites; the limit is ${TESTS_BULK_LIMITS.maxSuites}. Split the markdown into smaller documents.`,
+        });
+      }
+
+      if (dryRun) {
+        const plan = [];
+        for (const suite of parsed.suites) {
+          for (const test of suite.tests) {
+            plan.push({ suite: suite.title, action: test.uid ? 'update' : 'create', title: test.title, uid: test.uid });
+          }
+        }
+        return this.asText({
+          dry_run: true,
+          planned: {
+            suites: totalSuites,
+            tests: totalTests,
+            creates: plan.filter(item => item.action === 'create').length,
+            updates: plan.filter(item => item.action === 'update').length,
+          },
+          plan,
+        });
+      }
+
+      return this.asText(await this.testsBulkUpsert(parsed, { branch, createMissingSuites }));
+    };
   },
 
   pickRequiredArg(args = {}, key) {

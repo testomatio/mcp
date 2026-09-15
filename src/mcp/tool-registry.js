@@ -8,6 +8,7 @@ import { attachmentMethods } from './registry/attachments.js';
 import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
+import { bulkMethods } from './registry/bulk-upsert.js';
 
 function withPagination(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -116,5 +117,6 @@ Object.assign(
   attachmentMethods,
   listingMethods,
   issueMethods,
-  payloadMethods
+  payloadMethods,
+  bulkMethods
 );
