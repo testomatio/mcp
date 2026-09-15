@@ -1,8 +1,9 @@
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { loadServerConfig } from '../../src/config/load-config.js';
+import { decodePathParameter } from '../../src/core/path-segment.js';
 
 const AUTH_REQUEST_TTL_SECONDS = 600;
-const RESOURCE_PROJECT = /\/mcp\/([^/?#]+)/;
+const RESOURCE_PATH = /^\/mcp\/([^/]+)\/?$/;
 
 export class TestomatioAuthHandler extends WorkerEntrypoint {
   async fetch(request) {
@@ -32,7 +33,13 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     });
 
     const client = await this.env.OAUTH_PROVIDER.lookupClient(oauthReqInfo.clientId).catch(() => null);
-    const project = this.#projectFromResource(oauthReqInfo.resource);
+    const project = this.#projectFromResource(oauthReqInfo.resource, request);
+    if (!project) {
+      return new Response('Authorization resource must identify one project on this server', {
+        status: 400,
+      });
+    }
+
     const redirect = new URL('/mcp/authorize', `${this.#baseUrl()}/`);
 
     redirect.searchParams.set('state', state);
@@ -41,9 +48,7 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
       redirect.searchParams.set('client_name', client.clientName);
     }
 
-    if (project) {
-      redirect.searchParams.set('project', project);
-    }
+    redirect.searchParams.set('project', project);
 
     return Response.redirect(redirect.toString(), 302);
   }
@@ -115,13 +120,22 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     return crypto.randomUUID().replace(/-/g, '');
   }
 
-  #projectFromResource(resource) {
-    const value = Array.isArray(resource) ? resource[0] : resource;
-    if (!value) {
+  #projectFromResource(resource, request) {
+    if (!resource || Array.isArray(resource)) {
       return '';
     }
 
-    const match = RESOURCE_PROJECT.exec(String(value));
-    return match ? decodeURIComponent(match[1]) : '';
+    try {
+      const resourceUrl = new URL(String(resource));
+      const requestUrl = new URL(request.url);
+      if (resourceUrl.origin !== requestUrl.origin || resourceUrl.search || resourceUrl.hash) {
+        return '';
+      }
+
+      const match = RESOURCE_PATH.exec(resourceUrl.pathname);
+      return match ? decodePathParameter(match[1], 'Project ID') : '';
+    } catch {
+      return '';
+    }
   }
 }

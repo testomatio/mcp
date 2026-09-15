@@ -2,6 +2,7 @@ import { SELF, env } from 'cloudflare:test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const CLIENT_REDIRECT = 'https://claude.test/api/mcp/callback';
+const MCP_RESOURCE = 'https://mcp.testomat.test/mcp/demo-project';
 
 async function registerClient() {
   const response = await SELF.fetch('https://mcp.testomat.test/register', {
@@ -18,7 +19,7 @@ async function registerClient() {
   return response.json();
 }
 
-async function startAuthorization(clientId) {
+async function startAuthorization(clientId, resource = MCP_RESOURCE) {
   const url = new URL('https://mcp.testomat.test/authorize');
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', clientId);
@@ -26,6 +27,11 @@ async function startAuthorization(clientId) {
   url.searchParams.set('state', 'client-state');
   url.searchParams.set('code_challenge', 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
   url.searchParams.set('code_challenge_method', 'S256');
+  for (const value of Array.isArray(resource) ? resource : [resource]) {
+    if (value) {
+      url.searchParams.append('resource', value);
+    }
+  }
 
   return SELF.fetch(url.toString(), { redirect: 'manual' });
 }
@@ -66,6 +72,18 @@ describe('oauth authorize', () => {
     const stored = JSON.parse(await env.OAUTH_KV.get(`mcp_auth_request:${state}`));
     expect(stored.clientId).toBe(client.client_id);
     expect(stored.redirectUri).toBe(CLIENT_REDIRECT);
+  });
+
+  it.each([
+    ['a missing resource', ''],
+    ['an unsafe project id', 'https://mcp.testomat.test/mcp/demo%2F..%2F..%2Fadmin'],
+    ['a resource on another origin', 'https://attacker.test/mcp/demo-project'],
+    ['multiple resources', [MCP_RESOURCE, 'https://mcp.testomat.test/mcp/other-project']],
+  ])('rejects %s', async (_label, resource) => {
+    const client = await registerClient();
+    const response = await startAuthorization(client.client_id, resource);
+
+    expect(response.status).toBe(400);
   });
 
   it('exchanges the opaque code server to server and completes the grant', async () => {

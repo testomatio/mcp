@@ -28,7 +28,8 @@ export class TestomatioMCPServer {
       tools,
       ...registryOptions,
     });
-    this.cleanupStarted = false;
+    this.closePromise = null;
+    this.sessionCleanupPromise = null;
 
     this.server = new Server(
       {
@@ -70,29 +71,42 @@ export class TestomatioMCPServer {
     this.logger.info('Testomatio MCP server started');
   }
 
+  close() {
+    if (!this.closePromise) {
+      this.closePromise = (async () => {
+        try {
+          await this.server.close();
+        } finally {
+          await this.#stopSession();
+        }
+      })();
+    }
+
+    return this.closePromise;
+  }
+
   installSessionCleanup() {
-    const cleanup = async () => {
-      if (this.cleanupStarted) {
-        return;
-      }
-
-      this.cleanupStarted = true;
-      await this.apiClient?.stopSession?.();
-    };
-
     this.server.onclose = () => {
-      void cleanup();
+      void this.#stopSession();
     };
 
     process.once('beforeExit', () => {
-      void cleanup();
+      void this.#stopSession();
     });
 
     for (const signal of ['SIGINT', 'SIGTERM']) {
       process.once(signal, async () => {
-        await cleanup();
+        await this.#stopSession();
         process.exit(0);
       });
     }
+  }
+
+  #stopSession() {
+    if (!this.sessionCleanupPromise) {
+      this.sessionCleanupPromise = Promise.resolve().then(() => this.apiClient?.stopSession?.());
+    }
+
+    return this.sessionCleanupPromise;
   }
 }
