@@ -17,9 +17,8 @@ export class TestomatioApiClient {
   buildPath(resource, id = '') {
     const safeProjectId = encodePathParameter(this.projectId, 'Project ID');
     const safeResource = String(resource).replace(/^\/+|\/+$/g, '');
-    const safeId = id === '' || id === null || id === undefined
-      ? ''
-      : `/${encodePathParameter(id, 'Resource ID')}`;
+    const resourceId = String(id ?? '');
+    const safeId = resourceId ? `/${encodePathParameter(resourceId, 'Resource ID')}` : '';
 
     return `/api/v2/${safeProjectId}/${safeResource}${safeId}`;
   }
