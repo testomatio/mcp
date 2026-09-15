@@ -1,4 +1,5 @@
 import { HttpClient } from './http-client.js';
+import { encodePathParameter } from '../core/path-segment.js';
 
 export class TestomatioApiClient {
   constructor({ baseUrl, projectId, token, logger }) {
@@ -14,9 +15,12 @@ export class TestomatioApiClient {
   }
 
   buildPath(resource, id = '') {
+    const safeProjectId = encodePathParameter(this.projectId, 'Project ID');
     const safeResource = String(resource).replace(/^\/+|\/+$/g, '');
-    const safeId = id ? `/${String(id).replace(/^\/+|\/+$/g, '')}` : '';
-    return `/api/v2/${this.projectId}/${safeResource}${safeId}`;
+    const resourceId = String(id ?? '');
+    const safeId = resourceId ? `/${encodePathParameter(resourceId, 'Resource ID')}` : '';
+
+    return `/api/v2/${safeProjectId}/${safeResource}${safeId}`;
   }
 
   list(resource, query = {}) {

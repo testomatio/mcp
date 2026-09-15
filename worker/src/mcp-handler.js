@@ -4,6 +4,7 @@ import { CfWorkerJsonSchemaValidator } from '@modelcontextprotocol/sdk/validatio
 import { loadServerConfig } from '../../src/config/load-config.js';
 import { createMcpServer } from '../../src/mcp/create-server.js';
 import { createLogger } from '../../src/core/logger.js';
+import { decodePathParameter } from '../../src/core/path-segment.js';
 import pkg from '../../package.json';
 
 const PROJECT_PATH = /^\/mcp\/([^/]+)\/?$/;
@@ -23,11 +24,11 @@ export class McpHandler extends WorkerEntrypoint {
 
   static projectId(pathname) {
     const match = PROJECT_PATH.exec(pathname);
-    return match ? decodeURIComponent(match[1]) : '';
+    return match ? decodePathParameter(match[1], 'Project ID') : '';
   }
 
   async fetch(request) {
-    if (request.method === 'GET') {
+    if (request.method !== 'POST') {
       return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
     }
 
@@ -61,9 +62,12 @@ export class McpHandler extends WorkerEntrypoint {
     });
 
     const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
-    await server.connect(transport);
-
-    return transport.handleRequest(request);
+    try {
+      await server.connect(transport);
+      return await transport.handleRequest(request);
+    } finally {
+      await server.close();
+    }
   }
 
   async #mapRevokedToken(request, response) {

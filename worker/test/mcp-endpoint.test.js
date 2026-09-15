@@ -99,8 +99,60 @@ describe('POST /mcp/<project_id>', () => {
     expect(calls[0]).toBe('/api/v2/other-project/suites');
   });
 
-  it('rejects GET with 405', async () => {
+  it('closes the Testomat.io API session after a mutating request', async () => {
+    stubApi((url, init) => {
+      const method = init?.method;
+      calls.push({ method, path: url.pathname, session: new Headers(init?.headers).get('X-Session-Hash') });
+
+      if (method === 'POST' && url.pathname.endsWith('/sessions')) {
+        return Response.json({ data: { hash: 'session-1' } });
+      }
+
+      if (method === 'POST' && url.pathname.endsWith('/tests')) {
+        return Response.json({ data: { id: 'test-1' } });
+      }
+
+      if (method === 'DELETE' && url.pathname.endsWith('/sessions/session-1')) {
+        return Response.json({});
+      }
+
+      return Response.json({ error: 'Unexpected request' }, { status: 500 });
+    });
+
+    const { client, transport } = connect();
+    await client.connect(transport);
+    await client.callTool({
+      name: 'tests_create',
+      arguments: { title: 'Session cleanup', suite_id: 'suite-1' },
+    });
+
+    expect(calls).toEqual([
+      { method: 'POST', path: '/api/v2/demo-project/sessions', session: null },
+      { method: 'POST', path: '/api/v2/demo-project/tests', session: 'session-1' },
+      { method: 'DELETE', path: '/api/v2/demo-project/sessions/session-1', session: null },
+    ]);
+  });
+
+  it.each(['demo%2F..%2F..%2Fadmin', '%'])(
+    'rejects an unsafe project path: %s',
+    async (project) => {
+      const response = await SELF.fetch(`https://mcp.testomat.test/mcp/${project}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+          Authorization: `Bearer ${STATIC_TOKEN}`,
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+
+      expect(response.status).toBe(404);
+    }
+  );
+
+  it.each(['GET', 'PUT', 'DELETE'])('rejects %s with 405', async (method) => {
     const response = await SELF.fetch(MCP_URL, {
+      method,
       headers: { Authorization: `Bearer ${STATIC_TOKEN}` },
     });
 

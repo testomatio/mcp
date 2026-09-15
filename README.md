@@ -442,6 +442,12 @@ Put the namespace id returned by the first command into `kv_namespaces` in
 redeem authorization codes against Testomat.io server-to-server and is never
 committed.
 
+Before exposing the Worker publicly, configure Cloudflare rate-limiting rules for
+`/register`, `/authorize`, `/token`, and `/mcp/*`. These endpoints intentionally
+support unauthenticated OAuth discovery and client registration, so rate limiting
+belongs at the edge rather than in per-isolate memory. Keep separate rules and KV
+namespaces for beta and production.
+
 A beta worker is the same code deployed to the `beta` environment, which targets
 `https://beta.testomat.io` and keeps its own KV namespace so beta grants never
 reach the production one:
