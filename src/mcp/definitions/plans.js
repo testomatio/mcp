@@ -1,3 +1,5 @@
+import { PLANS_TQL_INPUT_DESCRIPTION, PLANS_TQL_REFERENCE } from './tql-reference.js';
+
 export const PLANS_TOOLS = [
   {
     "name": "plans_list",
@@ -14,7 +16,24 @@ export const PLANS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "query": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "automated",
+            "mixed"
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search_text": {
           "type": "string"
         }
       },
@@ -39,7 +58,7 @@ export const PLANS_TOOLS = [
   },
   {
     "name": "plans_create",
-    "description": "Create plan (/api/v2/{project_id}/plans)",
+    "description": `Create plan (/api/v2/{project_id}/plans). ${PLANS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -63,8 +82,23 @@ export const PLANS_TOOLS = [
         "as_manual": {
           "type": "boolean"
         },
-        "test_plan": {
-          "type": "object"
+        "test_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included."
+        },
+        "suite_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
+        },
+        "tql": {
+          "type": "string",
+          "description": PLANS_TQL_INPUT_DESCRIPTION
         },
         "link": {
           "type": "array",
@@ -84,6 +118,7 @@ export const PLANS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -109,7 +144,7 @@ export const PLANS_TOOLS = [
   },
   {
     "name": "plans_update",
-    "description": "Update plan (/api/v2/{project_id}/plans/{id})",
+    "description": `Update plan (/api/v2/{project_id}/plans/{id}). ${PLANS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -136,8 +171,23 @@ export const PLANS_TOOLS = [
         "as_manual": {
           "type": "boolean"
         },
-        "test_plan": {
-          "type": "object"
+        "test_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included."
+        },
+        "suite_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered."
+        },
+        "tql": {
+          "type": "string",
+          "description": PLANS_TQL_INPUT_DESCRIPTION
         },
         "link": {
           "type": "array",
@@ -157,6 +207,7 @@ export const PLANS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -193,28 +244,6 @@ export const PLANS_TOOLS = [
       "required": [
         "plan_id"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "plans_search",
-    "description": "Search plans (delegates to plans list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
       "additionalProperties": false
     }
   },

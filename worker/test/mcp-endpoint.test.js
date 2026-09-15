@@ -67,7 +67,11 @@ describe('POST /mcp/<project_id>', () => {
     expect(tools.map((tool) => tool.name)).toContain('tests_list');
 
     const result = await client.callTool({ name: 'tests_list', arguments: { page: 1, per_page: 2 } });
-    expect(JSON.parse(result.content[0].text)).toEqual(TESTS_PAYLOAD);
+    const payload = JSON.parse(result.content[0].text);
+    expect(payload.data.map((test) => test.id)).toEqual(['1', '2']);
+    expect(payload.data.map((test) => test.attributes.title)).toEqual(
+      TESTS_PAYLOAD.data.map((test) => test.attributes.title)
+    );
 
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toContain('https://api.testomat.test/api/v2/demo-project/tests');

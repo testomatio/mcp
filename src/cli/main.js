@@ -16,6 +16,10 @@ export function parseArgs(argv = process.argv) {
     .option('-p, --project <project>', 'Project ID')
     .option('--base-url <url>', 'Base URL for Testomatio API')
     .option('--host <host>', 'Testomatio host, e.g. beta.testomat.io')
+    .option(
+      '--tools <profile>',
+      'Tool surface: full (default, all tools), core (common entities only), read (read-only)'
+    )
     .parse(argv);
 
   return command.opts();

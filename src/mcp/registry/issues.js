@@ -1,18 +1,15 @@
 import { ISSUE_RESOURCE_KEYS } from '../configs/issues-config.js';
 
 export const issueMethods = {
-  listIssues({ page, per_page: perPage, source, ...resourceQuery } = {}) {
+  listIssues({ page, per_page: perPage, source, slim, ...resourceQuery } = {}) {
     this.validateIssueResourceQuery(resourceQuery, { allowEmpty: true, allowMany: false });
     return this.listIssuesForResource({
       ...resourceQuery,
       page,
       per_page: perPage,
       source,
+      slim,
     });
-  },
-
-  searchIssues(args = {}) {
-    return this.listIssues(args);
   },
 
   createIssue({ url, jira_id: jiraId, ...resourceQuery } = {}) {
@@ -24,22 +21,24 @@ export const issueMethods = {
     });
   },
 
-  listIssuesForResource({ page, per_page: perPage, source, ...resourceQuery } = {}) {
+  listIssuesForResource({ page, per_page: perPage, source, slim, ...resourceQuery } = {}) {
     return this.apiClient.list('issues', {
       ...resourceQuery,
       page,
       per_page: perPage,
       source,
+      slim,
     });
   },
 
-  listIssuesForKey({ resourceKey, resourceId, page, per_page: perPage, source }) {
+  listIssuesForKey({ resourceKey, resourceId, page, per_page: perPage, source, slim }) {
     this.assertSupportedIssueResourceKey(resourceKey);
     return this.listIssuesForResource({
       [resourceKey]: resourceId,
       page,
       per_page: perPage,
       source,
+      slim,
     });
   },
 

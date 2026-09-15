@@ -1,7 +1,10 @@
+import { RUNS_TQL_INPUT_DESCRIPTION, RUNS_TQL_REFERENCE } from './tql-reference.js';
+import { BRANCH_PARAM } from './branches.js';
+
 export const RUNS_TOOLS = [
   {
     "name": "runs_list",
-    "description": "List runs (/api/v2/{project_id}/runs)",
+    "description": `List runs (/api/v2/{project_id}/runs). ${RUNS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -14,9 +17,11 @@ export const RUNS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "query": {
-          "type": "string"
-        }
+        "tql": {
+          "type": "string",
+          "description": RUNS_TQL_INPUT_DESCRIPTION
+        },
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -29,7 +34,8 @@ export const RUNS_TOOLS = [
       "properties": {
         "run_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"
@@ -49,8 +55,11 @@ export const RUNS_TOOLS = [
         "description": {
           "type": "string"
         },
-        "plan_id": {
-          "type": "string"
+        "plan_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "kind": {
           "type": "string",
@@ -95,9 +104,6 @@ export const RUNS_TOOLS = [
             "type": "string"
           }
         },
-        "configuration": {
-          "type": "object"
-        },
         "link": {
           "type": "array",
           "items": {
@@ -116,6 +122,7 @@ export const RUNS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -131,7 +138,8 @@ export const RUNS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title"
@@ -152,9 +160,6 @@ export const RUNS_TOOLS = [
           "type": "string"
         },
         "description": {
-          "type": "string"
-        },
-        "plan_id": {
           "type": "string"
         },
         "kind": {
@@ -205,9 +210,6 @@ export const RUNS_TOOLS = [
             "type": "string"
           }
         },
-        "configuration": {
-          "type": "object"
-        },
         "link": {
           "type": "array",
           "items": {
@@ -226,6 +228,7 @@ export const RUNS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -241,7 +244,8 @@ export const RUNS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"
@@ -257,33 +261,12 @@ export const RUNS_TOOLS = [
       "properties": {
         "run_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "run_id"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "runs_search",
-    "description": "Search runs (delegates to runs list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
       "additionalProperties": false
     }
   },

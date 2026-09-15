@@ -1,3 +1,4 @@
+import { BRANCH_PARAM } from './branches.js';
 export const SUITES_TOOLS = [
   {
     "name": "suites_list",
@@ -30,9 +31,7 @@ export const SUITES_TOOLS = [
         "search_text": {
           "type": "string"
         },
-        "query": {
-          "type": "string"
-        }
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -45,7 +44,8 @@ export const SUITES_TOOLS = [
       "properties": {
         "suite_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
@@ -72,7 +72,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -81,7 +85,8 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         },
         "link": {
           "type": "array",
@@ -101,8 +106,10 @@ export const SUITES_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
-                  "jira"
+                  "jira",
+                  "requirement"
                 ]
               },
               "value": {
@@ -116,7 +123,8 @@ export const SUITES_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title"
@@ -146,7 +154,11 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "file_type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "file",
+            "folder"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -155,7 +167,8 @@ export const SUITES_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         },
         "link": {
           "type": "array",
@@ -175,8 +188,10 @@ export const SUITES_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
-                  "jira"
+                  "jira",
+                  "requirement"
                 ]
               },
               "value": {
@@ -190,7 +205,8 @@ export const SUITES_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
@@ -206,49 +222,12 @@ export const SUITES_TOOLS = [
       "properties": {
         "suite_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "suite_id"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "suites_search",
-    "description": "Search suites by title (delegates to suites list with search_text)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "search_text": {
-          "type": "string"
-        },
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "file_type": {
-          "type": "string",
-          "enum": [
-            "file",
-            "folder"
-          ]
-        },
-        "tag": {
-          "type": "string"
-        },
-        "labels": {
-          "type": "string"
-        }
-      },
       "additionalProperties": false
     }
   },

@@ -12,11 +12,44 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "system_ping",
     },
     {
-      "description": "List tests (/api/v2/{project_id}/tests)",
+      "description": "Full TQL (Testomat.io Query Language) reference — syntax, filter variables (tests + runs), and examples. Call this before writing a \`tql\` or \`q\` filter.",
+      "inputSchema": {
+        "properties": {},
+        "type": "object",
+      },
+      "name": "tql_help",
+    },
+    {
+      "description": "Get configuration and metadata for the current project (/api/v2/{project_id}/info), including framework, language, environments, labels, tags, subscription features, artifact storage status, and CI profiles.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object",
+      },
+      "name": "project_info",
+    },
+    {
+      "description": "List tests (/api/v2/{project_id}/tests). Filter tests with \`tql\` (TQL); call \`tql_help\` for the syntax and full field list. Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "assigned_to": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
             "type": "string",
           },
           "page": {
@@ -28,20 +61,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "priority": {
+          "tql": {
+            "description": "TQL filter for tests. Fields: tag, label, priority, issue, jira, state, status, custom_status, created_at, updated_at, last_run_at, executed_at, created_by, assigned_to, suite, test, shared, milestone. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`state == 'automated'\`, \`suite % 'Checkout'\`.",
             "type": "string",
           },
-          "query": {
-            "type": "string",
-          },
-          "search_text": {
-            "type": "string",
-          },
-          "state": {
-            "type": "string",
-          },
-          "suite_id": {
-            "type": "string",
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -53,6 +80,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "test_id": {
             "type": "string",
           },
@@ -70,6 +101,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
         "additionalProperties": false,
         "properties": {
           "assigned_to": {
+            "type": "string",
+          },
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
             "type": "string",
           },
           "code": {
@@ -97,6 +132,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -116,9 +152,21 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "array",
           },
           "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "important",
+              "high",
+              "critical",
+            ],
             "type": "string",
           },
           "state": {
+            "enum": [
+              "manual",
+              "detached",
+              "automated",
+            ],
             "type": "string",
           },
           "suite_id": {
@@ -144,6 +192,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "assigned_to": {
             "type": "string",
           },
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "code": {
             "type": "string",
           },
@@ -169,6 +221,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -188,9 +241,21 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "array",
           },
           "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "important",
+              "high",
+              "critical",
+            ],
             "type": "string",
           },
           "state": {
+            "enum": [
+              "manual",
+              "detached",
+              "automated",
+            ],
             "type": "string",
           },
           "suite_id": {
@@ -218,6 +283,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "test_id": {
             "type": "string",
           },
@@ -230,47 +299,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "tests_delete",
     },
     {
-      "description": "Search tests by text (delegates to tests list with search_text)",
+      "description": "List linked issues for a test (/api/v2/{project_id}/issues?test_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "assigned_to": {
-            "type": "string",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "page": {
-            "minimum": 1,
-            "type": "integer",
-          },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "priority": {
-            "type": "string",
-          },
-          "query": {
-            "type": "string",
-          },
-          "search_text": {
-            "type": "string",
-          },
-          "state": {
-            "type": "string",
-          },
-          "suite_id": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "tests_search",
-    },
-    {
-      "description": "List linked issues for a test (/api/v2/{project_id}/issues?test_id=...)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -285,6 +324,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "test_id": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "required": [
@@ -341,15 +385,34 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "tests_issues_unlink",
     },
     {
-      "description": "List suites as tree (/api/v2/{project_id}/suites)",
+      "description": "List suites as tree (/api/v2/{project_id}/suites) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
           "file_type": {
             "enum": [
               "file",
               "folder",
             ],
+            "type": "string",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
             "type": "string",
           },
           "labels": {
@@ -364,14 +427,16 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
-          },
           "search_text": {
             "type": "string",
           },
           "tag": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -383,6 +448,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "suite_id": {
             "type": "string",
           },
@@ -402,7 +471,12 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "assigned_to": {
             "type": "string",
           },
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "children": {
+            "items": {},
             "type": "array",
           },
           "description": {
@@ -415,6 +489,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "string",
           },
           "file_type": {
+            "enum": [
+              "file",
+              "folder",
+            ],
             "type": "string",
           },
           "link": {
@@ -433,8 +511,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
+                    "requirement",
                   ],
                   "type": "string",
                 },
@@ -473,7 +553,12 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "assigned_to": {
             "type": "string",
           },
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "children": {
+            "items": {},
             "type": "array",
           },
           "description": {
@@ -486,6 +571,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "string",
           },
           "file_type": {
+            "enum": [
+              "file",
+              "folder",
+            ],
             "type": "string",
           },
           "link": {
@@ -504,8 +593,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
+                    "requirement",
                   ],
                   "type": "string",
                 },
@@ -544,6 +635,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "suite_id": {
             "type": "string",
           },
@@ -556,48 +651,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "suites_delete",
     },
     {
-      "description": "Search suites by title (delegates to suites list with search_text)",
+      "description": "List linked issues for a suite (/api/v2/{project_id}/issues?suite_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "file_type": {
-            "enum": [
-              "file",
-              "folder",
-            ],
-            "type": "string",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "labels": {
-            "type": "string",
-          },
-          "page": {
-            "minimum": 1,
-            "type": "integer",
-          },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
-          },
-          "search_text": {
-            "type": "string",
-          },
-          "tag": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "suites_search",
-    },
-    {
-      "description": "List linked issues for a suite (/api/v2/{project_id}/issues?suite_id=...)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -612,6 +676,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "suite_id": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "required": [
@@ -668,10 +737,29 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "suites_issues_unlink",
     },
     {
-      "description": "List runs (/api/v2/{project_id}/runs)",
+      "description": "List runs (/api/v2/{project_id}/runs). Filter runs with \`tql\` (TQL); runs also accept boolean flags. Call \`tql_help\` for the syntax and full field list. Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -681,8 +769,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
+          "tql": {
+            "description": "TQL filter for runs. Fields: title, plan, rungroup, env, tag, label, jira, duration, passed_count, failed_count, skipped_count, automated, manual, mixed, finished, unfinished, passed, failed, terminated, published, private, archived, unarchived, with_defect, has_defect, has_test, has_test_tag, has_test_label, has_suite, has_message, has_custom_status, has_assigned_to, has_retries, has_test_duration, has_priority, created_at, updated_at, launched_at, finished_at, milestone. Call \`tql_help\` for syntax. Examples: \`finished and with_defect\`, \`env in ['Windows', 'Linux']\`, \`has_retries > 2\`.",
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -694,6 +788,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "run_id": {
             "type": "string",
           },
@@ -721,8 +819,9 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "assigned_to": {
             "type": "string",
           },
-          "configuration": {
-            "type": "object",
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
           },
           "description": {
             "type": "string",
@@ -760,6 +859,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -778,8 +878,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             },
             "type": "array",
           },
-          "plan_id": {
-            "type": "string",
+          "plan_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
           "rungroup_id": {
             "type": "string",
@@ -823,8 +926,9 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "assigned_to": {
             "type": "string",
           },
-          "configuration": {
-            "type": "object",
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
           },
           "description": {
             "type": "string",
@@ -856,6 +960,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -873,9 +978,6 @@ exports[`tools/list > returns the full tool catalog 1`] = `
               "type": "object",
             },
             "type": "array",
-          },
-          "plan_id": {
-            "type": "string",
           },
           "run_id": {
             "type": "string",
@@ -922,6 +1024,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "branch": {
+            "description": "Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "type": "string",
+          },
           "run_id": {
             "type": "string",
           },
@@ -934,32 +1040,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "runs_delete",
     },
     {
-      "description": "Search runs (delegates to runs list; docs has no dedicated search parameter)",
+      "description": "List linked issues for a run (/api/v2/{project_id}/issues?run_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "runs_search",
-    },
-    {
-      "description": "List linked issues for a run (/api/v2/{project_id}/issues?run_id=...)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -974,6 +1065,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "source": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "required": [
@@ -1030,10 +1126,97 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "runs_issues_unlink",
     },
     {
-      "description": "List testruns (/api/v2/{project_id}/testruns)",
+      "description": "List testruns (/api/v2/{project_id}/testruns) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "defects": {
+            "enum": [
+              "has_defects",
+              "without_defects",
+            ],
+            "type": "string",
+          },
+          "envs": {
+            "items": {
+              "type": "string",
+            },
+            "type": [
+              "array",
+              "string",
+            ],
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "filter_finished_at_date_range": {
+            "type": "string",
+          },
+          "filter_kind": {
+            "enum": [
+              "manual",
+              "automated",
+            ],
+            "type": "string",
+          },
+          "filter_link": {
+            "type": "boolean",
+          },
+          "filter_message": {
+            "type": "boolean",
+          },
+          "filter_priority": {
+            "enum": [
+              "low",
+              "normal",
+              "important",
+              "high",
+              "critical",
+            ],
+            "type": "string",
+          },
+          "filter_search": {
+            "type": "string",
+          },
+          "filter_status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "pending",
+            ],
+            "type": "string",
+          },
+          "filter_substatus": {
+            "type": "string",
+          },
+          "filter_user": {
+            "type": [
+              "integer",
+              "string",
+            ],
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
+          "labels": {
+            "items": {
+              "type": "string",
+            },
+            "type": [
+              "array",
+              "string",
+            ],
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1043,11 +1226,40 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
-          },
           "run_id": {
             "type": "string",
+          },
+          "rungroups": {
+            "items": {
+              "type": "string",
+            },
+            "type": [
+              "array",
+              "string",
+            ],
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": [
+              "array",
+              "string",
+            ],
+          },
+          "test_ids": {
+            "items": {
+              "type": "string",
+            },
+            "type": [
+              "array",
+              "string",
+            ],
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -1091,6 +1303,12 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "number",
           },
           "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "pending",
+            ],
             "type": "string",
           },
           "test_id": {
@@ -1128,6 +1346,12 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "number",
           },
           "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "pending",
+            ],
             "type": "string",
           },
           "test_id": {
@@ -1164,35 +1388,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "testruns_delete",
     },
     {
-      "description": "Search testruns (delegates to testruns list; docs has no dedicated search parameter)",
+      "description": "List linked issues for a testrun (/api/v2/{project_id}/issues?testrun_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
-          },
-          "run_id": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "testruns_search",
-    },
-    {
-      "description": "List linked issues for a testrun (/api/v2/{project_id}/issues?testrun_id=...)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1207,6 +1413,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "testrun_id": {
             "type": "integer",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "required": [
@@ -1263,10 +1474,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "testruns_issues_unlink",
     },
     {
-      "description": "List run groups as tree (/api/v2/{project_id}/rungroups)",
+      "description": "List run groups as tree (/api/v2/{project_id}/rungroups) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1276,8 +1502,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -1306,6 +1534,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
         "additionalProperties": false,
         "properties": {
           "children": {
+            "items": {},
             "type": "array",
           },
           "description": {
@@ -1343,6 +1572,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
         "additionalProperties": false,
         "properties": {
           "children": {
+            "items": {},
             "type": "array",
           },
           "description": {
@@ -1394,10 +1624,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "rungroups_delete",
     },
     {
-      "description": "Search run groups (delegates to rungroups list; docs has no dedicated search parameter)",
+      "description": "List steps (/api/v2/{project_id}/steps) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1407,30 +1652,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "rungroups_search",
-    },
-    {
-      "description": "List steps (/api/v2/{project_id}/steps)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
-          },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -1477,6 +1702,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -1530,6 +1756,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -1579,10 +1806,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "steps_delete",
     },
     {
-      "description": "Search steps (delegates to steps list; docs has no dedicated search parameter)",
+      "description": "List snippets (/api/v2/{project_id}/snippets) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1592,30 +1834,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "steps_search",
-    },
-    {
-      "description": "List snippets (/api/v2/{project_id}/snippets)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
-          },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -1662,6 +1884,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -1715,6 +1938,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -1764,10 +1988,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "snippets_delete",
     },
     {
-      "description": "Search snippets (delegates to snippets list; docs has no dedicated search parameter)",
+      "description": "List labels (/api/v2/{project_id}/labels) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1777,30 +2016,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "snippets_search",
-    },
-    {
-      "description": "List labels (/api/v2/{project_id}/labels)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
-          },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -1935,32 +2154,31 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "labels_delete",
     },
     {
-      "description": "Search labels (delegates to labels list; docs has no dedicated search parameter)",
+      "description": "List tags with counts (/api/v2/{project_id}/tags) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
           },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "query": {
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
             "type": "string",
           },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
         },
-        "type": "object",
-      },
-      "name": "labels_search",
-    },
-    {
-      "description": "List tags with counts (/api/v2/{project_id}/tags)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {},
         "type": "object",
       },
       "name": "tags_list",
@@ -1998,10 +2216,92 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "tags_search",
     },
     {
-      "description": "List linked issues (/api/v2/{project_id}/issues)",
+      "description": "List milestones (/api/v2/{project_id}/milestones) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "status": {
+            "enum": [
+              "created",
+              "active",
+              "closed",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "description": "Filter by milestone type (title), e.g. Sprint or Release.",
+            "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "type": "object",
+      },
+      "name": "milestones_list",
+    },
+    {
+      "description": "Get milestone by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "milestone_id",
+        ],
+        "type": "object",
+      },
+      "name": "milestones_get",
+    },
+    {
+      "description": "List linked issues (/api/v2/{project_id}/issues) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -2028,6 +2328,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "testrun_id": {
             "type": "integer",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -2090,47 +2395,249 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "issues_delete",
     },
     {
-      "description": "Search issues (delegates to issues_list filters)",
+      "description": "List attachments for a test (/api/v2/{project_id}/attachments?test_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "plan_id": {
+          "test_id": {
             "type": "string",
           },
-          "run_id": {
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "test_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_attachments_list",
+    },
+    {
+      "description": "Upload one attachment to a test (/api/v2/{project_id}/attachments?test_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Local path to the file that will be sent as multipart/form-data field "file".",
             "type": "string",
           },
-          "source": {
+          "test_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+          "file_path",
+        ],
+        "type": "object",
+      },
+      "name": "tests_attachments_upload",
+    },
+    {
+      "description": "Delete attachment from a test (/api/v2/{project_id}/attachments/{id}?test_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "attachment_id": {
+            "type": "string",
+          },
+          "test_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "test_id",
+          "attachment_id",
+        ],
+        "type": "object",
+      },
+      "name": "tests_attachments_delete",
+    },
+    {
+      "description": "List attachments for a suite (/api/v2/{project_id}/attachments?suite_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "suite_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_attachments_list",
+    },
+    {
+      "description": "Upload one attachment to a suite (/api/v2/{project_id}/attachments?suite_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Local path to the file that will be sent as multipart/form-data field "file".",
             "type": "string",
           },
           "suite_id": {
             "type": "string",
           },
-          "test_id": {
+        },
+        "required": [
+          "suite_id",
+          "file_path",
+        ],
+        "type": "object",
+      },
+      "name": "suites_attachments_upload",
+    },
+    {
+      "description": "Delete attachment from a suite (/api/v2/{project_id}/attachments/{id}?suite_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "attachment_id": {
+            "type": "string",
+          },
+          "suite_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "suite_id",
+          "attachment_id",
+        ],
+        "type": "object",
+      },
+      "name": "suites_attachments_delete",
+    },
+    {
+      "description": "List attachments for a testrun (/api/v2/{project_id}/attachments?testrun_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "testrun_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_attachments_list",
+    },
+    {
+      "description": "Upload one attachment to a testrun (/api/v2/{project_id}/attachments?testrun_id=...)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Local path to the file that will be sent as multipart/form-data field "file".",
             "type": "string",
           },
           "testrun_id": {
             "type": "integer",
           },
         },
+        "required": [
+          "testrun_id",
+          "file_path",
+        ],
         "type": "object",
       },
-      "name": "issues_search",
+      "name": "testruns_attachments_upload",
     },
     {
-      "description": "List plans (/api/v2/{project_id}/plans)",
+      "description": "Delete attachment from a testrun (/api/v2/{project_id}/attachments/{id}?testrun_id=...)",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "attachment_id": {
+            "type": "string",
+          },
+          "testrun_id": {
+            "type": "integer",
+          },
+        },
+        "required": [
+          "testrun_id",
+          "attachment_id",
+        ],
+        "type": "object",
+      },
+      "name": "testruns_attachments_delete",
+    },
+    {
+      "description": "List plans (/api/v2/{project_id}/plans) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
+          "hidden": {
+            "type": "boolean",
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "mixed",
+            ],
+            "type": "string",
+          },
+          "labels": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -2140,8 +2647,13 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "minimum": 1,
             "type": "integer",
           },
-          "query": {
+          "search_text": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "type": "object",
@@ -2165,7 +2677,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "plans_get",
     },
     {
-      "description": "Create plan (/api/v2/{project_id}/plans)",
+      "description": "Create plan (/api/v2/{project_id}/plans). Select tests for the plan with \`tql\` (TQL); the API resolves matching tests. Call \`tql_help\` for the syntax and full field list.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -2202,6 +2714,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -2220,10 +2733,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             },
             "type": "array",
           },
-          "test_plan": {
-            "type": "object",
+          "suite_ids": {
+            "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "test_ids": {
+            "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
           "title": {
+            "type": "string",
+          },
+          "tql": {
+            "description": "TQL to select tests for the plan. Fields: tag, label, priority, issue, jira, state, status, custom_status, created_at, updated_at, last_run_at, executed_at, created_by, assigned_to, suite, test, shared, milestone. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`tag in ['smoke', 'stage1']\`.",
             "type": "string",
           },
         },
@@ -2235,7 +2763,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "plans_create",
     },
     {
-      "description": "Update plan (/api/v2/{project_id}/plans/{id})",
+      "description": "Update plan (/api/v2/{project_id}/plans/{id}). Select tests for the plan with \`tql\` (TQL); the API resolves matching tests. Call \`tql_help\` for the syntax and full field list.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -2272,6 +2800,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
                     "label",
                     "custom_field",
                     "tag",
+                    "milestone",
                     "issue",
                     "jira",
                   ],
@@ -2293,10 +2822,25 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           "plan_id": {
             "type": "string",
           },
-          "test_plan": {
-            "type": "object",
+          "suite_ids": {
+            "description": "List of suite IDs (8-char) to include in the plan. If omitted, all suites are considered.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "test_ids": {
+            "description": "List of test IDs (8-char) to include in the plan. If omitted, all tests matching the plan kind are included.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
           "title": {
+            "type": "string",
+          },
+          "tql": {
+            "description": "TQL to select tests for the plan. Fields: tag, label, priority, issue, jira, state, status, custom_status, created_at, updated_at, last_run_at, executed_at, created_by, assigned_to, suite, test, shared, milestone. Call \`tql_help\` for syntax. Examples: \`priority == 'high'\`, \`tag in ['smoke', 'stage1']\`.",
             "type": "string",
           },
         },
@@ -2324,32 +2868,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "plans_delete",
     },
     {
-      "description": "Search plans (delegates to plans list; docs has no dedicated search parameter)",
+      "description": "List linked issues for a plan (/api/v2/{project_id}/issues?plan_id=...) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "page": {
-            "minimum": 1,
-            "type": "integer",
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
           },
-          "per_page": {
-            "maximum": 100,
-            "minimum": 1,
-            "type": "integer",
-          },
-          "query": {
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "plans_search",
-    },
-    {
-      "description": "List linked issues for a plan (/api/v2/{project_id}/issues?plan_id=...)",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -2364,6 +2893,11 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "source": {
             "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
           },
         },
         "required": [
@@ -2418,6 +2952,306 @@ exports[`tools/list > returns the full tool catalog 1`] = `
         "type": "object",
       },
       "name": "plans_issues_unlink",
+    },
+    {
+      "description": "List requirements (/api/v2/{project_id}/requirements) Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "scope": {
+            "enum": [
+              "global",
+              "attached",
+              "detached",
+              "without_suites",
+            ],
+            "type": "string",
+          },
+          "source": {
+            "enum": [
+              "jira",
+              "confluence",
+              "file",
+              "text",
+            ],
+            "type": "string",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requirements_list",
+    },
+    {
+      "description": "Get requirement by ID",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "requirement_id",
+        ],
+        "type": "object",
+      },
+      "name": "requirements_get",
+    },
+    {
+      "description": "Create requirement (/api/v2/{project_id}/requirements)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean",
+          },
+          "confluence_url": {
+            "description": "Required for confluence requirements.",
+            "type": "string",
+          },
+          "description": {
+            "description": "Required for text requirements. Must be at least 500 characters.",
+            "type": "string",
+          },
+          "details": {
+            "type": "string",
+          },
+          "files": {
+            "description": "Local file paths to upload for file requirements.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "global": {
+            "type": "boolean",
+          },
+          "source_type": {
+            "enum": [
+              "jira",
+              "confluence",
+              "file",
+              "text",
+            ],
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+          "source_type",
+        ],
+        "type": "object",
+      },
+      "name": "requirements_create",
+    },
+    {
+      "description": "Update requirement (/api/v2/{project_id}/requirements/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean",
+          },
+          "description": {
+            "description": "Only applied for text requirements.",
+            "type": "string",
+          },
+          "details": {
+            "type": "string",
+          },
+          "files": {
+            "description": "Local file paths to upload for file requirements.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "global": {
+            "type": "boolean",
+          },
+          "requirement_id": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "requirement_id",
+        ],
+        "type": "object",
+      },
+      "name": "requirements_update",
+    },
+    {
+      "description": "Delete requirement (/api/v2/{project_id}/requirements/{id})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "requirement_id",
+        ],
+        "type": "object",
+      },
+      "name": "requirements_delete",
+    },
+    {
+      "description": "List project branches (/api/v2/{project_id}/branches). Requires the branches feature (enterprise plan). Use filter[state] / filter[title] to narrow down. Entity-specific heavy fields are stripped by default; verbose:true for full bodies.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
+            "type": "boolean",
+          },
+          "fields": {
+            "description": "Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "filter_state": {
+            "description": "Filter by branch state",
+            "enum": [
+              "active",
+              "merged",
+            ],
+            "type": "string",
+          },
+          "filter_title": {
+            "description": "Filter by title (partial substring match)",
+            "type": "string",
+          },
+          "group_by": {
+            "description": "Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.",
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "per_page": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "verbose": {
+            "default": false,
+            "description": "Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
+            "type": "boolean",
+          },
+        },
+        "type": "object",
+      },
+      "name": "branches_list",
+    },
+    {
+      "description": "Get branch by slug",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "branch_id": {
+            "description": "Branch slug",
+            "type": "string",
+          },
+        },
+        "required": [
+          "branch_id",
+        ],
+        "type": "object",
+      },
+      "name": "branches_get",
+    },
+    {
+      "description": "Create branch (/api/v2/{project_id}/branches)",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "description": "Branch title; a slug is generated from it",
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
+      "name": "branches_create",
+    },
+    {
+      "description": "Update branch title (/api/v2/{project_id}/branches/{slug})",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "branch_id": {
+            "description": "Branch slug",
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "branch_id",
+        ],
+        "type": "object",
+      },
+      "name": "branches_update",
+    },
+    {
+      "description": "Delete branch by slug",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "branch_id": {
+            "description": "Branch slug",
+            "type": "string",
+          },
+        },
+        "required": [
+          "branch_id",
+        ],
+        "type": "object",
+      },
+      "name": "branches_delete",
     },
   ],
 }

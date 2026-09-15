@@ -1,0 +1,198 @@
+/**
+ * Slim projection for list-tool responses.
+ *
+ * List tools return only what an index view needs: entity-specific heavy fields
+ * and null values are dropped.
+ * `verbose:true` returns the full body; `fields:[...]` selects a custom field set.
+ * Every shaped response carries a `_view` marker so the caller knows it is partial.
+ */
+
+const HEAVY_FIELDS_BY_ENTITY = {
+  tests: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
+  suites: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
+  runs: new Set(['description']),
+  testruns: new Set(['description', 'code']),
+  rungroups: new Set(['description']),
+  steps: new Set(['description']),
+  snippets: new Set(['description']),
+  plans: new Set(['description']),
+  requirements: new Set(['description']),
+  analytics_tests: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
+  analytics_charts: new Set(['description']),
+  analytics_chart_results: new Set(['description', 'code', 'cleanTitle', 'publicTitle']),
+};
+
+function isNullish(value) {
+  return value === null || value === undefined;
+}
+
+function pickFields(item, fields) {
+  const result = {};
+  for (const key of fields) {
+    if (!(key in item)) continue;
+    const value = item[key];
+    if (isNullish(value)) continue;
+    result[key] = value;
+  }
+  return result;
+}
+
+function stripHeavy(item, heavyFields) {
+  const result = {};
+  for (const [key, value] of Object.entries(item)) {
+    if (heavyFields.has(key)) continue;
+    if (isNullish(value)) continue;
+    result[key] = value;
+  }
+  return result;
+}
+
+function mapItems(items, fn) {
+  return items.map((item) =>
+    item && typeof item === 'object' && !Array.isArray(item) ? fn(item) : item
+  );
+}
+
+function applyToEnvelope(payload, fn) {
+  if (!payload || typeof payload !== 'object') return payload;
+  if (Array.isArray(payload)) return mapItems(payload, fn);
+  if (Array.isArray(payload.data)) {
+    return { ...payload, data: mapItems(payload.data, fn) };
+  }
+  return payload;
+}
+
+const VIEW_NOTE =
+  'Entity-specific heavy fields and null values removed. Pass verbose:true for full bodies or fields:[...] to select fields.';
+
+function withViewMarker(result, note = VIEW_NOTE) {
+  if (
+    result &&
+    typeof result === 'object' &&
+    !Array.isArray(result) &&
+    Array.isArray(result.data)
+  ) {
+    return { ...result, _view: note };
+  }
+  return result;
+}
+
+/**
+ * Shape a list payload: drop entity-specific heavy and null fields by default, full body on `verbose`,
+ * custom field set on `fields`. A `_view` marker is added to shaped envelopes.
+ *
+ * @param {*} payload              raw API response ({ data, meta } or a bare array)
+ * @param {{ verbose?: boolean, fields?: string[], entity?: string }} [opts]
+ */
+export function slimList(payload, { verbose = false, fields, entity } = {}) {
+  if (verbose) {
+    return payload;
+  }
+  if (Array.isArray(fields) && fields.length) {
+    return withViewMarker(
+      applyToEnvelope(payload, (item) => pickFields(item, fields)),
+      `Custom fields [${fields.join(', ')}]. Pass verbose:true for the full object.`
+    );
+  }
+  const heavyFields = HEAVY_FIELDS_BY_ENTITY[entity] ?? new Set();
+  return withViewMarker(applyToEnvelope(payload, (item) => stripHeavy(item, heavyFields)));
+}
+
+/**
+ * Ask the API to omit heavy list fields only when MCP does not need them for a
+ * full or custom projection. When `count` is requested the response is meta only,
+ * so `slim` is irrelevant and must not be sent alongside `count`.
+ */
+export function backendSlimQuery({ verbose = false, fields, count = false } = {}) {
+  if (count) {
+    return {};
+  }
+  return !verbose && !(Array.isArray(fields) && fields.length) ? { slim: true } : {};
+}
+
+const LIST_OPTION_PROPERTIES = {
+  verbose: {
+    type: 'boolean',
+    default: false,
+    description:
+      'Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.',
+  },
+  fields: {
+    type: 'array',
+    items: { type: 'string' },
+    description:
+      'Fields to keep per item (e.g. ["id","title","status","message"]). Ignored when verbose is true.',
+  },
+};
+
+/**
+ * Inject `verbose`/`fields` input params into every list-style tool definition so the
+ * model can opt into full bodies or a custom projection. Returns shallow copies; the
+ * source definitions are not mutated.
+ *
+ * @param {Array} tools
+ * @param {{ extraNames?: string[] }} [options]  additional tool names to augment
+ */
+export function withListOptions(tools, { extraNames = [] } = {}) {
+  return tools.map((tool) => {
+    if (!tool || !tool.name) return tool;
+    const isListStyle = tool.name.endsWith('_list') || extraNames.includes(tool.name);
+    if (!isListStyle) return tool;
+
+    const inputSchema = tool.inputSchema || { type: 'object', properties: {} };
+    const properties = { ...(inputSchema.properties || {}), ...LIST_OPTION_PROPERTIES };
+
+    return {
+      ...tool,
+      description: `${tool.description ?? ''} Entity-specific heavy fields are stripped by default; verbose:true for full bodies.`.trim(),
+      inputSchema: {
+        ...inputSchema,
+        properties,
+      },
+    };
+  });
+}
+
+// Scoped list tools (*_issues_list, *_attachments_list) are filtered to one entity,
+// so count/group_by aggregation does not apply there.
+const SCOPED_LIST_INFIXES = ['_issues_', '_attachments_'];
+
+function isPrimaryListToolName(name) {
+  return (
+    typeof name === 'string' &&
+    name.endsWith('_list') &&
+    !SCOPED_LIST_INFIXES.some((infix) => name.includes(infix))
+  );
+}
+
+const COUNT_PROPERTY = {
+  type: 'boolean',
+  description:
+    'Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.',
+};
+
+const GROUP_BY_PROPERTY = {
+  type: 'string',
+  description:
+    'Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.',
+};
+
+/**
+ * Inject `count` and `group_by` into every primary list tool. `group_by` is a
+ * free-form string — the backend is the source of truth for which fields each
+ * resource accepts. Scoped list tools (*_issues_list, *_attachments_list) are skipped.
+ *
+ * @param {Array} tools
+ */
+export function withCountGroupOptions(tools) {
+  return tools.map((tool) => {
+    if (!tool || !isPrimaryListToolName(tool.name)) return tool;
+    const inputSchema = tool.inputSchema || { type: 'object', properties: {} };
+    const properties = {
+      ...(inputSchema.properties || {}),
+      count: COUNT_PROPERTY,
+      group_by: GROUP_BY_PROPERTY,
+    };
+    return { ...tool, inputSchema: { ...inputSchema, properties } };
+  });
+}

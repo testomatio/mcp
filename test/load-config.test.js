@@ -58,7 +58,7 @@ describe('loadConfig', () => {
   it('reads credentials from the environment', () => {
     expect(
       loadConfig({}, { TESTOMATIO_PROJECT_TOKEN: 'tstmt_x', TESTOMATIO_PROJECT_ID: 'demo' })
-    ).toEqual({ token: 'tstmt_x', projectId: 'demo', baseUrl: DEFAULT_BASE_URL });
+    ).toEqual({ token: 'tstmt_x', projectId: 'demo', baseUrl: DEFAULT_BASE_URL, toolsProfile: 'full' });
   });
 
   it('supports the legacy api token variable', () => {

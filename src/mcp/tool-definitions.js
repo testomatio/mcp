@@ -1,4 +1,5 @@
 import { SYSTEM_TOOLS } from './definitions/system.js';
+import { PROJECT_TOOLS } from './definitions/projects.js';
 import { TESTS_TOOLS } from './definitions/tests.js';
 import { SUITES_TOOLS } from './definitions/suites.js';
 import { RUNS_TOOLS } from './definitions/runs.js';
@@ -8,11 +9,17 @@ import { STEPS_TOOLS } from './definitions/steps.js';
 import { SNIPPETS_TOOLS } from './definitions/snippets.js';
 import { LABELS_TOOLS } from './definitions/labels.js';
 import { TAGS_TOOLS } from './definitions/tags.js';
+import { MILESTONES_TOOLS } from './definitions/milestones.js';
 import { ISSUES_TOOLS } from './definitions/issues.js';
 import { PLANS_TOOLS } from './definitions/plans.js';
+import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
+import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
+import { BRANCHES_TOOLS } from './definitions/branches.js';
+import { withListOptions, withCountGroupOptions } from './list-projection.js';
 
-export const TOOL_DEFINITIONS = [
+export const TOOL_DEFINITIONS = withCountGroupOptions(withListOptions([
   ...SYSTEM_TOOLS,
+  ...PROJECT_TOOLS,
   ...TESTS_TOOLS,
   ...SUITES_TOOLS,
   ...RUNS_TOOLS,
@@ -22,6 +29,10 @@ export const TOOL_DEFINITIONS = [
   ...SNIPPETS_TOOLS,
   ...LABELS_TOOLS,
   ...TAGS_TOOLS,
+  ...MILESTONES_TOOLS,
   ...ISSUES_TOOLS,
+  ...ATTACHMENT_TOOLS,
   ...PLANS_TOOLS,
-];
+  ...REQUIREMENTS_TOOLS,
+  ...BRANCHES_TOOLS,
+]));

@@ -13,9 +13,6 @@ export const LABELS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
-        },
-        "query": {
-          "type": "string"
         }
       },
       "additionalProperties": false
@@ -148,26 +145,4 @@ export const LABELS_TOOLS = [
       "additionalProperties": false
     }
   },
-  {
-    "name": "labels_search",
-    "description": "Search labels (delegates to labels list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
-      "additionalProperties": false
-    }
-  }
 ];

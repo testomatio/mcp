@@ -2,25 +2,58 @@ import { DEFAULT_TOOL_RESPONSE } from '../config/constants.js';
 import { ApiError, NotImplementedToolError } from '../core/errors.js';
 import { textResponse } from '../helpers/mcp-response.js';
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
+import { TQL_FULL_REFERENCE } from './definitions/tql-reference.js';
 import { handlerMethods } from './registry/handlers.js';
+import { attachmentMethods } from './registry/attachments.js';
 import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
 
+function withPagination(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return payload;
+  }
+  const meta = payload.meta;
+  if (!Array.isArray(payload.data) || !meta || typeof meta !== 'object') {
+    return payload;
+  }
+  const { total, page, per_page: perPage, has_more: backendHasMore } = meta;
+  if (
+    typeof total !== 'number' ||
+    typeof page !== 'number' ||
+    typeof perPage !== 'number' ||
+    perPage <= 0
+  ) {
+    return payload;
+  }
+  const hasMore =
+    typeof backendHasMore === 'boolean' ? backendHasMore : page * perPage < total;
+
+  if (hasMore) {
+    return {
+      ...payload,
+      _note: `Showing ${payload.data.length} of ${total} (page ${page}). More available — refine the filter or request the next page.`,
+    };
+  }
+  return payload;
+}
+
 function formatJson(payload) {
-  return JSON.stringify(payload, null, 2);
+  return JSON.stringify(payload);
 }
 
 export class ToolRegistry {
-  constructor({ config, apiClient, logger }) {
+  constructor({ config, apiClient, logger, tools = TOOL_DEFINITIONS, handlerRegistrars = [] }) {
     this.config = config;
     this.apiClient = apiClient;
     this.logger = logger;
+    this.tools = tools;
+    this.handlerRegistrars = handlerRegistrars;
     this.handlers = this.buildHandlers();
   }
 
   asText(payload) {
-    return textResponse(formatJson(payload));
+    return textResponse(formatJson(withPagination(payload)));
   }
 
   buildHandlers() {
@@ -32,13 +65,18 @@ export class ToolRegistry {
           baseUrl: this.config.baseUrl,
           apiVersion: 'v2',
         }),
+      tql_help: async () => textResponse(TQL_FULL_REFERENCE),
     };
 
     this.registerEntityCrudHandlers(handlers);
     this.registerScopedIssueHandlers(handlers);
+    this.registerScopedAttachmentHandlers(handlers);
     this.registerGlobalHandlers(handlers);
+    for (const registerHandlers of this.handlerRegistrars) {
+      registerHandlers.call(this, handlers);
+    }
 
-    for (const tool of TOOL_DEFINITIONS) {
+    for (const tool of this.tools) {
       if (tool.name === 'system_ping') continue;
       if (!handlers[tool.name]) {
         handlers[tool.name] = async () => textResponse(`${DEFAULT_TOOL_RESPONSE} (${tool.name})`);
@@ -75,6 +113,7 @@ export class ToolRegistry {
 Object.assign(
   ToolRegistry.prototype,
   handlerMethods,
+  attachmentMethods,
   listingMethods,
   issueMethods,
   payloadMethods

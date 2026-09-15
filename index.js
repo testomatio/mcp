@@ -2,8 +2,7 @@
 
 import { fileURLToPath } from 'url';
 import { main } from './src/cli/main.js';
-
-export { TestomatioMCPServer } from './src/mcp/server.js';
+export * from './src/index.js';
 
 const modulePath = fileURLToPath(import.meta.url);
 const executedPath = process.argv[1] || '';

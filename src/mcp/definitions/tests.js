@@ -1,7 +1,10 @@
+import { TESTS_TQL_INPUT_DESCRIPTION, TESTS_TQL_REFERENCE } from './tql-reference.js';
+import { BRANCH_PARAM } from './branches.js';
+
 export const TESTS_TOOLS = [
   {
     "name": "tests_list",
-    "description": "List tests (/api/v2/{project_id}/tests)",
+    "description": `List tests (/api/v2/{project_id}/tests). ${TESTS_TQL_REFERENCE}`,
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -14,24 +17,11 @@ export const TESTS_TOOLS = [
           "minimum": 1,
           "maximum": 100
         },
-        "suite_id": {
-          "type": "string"
+        "tql": {
+          "type": "string",
+          "description": TESTS_TQL_INPUT_DESCRIPTION
         },
-        "search_text": {
-          "type": "string"
-        },
-        "query": {
-          "type": "string"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
-        }
+        "branch": BRANCH_PARAM
       },
       "additionalProperties": false
     }
@@ -44,7 +34,8 @@ export const TESTS_TOOLS = [
       "properties": {
         "test_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"
@@ -71,7 +62,14 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "priority": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -80,7 +78,12 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "manual",
+            "detached",
+            "automated"
+          ]
         },
         "link": {
           "type": "array",
@@ -100,6 +103,7 @@ export const TESTS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -115,7 +119,8 @@ export const TESTS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "title",
@@ -146,7 +151,14 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "priority": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "low",
+            "normal",
+            "important",
+            "high",
+            "critical"
+          ]
         },
         "assigned_to": {
           "type": "string"
@@ -155,7 +167,12 @@ export const TESTS_TOOLS = [
           "type": "string"
         },
         "state": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "manual",
+            "detached",
+            "automated"
+          ]
         },
         "sync": {
           "type": "boolean"
@@ -178,6 +195,7 @@ export const TESTS_TOOLS = [
                   "label",
                   "custom_field",
                   "tag",
+                  "milestone",
                   "issue",
                   "jira"
                 ]
@@ -193,7 +211,8 @@ export const TESTS_TOOLS = [
             ],
             "additionalProperties": false
           }
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"
@@ -209,48 +228,12 @@ export const TESTS_TOOLS = [
       "properties": {
         "test_id": {
           "type": "string"
-        }
+        },
+        "branch": BRANCH_PARAM
       },
       "required": [
         "test_id"
       ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "tests_search",
-    "description": "Search tests by text (delegates to tests list with search_text)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "search_text": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "suite_id": {
-          "type": "string"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
-        "state": {
-          "type": "string"
-        }
-      },
       "additionalProperties": false
     }
   },

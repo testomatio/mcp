@@ -1,4 +1,4 @@
-import { DEFAULT_BASE_URL } from './constants.js';
+import { DEFAULT_BASE_URL, DEFAULT_PROFILE, TOOL_PROFILES } from './constants.js';
 import { ConfigurationError } from '../core/errors.js';
 
 function normalizeString(value) {
@@ -46,6 +46,8 @@ export function loadConfig(argvOptions = {}, env = process.env) {
   );
   const projectId = normalizeString(argvOptions.project || env.TESTOMATIO_PROJECT_ID);
   const baseUrl = resolveBaseUrl(argvOptions, env);
+  const rawToolsProfile = normalizeString(argvOptions.tools || env.TESTOMATIO_TOOLS).toLowerCase();
+  const toolsProfile = rawToolsProfile || DEFAULT_PROFILE;
 
   if (!token) {
     throw new ConfigurationError(
@@ -59,9 +61,16 @@ export function loadConfig(argvOptions = {}, env = process.env) {
     );
   }
 
+  if (!TOOL_PROFILES.includes(toolsProfile)) {
+    throw new ConfigurationError(
+      `Unknown tools profile "${toolsProfile}". Use one of: ${TOOL_PROFILES.join(', ')}.`
+    );
+  }
+
   return {
     token,
     projectId,
     baseUrl,
+    toolsProfile,
   };
 }

@@ -28,16 +28,21 @@ jobs:
       - run: git config --global user.name "GitHub CD bot"
       - run: git config --global user.email "github-cd-bot@example.com"
 
-      - run: git add . && git diff --staged --quiet || git commit -m "Update dependencies"
-
-      - run: git status
-
-      - run: npm version ${{ github.event.release.tag_name }} --no-git-tag-version
+      - name: Set package version if needed
+        run: |
+          RELEASE_VERSION="${{ github.event.release.tag_name }}"
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$CURRENT_VERSION" = "$RELEASE_VERSION" ]; then
+            echo "package.json already at version $CURRENT_VERSION"
+          else
+            npm version "$RELEASE_VERSION" --no-git-tag-version
+          fi
+      - run: npm run sync:enterprise-package
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Bump version to ${{ github.event.release.tag_name }}"
-          file_pattern: "package.json package-lock.json"
+          file_pattern: "package.json package-lock.json packages/enterprise/package.json"
 
       - name: Determine npm tag
         id: npm_tag
@@ -58,12 +63,68 @@ jobs:
       - name: Publish to npm
         run: npm publish --provenance --tag ${{ steps.npm_tag.outputs.tag }}
 
+  publish_enterprise:
+    name: Publish enterprise package to npm
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm install -g npm@latest
+      - run: npm ci
+
+      - name: Set package version if needed
+        run: |
+          RELEASE_VERSION="${{ github.event.release.tag_name }}"
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$CURRENT_VERSION" = "$RELEASE_VERSION" ]; then
+            echo "package.json already at version $CURRENT_VERSION"
+          else
+            npm version "$RELEASE_VERSION" --no-git-tag-version
+          fi
+      - run: npm run sync:enterprise-package
+
+      - name: Determine npm tag
+        id: npm_tag
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if echo "$TAG" | grep -qE "alpha|-alpha|\.a\."; then
+            echo "tag=alpha" >> $GITHUB_OUTPUT
+          elif echo "$TAG" | grep -qE "beta|-beta|\.b\."; then
+            echo "tag=beta" >> $GITHUB_OUTPUT
+          elif echo "$TAG" | grep -qE "rc|-rc|\.rc\."; then
+            echo "tag=rc" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            echo "tag=beta" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish enterprise package to npm
+        working-directory: packages/enterprise
+        run: npm publish --provenance --tag ${{ steps.npm_tag.outputs.tag }}
+
   show-npm-log:
     runs-on: ubuntu-latest
-    needs: publish
+    needs: [publish, publish_enterprise]
     if: failure()
     steps:
-      - run: echo "NPM Logs Directory:"
-      - run: ls -l /home/runner/.npm/_logs/
-      - run: echo "Displaying the most recent log:"
-      - run: cat /home/runner/.npm/_logs/*.log
+      - name: Show npm logs if present
+        run: |
+          LOG_DIR="/home/runner/.npm/_logs"
+          if [ -d "$LOG_DIR" ]; then
+            echo "NPM Logs Directory:"
+            ls -l "$LOG_DIR"
+            echo "Displaying available logs:"
+            cat "$LOG_DIR"/*.log
+          else
+            echo "NPM log directory not found: $LOG_DIR"
+          fi

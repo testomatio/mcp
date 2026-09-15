@@ -91,41 +91,4 @@ export const ISSUES_TOOLS = [
       "additionalProperties": false
     }
   },
-  {
-    "name": "issues_search",
-    "description": "Search issues (delegates to issues_list filters)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "test_id": {
-          "type": "string"
-        },
-        "suite_id": {
-          "type": "string"
-        },
-        "run_id": {
-          "type": "string"
-        },
-        "testrun_id": {
-          "type": "integer"
-        },
-        "plan_id": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    }
-  }
 ];

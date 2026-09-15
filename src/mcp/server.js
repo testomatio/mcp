@@ -7,14 +7,32 @@ import { createLogger } from '../core/logger.js';
 import { getPackageVersion } from '../config/package-version.js';
 
 export class TestomatioMCPServer {
-  constructor({ config, apiClient, logger, version, jsonSchemaValidator }) {
+  constructor({
+    config,
+    apiClient,
+    logger,
+    tools = TOOL_DEFINITIONS,
+    name = 'testomatio-mcp-server',
+    registryOptions = {},
+    version,
+    jsonSchemaValidator,
+  }) {
     this.config = config;
+    this.apiClient = apiClient;
     this.logger = logger || createLogger();
-    this.toolRegistry = new ToolRegistry({ config, apiClient, logger: this.logger });
+    this.tools = tools;
+    this.toolRegistry = new ToolRegistry({
+      config,
+      apiClient,
+      logger: this.logger,
+      tools,
+      ...registryOptions,
+    });
+    this.cleanupStarted = false;
 
     this.server = new Server(
       {
-        name: 'testomatio-mcp-server',
+        name,
         version: version || getPackageVersion(),
       },
       {
@@ -30,7 +48,7 @@ export class TestomatioMCPServer {
 
   setupHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: TOOL_DEFINITIONS,
+      tools: this.tools,
     }));
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -48,6 +66,33 @@ export class TestomatioMCPServer {
 
   async run() {
     await this.connect(new StdioServerTransport());
+    this.installSessionCleanup();
     this.logger.info('Testomatio MCP server started');
+  }
+
+  installSessionCleanup() {
+    const cleanup = async () => {
+      if (this.cleanupStarted) {
+        return;
+      }
+
+      this.cleanupStarted = true;
+      await this.apiClient?.stopSession?.();
+    };
+
+    this.server.onclose = () => {
+      void cleanup();
+    };
+
+    process.once('beforeExit', () => {
+      void cleanup();
+    });
+
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+      process.once(signal, async () => {
+        await cleanup();
+        process.exit(0);
+      });
+    }
   }
 }

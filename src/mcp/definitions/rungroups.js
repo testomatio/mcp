@@ -13,9 +13,6 @@ export const RUNGROUPS_TOOLS = [
           "type": "integer",
           "minimum": 1,
           "maximum": 100
-        },
-        "query": {
-          "type": "string"
         }
       },
       "additionalProperties": false
@@ -65,7 +62,8 @@ export const RUNGROUPS_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         }
       },
       "required": [
@@ -105,7 +103,8 @@ export const RUNGROUPS_TOOLS = [
           "type": "string"
         },
         "children": {
-          "type": "array"
+          "type": "array",
+          "items": {}
         }
       },
       "required": [
@@ -130,26 +129,4 @@ export const RUNGROUPS_TOOLS = [
       "additionalProperties": false
     }
   },
-  {
-    "name": "rungroups_search",
-    "description": "Search run groups (delegates to rungroups list; docs has no dedicated search parameter)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
-      "additionalProperties": false
-    }
-  }
 ];
