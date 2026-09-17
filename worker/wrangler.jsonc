@@ -10,6 +10,12 @@
   "vars": {
     "TESTOMATIO_BASE_URL": "https://app.testomat.io"
   },
+  "routes": [
+    {
+      "pattern": "mcp.testomat.io",
+      "custom_domain": true
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "OAUTH_KV",
@@ -22,6 +28,12 @@
       "vars": {
         "TESTOMATIO_BASE_URL": "https://beta.testomat.io"
       },
+      "routes": [
+        {
+          "pattern": "mcp-beta.testomat.io",
+          "custom_domain": true
+        }
+      ],
       "kv_namespaces": [
         {
           "binding": "OAUTH_KV",
