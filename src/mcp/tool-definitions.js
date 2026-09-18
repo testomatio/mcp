@@ -2,6 +2,7 @@ import { SYSTEM_TOOLS } from './definitions/system.js';
 import { PROJECT_TOOLS } from './definitions/projects.js';
 import { TESTS_TOOLS } from './definitions/tests.js';
 import { SUITES_TOOLS } from './definitions/suites.js';
+import { SHARES_TOOLS } from './definitions/shares.js';
 import { RUNS_TOOLS } from './definitions/runs.js';
 import { TESTRUNS_TOOLS } from './definitions/testruns.js';
 import { RUNGROUPS_TOOLS } from './definitions/rungroups.js';
@@ -22,6 +23,7 @@ export const TOOL_DEFINITIONS = withCountGroupOptions(withListOptions([
   ...PROJECT_TOOLS,
   ...TESTS_TOOLS,
   ...SUITES_TOOLS,
+  ...SHARES_TOOLS,
   ...RUNS_TOOLS,
   ...TESTRUNS_TOOLS,
   ...RUNGROUPS_TOOLS,

@@ -8,6 +8,7 @@ import { attachmentMethods } from './registry/attachments.js';
 import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
+import { shareMethods } from './registry/shares.js';
 
 function withPagination(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -72,6 +73,7 @@ export class ToolRegistry {
     this.registerScopedIssueHandlers(handlers);
     this.registerScopedAttachmentHandlers(handlers);
     this.registerGlobalHandlers(handlers);
+    this.registerShareHandlers(handlers);
     for (const registerHandlers of this.handlerRegistrars) {
       registerHandlers.call(this, handlers);
     }
@@ -116,5 +118,6 @@ Object.assign(
   attachmentMethods,
   listingMethods,
   issueMethods,
-  payloadMethods
+  payloadMethods,
+  shareMethods
 );

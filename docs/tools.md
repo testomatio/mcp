@@ -9,6 +9,7 @@ Complete reference for the MCP tools available in the Testomat.io MCP Server.
 - [Project Tools](#project-tools)
 - [Test Management](#test-management)
 - [Suite Management](#suite-management)
+- [Share Management](#share-management)
 - [Run Management](#run-management)
 - [TestRun Management](#testrun-management)
 - [Plan Management](#plan-management)
@@ -453,6 +454,132 @@ Delete a suite.
 **suites_issues_list**, **suites_issues_link**, **suites_issues_unlink**
 
 Same pattern as test issue operations, but for suites.
+
+---
+
+## Share Management
+
+Share tests and suites into other projects. The source project stays the single source of truth: shared copies in target projects are read-only and stay in sync until unlinked. Source and target projects must be of the same type (Classic/BDD). Share requests are queued and processed asynchronously — `status: "queued"` only confirms the request was accepted, not that sharing has completed.
+
+### tests_share
+
+Share one or more tests into a suite of another project. Tests are selected by `test_ids`, by `labels`, or both (the two sets are combined); at least one is required, max 1000 tests per request. Re-sharing a test into a target project that already has it does not create a duplicate. A matched test that is itself a shared copy is skipped and listed in `skipped_test_ids` — share from the original test's project instead.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| test_ids | string[] | No* | Test IDs to share |
+| labels | string[] | No* | Label slugs or titles; every test carrying any of these labels is shared, in addition to test_ids |
+| target_project_id | string | Yes | Project ID (slug) of the destination project |
+| target_suite_id | string | Yes | Suite ID in the target project; must be a file-type suite, not a folder |
+
+*At least one of test_ids/labels is required
+
+**Example (bulk by IDs):**
+```json
+{
+  "name": "tests_share",
+  "arguments": {
+    "test_ids": ["be779025", "sgqat108", "sgqat104"],
+    "target_project_id": "sugar-king",
+    "target_suite_id": "e73d559c"
+  }
+}
+```
+
+**Example (by label):**
+```json
+{
+  "name": "tests_share",
+  "arguments": {
+    "labels": ["pre-cert"],
+    "target_project_id": "sugar-king",
+    "target_suite_id": "e73d559c"
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "data": {
+    "status": "queued",
+    "target_project_id": "sugar-king",
+    "target_suite_id": "e73d559c",
+    "test_ids": ["be779025", "sgqat108", "sgqat104"],
+    "skipped_test_ids": []
+  }
+}
+```
+
+**API Endpoint:** `POST /api/v2/{project_id}/shares/tests`
+
+---
+
+### suites_share
+
+Share one or more suites (with their tests) into one or more other projects. Suites are selected by `suite_ids`, by `labels`, or both (the two sets are combined); at least one is required, max 200 suites per request. File-type suites are linked (read-only copies that stay in sync); folder suites are deep-copied as regular editable copies. Re-sharing a linked suite into a project that already has it does not duplicate — checked per target project. Omit `destination_folder_id` to share into the root of the target project(s).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| suite_ids | string[] | No* | Suite IDs to share |
+| labels | string[] | No* | Label slugs or titles; every suite carrying any of these labels is shared, in addition to suite_ids |
+| target_project_ids | string[] | Yes | Project IDs (slugs) of the destination projects |
+| destination_folder_id | string | No | Folder suite ID in the target project to place the shared suites into; only allowed when sharing to a single target project |
+
+*At least one of suite_ids/labels is required
+
+**Example:**
+```json
+{
+  "name": "suites_share",
+  "arguments": {
+    "suite_ids": ["e73d559c"],
+    "target_project_ids": ["sugar-king", "game-qa"]
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "data": {
+    "status": "queued",
+    "target_project_ids": ["sugar-king", "game-qa"],
+    "destination_folder_id": null,
+    "suite_ids": ["e73d559c"]
+  }
+}
+```
+
+**API Endpoint:** `POST /api/v2/{project_id}/shares/suites`
+
+---
+
+### tests_unshare
+
+Remove a test's share, converting the shared copy back into a regular, editable test. Only the shared copy can be targeted — the original source test is untouched. Must be called against the project that holds the shared copy.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| test_id | string | Yes | ID of the shared test copy to unlink |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/shares/tests/{id}`
+
+---
+
+### suites_unshare
+
+Remove a suite's share, converting the shared copy back into a regular, editable suite. Only the shared (linked) copy can be targeted — the original source suite is untouched. Must be called against the project that holds the shared copy.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| suite_id | string | Yes | ID of the shared suite copy to unlink |
+
+**API Endpoint:** `DELETE /api/v2/{project_id}/shares/suites/{id}`
 
 ---
 
