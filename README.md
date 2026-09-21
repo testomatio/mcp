@@ -415,36 +415,5 @@ Example `analytics_charts_results` call:
 }
 ```
 
-### Worker deployment
-
-The `worker/` directory holds the Cloudflare Worker and is excluded from the npm
-package. Deploy it from that directory:
-
-```bash
-cd worker
-npx wrangler kv namespace create OAUTH_KV
-npx wrangler secret put TESTOMATIO_MCP_WORKER_SECRET
-npx wrangler deploy
-```
-
-Put the namespace id returned by the first command into `kv_namespaces` in
-`worker/wrangler.jsonc`. `TESTOMATIO_MCP_WORKER_SECRET` is the shared secret used to
-redeem authorization codes against Testomat.io server-to-server and is never
-committed.
-
-Before exposing the Worker publicly, configure Cloudflare rate-limiting rules for
-`/register`, `/authorize`, `/token`, and `/mcp/*`. These endpoints intentionally
-support unauthenticated OAuth discovery and client registration, so rate limiting
-belongs at the edge rather than in per-isolate memory. Keep separate rules and KV
-namespaces for beta and production.
-
-A beta worker is the same code deployed to the `beta` environment, which targets
-`https://beta.testomat.io` and keeps its own KV namespace so beta grants never
-reach the production one:
-
-```bash
-npx wrangler kv namespace create OAUTH_KV --env beta
-npx wrangler secret put TESTOMATIO_MCP_WORKER_SECRET --env beta
-npx wrangler deploy --env beta
 ```
 
