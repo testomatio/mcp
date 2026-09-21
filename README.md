@@ -37,35 +37,25 @@ Need enterprise analytics tools? Install `@testomatio/mcp-enterprise@latest` ins
 
 **Run server:**
 ```bash
-testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID>
+npx testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID>
 ```
 
 **Or with environment variables:**
 ```bash
 export TESTOMATIO_PROJECT_TOKEN=<PROJECT_TOKEN>
 export TESTOMATIO_PROJECT_ID=<PROJECT_ID>
-testomatio-mcp
-```
-
-**Optional: custom host**
-```bash
-export TESTOMATIO_HOST=beta.testomat.io
-testomatio-mcp --host beta.testomat.io
+npx testomatio-mcp
 ```
 
 A bare hostname is expanded to `https://<host>`. For full control use
-`--base-url` / `TESTOMATIO_BASE_URL`, which takes precedence over the host option:
-
-```bash
-export TESTOMATIO_BASE_URL=https://beta.testomat.io
-```
+`--base-url` / `TESTOMATIO_BASE_URL`, which takes precedence over the host option
 
 **Optional: tool surface profile**
 
 By default the server exposes all tools. For long, token-sensitive sessions you can expose a smaller set with `--tools`:
 
 ```bash
-testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
+npx testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
 ```
 
 | Profile | What's exposed |
