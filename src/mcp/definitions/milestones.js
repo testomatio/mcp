@@ -1,43 +1,27 @@
-export const MILESTONES_TOOLS = [
-  {
-    name: 'milestones_list',
-    description: 'List milestones (/api/v2/{project_id}/milestones)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        page: {
-          type: 'integer',
-          minimum: 1,
-        },
-        per_page: {
-          type: 'integer',
-          minimum: 1,
-          maximum: 100,
-        },
-        type: {
-          type: 'string',
-          description: 'Filter by milestone type (title), e.g. Sprint or Release.',
-        },
-        status: {
-          type: 'string',
-          enum: ['created', 'active', 'closed'],
-        },
-      },
-      additionalProperties: false,
-    },
+import { buildEntityTool } from './entity-tool.js';
+import { paginationParams } from './params.js';
+
+export const MILESTONES_TOOL_SPEC = {
+  name: 'milestones',
+  summary: 'Milestones: list and get (/api/v2/{project_id}/milestones)',
+  commands: {
+    list: 'List milestones (type, status filters)',
+    get: 'Get milestone by ID',
   },
-  {
-    name: 'milestones_get',
-    description: 'Get milestone by ID',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        milestone_id: {
-          type: 'string',
-        },
-      },
-      required: ['milestone_id'],
-      additionalProperties: false,
+  params: {
+    milestone_id: { commands: ['get'], type: 'string' },
+    type: {
+      commands: ['list'],
+      type: 'string',
+      description: 'Filter by milestone type (title), e.g. Sprint or Release.',
     },
+    status: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['created', 'active', 'closed'],
+    },
+    ...paginationParams(['list']),
   },
-];
+};
+
+export const MILESTONES_TOOL = buildEntityTool(MILESTONES_TOOL_SPEC);

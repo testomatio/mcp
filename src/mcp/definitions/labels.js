@@ -1,148 +1,37 @@
-export const LABELS_TOOLS = [
-  {
-    "name": "labels_list",
-    "description": "List labels (/api/v2/{project_id}/labels)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        }
-      },
-      "additionalProperties": false
-    }
+import { buildEntityTool } from './entity-tool.js';
+import { paginationParams } from './params.js';
+
+const VISIBILITY_PROPERTY = {
+  commands: ['create', 'update'],
+  type: 'array',
+  items: { type: 'string', enum: ['filter', 'list'] },
+};
+
+const SCOPE_PROPERTY = {
+  commands: ['create', 'update'],
+  type: 'array',
+  items: { type: 'string', enum: ['tests', 'suites', 'runs', 'plans', 'steps', 'templates'] },
+};
+
+export const LABELS_TOOL_SPEC = {
+  name: 'labels',
+  summary: 'Manage labels (/api/v2/{project_id}/labels)',
+  commands: {
+    list: 'List labels',
+    get: 'Get label by slug',
+    create: 'Create label (title required)',
+    update: 'Update label by slug',
+    delete: 'Delete label by slug',
   },
-  {
-    "name": "labels_get",
-    "description": "Get label by slug",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "label_id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "label_id"
-      ],
-      "additionalProperties": false
-    }
+  params: {
+    label_id: { commands: ['get', 'update', 'delete'], type: 'string', description: 'Label slug' },
+    title: { commands: ['create', 'update'], type: 'string' },
+    color: { commands: ['create', 'update'], type: 'string' },
+    visibility: VISIBILITY_PROPERTY,
+    scope: SCOPE_PROPERTY,
+    field: { commands: ['create', 'update'], type: 'object' },
+    ...paginationParams(['list']),
   },
-  {
-    "name": "labels_create",
-    "description": "Create label (/api/v2/{project_id}/labels)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "color": {
-          "type": "string"
-        },
-        "visibility": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "filter",
-              "list"
-            ]
-          }
-        },
-        "scope": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "tests",
-              "suites",
-              "runs",
-              "plans",
-              "steps",
-              "templates"
-            ]
-          }
-        },
-        "field": {
-          "type": "object"
-        }
-      },
-      "required": [
-        "title"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "labels_update",
-    "description": "Update label (/api/v2/{project_id}/labels/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "label_id": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "color": {
-          "type": "string"
-        },
-        "visibility": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "filter",
-              "list"
-            ]
-          }
-        },
-        "scope": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "tests",
-              "suites",
-              "runs",
-              "plans",
-              "steps",
-              "templates"
-            ]
-          }
-        },
-        "field": {
-          "type": "object"
-        }
-      },
-      "required": [
-        "label_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "labels_delete",
-    "description": "Delete label (/api/v2/{project_id}/labels/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "label_id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "label_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-];
+};
+
+export const LABELS_TOOL = buildEntityTool(LABELS_TOOL_SPEC);

@@ -1,6 +1,7 @@
 import { DEFAULT_TOOL_RESPONSE } from '../config/constants.js';
 import { ApiError, NotImplementedToolError } from '../core/errors.js';
 import { textResponse } from '../helpers/mcp-response.js';
+import { ENTITY_COMMANDS } from './entity-commands.js';
 import { TOOL_DEFINITIONS } from './tool-definitions.js';
 import { TQL_FULL_REFERENCE } from './definitions/tql-reference.js';
 import { handlerMethods } from './registry/handlers.js';
@@ -58,7 +59,8 @@ export class ToolRegistry {
   }
 
   buildHandlers() {
-    const handlers = {
+    // Ops are keyed by "<entity>_<command>" (tests_list, tests_issues_link, ...).
+    const ops = {
       system_ping: async () =>
         this.asText({
           status: 'ok',
@@ -69,23 +71,42 @@ export class ToolRegistry {
       tql_help: async () => textResponse(TQL_FULL_REFERENCE),
     };
 
-    this.registerEntityCrudHandlers(handlers);
-    this.registerScopedIssueHandlers(handlers);
-    this.registerScopedAttachmentHandlers(handlers);
-    this.registerGlobalHandlers(handlers);
-    this.registerShareHandlers(handlers);
+    this.registerEntityCrudHandlers(ops);
+    this.registerScopedIssueHandlers(ops);
+    this.registerScopedAttachmentHandlers(ops);
+    this.registerGlobalHandlers(ops);
+    this.registerShareHandlers(ops);
     for (const registerHandlers of this.handlerRegistrars) {
-      registerHandlers.call(this, handlers);
+      registerHandlers.call(this, ops);
     }
 
+    const handlers = {};
     for (const tool of this.tools) {
-      if (tool.name === 'system_ping') continue;
-      if (!handlers[tool.name]) {
+      const commands = ENTITY_COMMANDS[tool.name];
+      if (commands) {
+        handlers[tool.name] = this.buildCommandHandler(tool.name, commands, ops);
+      } else if (ops[tool.name]) {
+        // command-less singletons + custom registrar tools (e.g. enterprise analytics)
+        handlers[tool.name] = ops[tool.name];
+      } else {
         handlers[tool.name] = async () => textResponse(`${DEFAULT_TOOL_RESPONSE} (${tool.name})`);
       }
     }
 
     return handlers;
+  }
+
+  buildCommandHandler(toolName, commands, ops) {
+    return async (args = {}) => {
+      const { command, ...commandArgs } = args;
+      const op = command ? ops[`${toolName}_${command}`] : undefined;
+      if (!op) {
+        throw new Error(
+          `Unknown command ${command === undefined ? '(missing)' : `"${command}"`} for tool "${toolName}". Valid commands: ${commands.join(', ')}.`
+        );
+      }
+      return op(commandArgs);
+    };
   }
 
   async execute(name, args = {}) {
