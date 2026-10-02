@@ -1,40 +1,53 @@
 import { SYSTEM_TOOLS } from './definitions/system.js';
 import { PROJECT_TOOLS } from './definitions/projects.js';
-import { TESTS_TOOLS } from './definitions/tests.js';
-import { SUITES_TOOLS } from './definitions/suites.js';
-import { SHARES_TOOLS } from './definitions/shares.js';
-import { RUNS_TOOLS } from './definitions/runs.js';
-import { TESTRUNS_TOOLS } from './definitions/testruns.js';
-import { RUNGROUPS_TOOLS } from './definitions/rungroups.js';
-import { STEPS_TOOLS } from './definitions/steps.js';
-import { SNIPPETS_TOOLS } from './definitions/snippets.js';
-import { LABELS_TOOLS } from './definitions/labels.js';
-import { TAGS_TOOLS } from './definitions/tags.js';
-import { MILESTONES_TOOLS } from './definitions/milestones.js';
-import { ISSUES_TOOLS } from './definitions/issues.js';
-import { PLANS_TOOLS } from './definitions/plans.js';
-import { REQUIREMENTS_TOOLS } from './definitions/requirements.js';
-import { ATTACHMENT_TOOLS } from './definitions/attachments.js';
-import { BRANCHES_TOOLS } from './definitions/branches.js';
-import { withListOptions, withCountGroupOptions } from './list-projection.js';
+import { TESTS_TOOL, TESTS_TOOL_SPEC } from './definitions/tests.js';
+import { SUITES_TOOL, SUITES_TOOL_SPEC } from './definitions/suites.js';
+import { RUNS_TOOL, RUNS_TOOL_SPEC } from './definitions/runs.js';
+import { TESTRUNS_TOOL, TESTRUNS_TOOL_SPEC } from './definitions/testruns.js';
+import { RUNGROUPS_TOOL, RUNGROUPS_TOOL_SPEC } from './definitions/rungroups.js';
+import { STEPS_TOOL, STEPS_TOOL_SPEC } from './definitions/steps.js';
+import { SNIPPETS_TOOL, SNIPPETS_TOOL_SPEC } from './definitions/snippets.js';
+import { LABELS_TOOL, LABELS_TOOL_SPEC } from './definitions/labels.js';
+import { TAGS_TOOL, TAGS_TOOL_SPEC } from './definitions/tags.js';
+import { MILESTONES_TOOL, MILESTONES_TOOL_SPEC } from './definitions/milestones.js';
+import { ISSUES_TOOL, ISSUES_TOOL_SPEC } from './definitions/issues.js';
+import { PLANS_TOOL, PLANS_TOOL_SPEC } from './definitions/plans.js';
+import { REQUIREMENTS_TOOL, REQUIREMENTS_TOOL_SPEC } from './definitions/requirements.js';
+import { BRANCHES_TOOL, BRANCHES_TOOL_SPEC } from './definitions/branches.js';
 
-export const TOOL_DEFINITIONS = withCountGroupOptions(withListOptions([
+export const TOOL_DEFINITIONS = [
   ...SYSTEM_TOOLS,
   ...PROJECT_TOOLS,
-  ...TESTS_TOOLS,
-  ...SUITES_TOOLS,
-  ...SHARES_TOOLS,
-  ...RUNS_TOOLS,
-  ...TESTRUNS_TOOLS,
-  ...RUNGROUPS_TOOLS,
-  ...STEPS_TOOLS,
-  ...SNIPPETS_TOOLS,
-  ...LABELS_TOOLS,
-  ...TAGS_TOOLS,
-  ...MILESTONES_TOOLS,
-  ...ISSUES_TOOLS,
-  ...ATTACHMENT_TOOLS,
-  ...PLANS_TOOLS,
-  ...REQUIREMENTS_TOOLS,
-  ...BRANCHES_TOOLS,
-]));
+  TESTS_TOOL,
+  SUITES_TOOL,
+  RUNS_TOOL,
+  TESTRUNS_TOOL,
+  RUNGROUPS_TOOL,
+  STEPS_TOOL,
+  SNIPPETS_TOOL,
+  LABELS_TOOL,
+  TAGS_TOOL,
+  MILESTONES_TOOL,
+  ISSUES_TOOL,
+  PLANS_TOOL,
+  REQUIREMENTS_TOOL,
+  BRANCHES_TOOL,
+];
+
+// Specs behind the entity tools; tool-profiles rebuilds profiled tools from them.
+export const ENTITY_TOOL_SPECS = [
+  TESTS_TOOL_SPEC,
+  SUITES_TOOL_SPEC,
+  RUNS_TOOL_SPEC,
+  TESTRUNS_TOOL_SPEC,
+  RUNGROUPS_TOOL_SPEC,
+  STEPS_TOOL_SPEC,
+  SNIPPETS_TOOL_SPEC,
+  LABELS_TOOL_SPEC,
+  TAGS_TOOL_SPEC,
+  MILESTONES_TOOL_SPEC,
+  ISSUES_TOOL_SPEC,
+  PLANS_TOOL_SPEC,
+  REQUIREMENTS_TOOL_SPEC,
+  BRANCHES_TOOL_SPEC,
+];

@@ -165,7 +165,7 @@ describe('static bearer bypass', () => {
 
       expect(response.status).toBe(200);
       const payload = await response.json();
-      expect(payload.result.tools.length).toBeGreaterThan(50);
+      expect(payload.result.tools.length).toBeGreaterThanOrEqual(17);
     }
   );
 

@@ -110,7 +110,7 @@ export function backendSlimQuery({ verbose = false, fields, count = false } = {}
   return !verbose && !(Array.isArray(fields) && fields.length) ? { slim: true } : {};
 }
 
-const LIST_OPTION_PROPERTIES = {
+export const LIST_OPTION_PROPERTIES = {
   verbose: {
     type: 'boolean',
     default: false,
@@ -165,13 +165,13 @@ function isPrimaryListToolName(name) {
   );
 }
 
-const COUNT_PROPERTY = {
+export const COUNT_PROPERTY = {
   type: 'boolean',
   description:
     'Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.',
 };
 
-const GROUP_BY_PROPERTY = {
+export const GROUP_BY_PROPERTY = {
   type: 'string',
   description:
     'Aggregate counts by this field, e.g. status, state, priority, created_by (use with count=true). The backend validates supported fields per resource. For created_by, counts are keyed by user email, not ID.',

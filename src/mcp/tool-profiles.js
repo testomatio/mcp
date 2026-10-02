@@ -1,41 +1,43 @@
+import { ENTITY_TOOL_SPECS } from './tool-definitions.js';
+import { buildEntityTool } from './definitions/entity-tool.js';
+import { READ_ONLY_COMMANDS } from './entity-commands.js';
+
 const RARE_ENTITIES = new Set(['steps', 'snippets', 'labels', 'rungroups']);
 
-function entityOf(name) {
-  if (name === 'system_ping') return 'system';
-  return name
-    .split('_attachments_')[0]
-    .split('_issues_')[0]
-    .replace(/_(list|get|create|update|delete|search)$/, '');
-}
+const SPEC_BY_NAME = new Map(ENTITY_TOOL_SPECS.map((spec) => [spec.name, spec]));
 
-function isAttachment(name) {
-  return name.includes('_attachments_');
-}
-
-function isReadOp(name) {
-  return (
-    name === 'system_ping' ||
-    /_(list|get|results)$/.test(name) ||
-    name.endsWith('_issues_list')
+function restrictSpecToReadOnly(spec) {
+  const commands = Object.fromEntries(
+    Object.entries(spec.commands).filter(([command]) => READ_ONLY_COMMANDS.has(command))
   );
+  const params = Object.fromEntries(
+    Object.entries(spec.params)
+      .map(([key, param]) => [
+        key,
+        { ...param, commands: param.commands.filter((command) => READ_ONLY_COMMANDS.has(command)) },
+      ])
+      .filter(([, param]) => param.commands.length > 0)
+  );
+  return { ...spec, commands, params };
+}
+
+function shapeToolForProfile(tool, profile) {
+  if (!tool || !tool.name) return tool;
+  if (RARE_ENTITIES.has(tool.name)) return undefined;
+  if (profile === 'core') return tool;
+
+  const spec = SPEC_BY_NAME.get(tool.name);
+  if (!spec) return tool;
+  return buildEntityTool(restrictSpecToReadOnly(spec));
 }
 
 /**
- * Whether a tool is visible under the given profile. Unknown profiles fall back to full
+ * Select tools for a profile. Unknown profiles fall back to full.
  *
- * @param {string} name     tool name
+ * @param {Array} allTools
  * @param {string} profile  'full' | 'core' | 'read'
  */
-export function isToolInProfile(name, profile) {
-  if (!profile || profile === 'full') return true;
-  if (isAttachment(name)) return false;
-  const coreEntity = !RARE_ENTITIES.has(entityOf(name));
-  if (profile === 'core') return coreEntity;
-  if (profile === 'read') return coreEntity && isReadOp(name);
-  return true;
-}
-
 export function selectTools(allTools, profile) {
   if (!profile || profile === 'full') return allTools;
-  return allTools.filter((tool) => tool && isToolInProfile(tool.name, profile));
+  return allTools.map((tool) => shapeToolForProfile(tool, profile)).filter(Boolean);
 }

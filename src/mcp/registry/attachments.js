@@ -28,7 +28,7 @@ export const attachmentMethods = {
     const data = await fs.readFile(resolvedPath);
     const formData = new FormData();
 
-    formData.append('file', new Blob([data]), path.basename(resolvedPath));
+    formData.append('files', new Blob([data]), path.basename(resolvedPath));
     return formData;
   },
 

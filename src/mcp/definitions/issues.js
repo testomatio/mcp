@@ -1,94 +1,32 @@
-export const ISSUES_TOOLS = [
-  {
-    "name": "issues_list",
-    "description": "List linked issues (/api/v2/{project_id}/issues)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "test_id": {
-          "type": "string"
-        },
-        "suite_id": {
-          "type": "string"
-        },
-        "run_id": {
-          "type": "string"
-        },
-        "testrun_id": {
-          "type": "integer"
-        },
-        "plan_id": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    }
+import { buildEntityTool } from './entity-tool.js';
+import { paginationParams } from './params.js';
+
+export const ISSUES_TOOL_SPEC = {
+  name: 'issues',
+  summary: 'Linked issues across resources (/api/v2/{project_id}/issues)',
+  commands: {
+    list: 'List linked issues (scope by test_id/suite_id/run_id/testrun_id/plan_id, filter by source)',
+    create: 'Link issue to a resource (url or jira_id + one scope id)',
+    delete: 'Unlink issue',
   },
-  {
-    "name": "issues_create",
-    "description": "Link issue to resource (/api/v2/{project_id}/issues)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "test_id": {
-          "type": "string"
-        },
-        "suite_id": {
-          "type": "string"
-        },
-        "run_id": {
-          "type": "string"
-        },
-        "testrun_id": {
-          "type": "integer"
-        },
-        "plan_id": {
-          "type": "string"
-        },
-        "url": {
-          "type": "string"
-        },
-        "jira_id": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    }
+  params: {
+    test_id: { commands: ['list', 'create'], type: 'string' },
+    suite_id: { commands: ['list', 'create'], type: 'string' },
+    run_id: { commands: ['list', 'create'], type: 'string' },
+    testrun_id: { commands: ['list', 'create'], type: 'integer' },
+    plan_id: { commands: ['list', 'create'], type: 'string' },
+    source: { commands: ['list'], type: 'string', description: 'Filter issues by source (e.g. jira)' },
+    url: { commands: ['create'], type: 'string', description: 'Issue URL to link' },
+    jira_id: { commands: ['create'], type: 'string', description: 'Jira issue key to link (alternative to url)' },
+    issue_id: { commands: ['delete'], type: 'integer', description: 'ID of the linked issue to remove' },
+    type: {
+      commands: ['delete'],
+      type: 'string',
+      enum: ['issue', 'jira_issue'],
+      description: 'Kind of the linked issue',
+    },
+    ...paginationParams(['list']),
   },
-  {
-    "name": "issues_delete",
-    "description": "Unlink issue (/api/v2/{project_id}/issues/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "issue_id": {
-          "type": "integer"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "issue",
-            "jira_issue"
-          ]
-        }
-      },
-      "required": [
-        "issue_id",
-        "type"
-      ],
-      "additionalProperties": false
-    }
-  },
-];
+};
+
+export const ISSUES_TOOL = buildEntityTool(ISSUES_TOOL_SPEC);

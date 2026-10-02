@@ -4,18 +4,15 @@ Model Context Protocol (MCP) server that enables AI assistants (Claude, Cursor, 
 
 ## Features
 
-- **Full CRUD** for core entities:
-  - Tests, Suites, Plans, Runs, TestRuns, RunGroups, Steps, Snippets, Labels
-  - Tags and Milestones (read-only access)
-  - Issues (global + scoped helpers for tests/suites/runs/testruns/plans)
-  - Attachments (scoped helpers for tests/suites/testruns)
-  - Requirements (including file uploads from local file paths)
+- **One CLI-style tool per entity** - `tests`, `suites`, `runs`, `testruns`, `plans`, `rungroups`, `steps`, `snippets`, `labels`, `requirements`, `branches`, `tags`, `milestones`, `issues`; each takes a `command` argument (`list`, `get`, `create`, `update`, `delete`, plus scoped `issues_*`/`attachments_*`/`share` commands where applicable) and flat command params
 - **Project Information** - fetch project configuration, metadata, features, and CI profiles
-- **Issue Linking** - link/unlink issues to any resource
+- **Issue Linking** - link/unlink issues to any resource (`issues_*` commands on each entity, plus the global `issues` tool)
+- **Attachments** - `attachments_*` commands on tests, suites, and testruns; upload sends a local file path as multipart field `files`
+- **Requirements** - including file uploads from local file paths
 - **API Compatibility** - automatic handling of payload format differences (flat vs wrapped)
 - **Automatic API Sessions** - groups MCP changes in Testomat.io history using API sessions
 - **Run Management** - status transitions via `status_event` parameter
-- **TQL-Only Search** - `tests_list` and `runs_list` use `tql` as the single search/filter input
+- **TQL-Only Search** - `tests`/`runs` with `command: "list"` use `tql` as the single search/filter input
 - **Built-In TQL Reference** - TQL parameters include the exact field whitelist and examples; `tql_help` provides syntax details on demand
 - **Tool Surface Profiles** - expose only the tools a session needs via `--tools full|core|read` (default `full`); cuts the per-call schema cost for long agentic sessions
 
@@ -61,8 +58,8 @@ npx testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
 | Profile | What's exposed |
 |---------|----------------|
 | `full` (default) | Everything |
-| `core` | Core entities + CRUD (excludes steps, snippets, labels, rungroups, attachments) |
-| `read` | Core entities, read-only (list/get) |
+| `core` | Core entities with all commands (excludes the steps, snippets, labels, rungroups tools) |
+| `read` | Core entities restricted to read-only commands (`list`, `get`, `search`, `issues_list`, `attachments_list`) |
 
 Values are case-insensitive; an unknown value prevents the server from starting. Set the profile at launch with the flag or the `TESTOMATIO_TOOLS` environment variable — it can't be changed mid-session. The CLI flag takes precedence when both are set.
 
@@ -193,19 +190,22 @@ Self-hosted installations keep using stdio.
 
 ## Quick Examples
 
+Every entity tool works like a CLI: pass `command` plus the params that command needs. Each param description in the tool schema lists the commands it applies to.
+
 **List tests:**
 ```json
 {
-  "name": "tests_list",
-  "arguments": { "page": 1, "per_page": 50, "tql": "priority == 'high'" }
+  "name": "tests",
+  "arguments": { "command": "list", "page": 1, "per_page": 50, "tql": "priority == 'high'" }
 }
 ```
 
 **Create test:**
 ```json
 {
-  "name": "tests_create",
+  "name": "tests",
   "arguments": {
+    "command": "create",
     "title": "User login test",
     "suite_id": "123",
     "priority": "high"
@@ -216,8 +216,9 @@ Self-hosted installations keep using stdio.
 **Create run:**
 ```json
 {
-  "name": "runs_create",
+  "name": "runs",
   "arguments": {
+    "command": "create",
     "title": "Smoke tests",
     "kind": "automated",
     "env": "production"
@@ -228,8 +229,9 @@ Self-hosted installations keep using stdio.
 **Finish run:**
 ```json
 {
-  "name": "runs_update",
+  "name": "runs",
   "arguments": {
+    "command": "update",
     "run_id": "456",
     "status_event": "finish"
   }
@@ -239,8 +241,9 @@ Self-hosted installations keep using stdio.
 **Upload attachment to a test:**
 ```json
 {
-  "name": "tests_attachments_upload",
+  "name": "tests",
   "arguments": {
+    "command": "attachments_upload",
     "test_id": "123",
     "file_path": "/path/to/screenshot.png"
   }
@@ -312,14 +315,15 @@ NODE_EXTRA_CA_CERTS=/path/to/company-root-ca.pem testomatio-mcp --token <TOKEN> 
 
 ## Important Notes
 
-- **Run Status** - Use `runs_update` with `status_event` for transitions (finish, launch, rerun, etc.)
-- **Search/Filter** - No dedicated `/search` endpoints; filtering is done via the `*_list` tools (`tql` for tests and runs, OpenAPI-aligned filters for other entities)
-- **Slim List Responses** - List tools request compact API responses by default and omit heavy entity fields and null values. Pass `verbose: true` to return full objects, or `fields: ["id", "title", "description"]` to return only selected fields. Both options disable the backend `slim=true` request so heavy fields remain available when requested.
-- **TQL** - Use `tql` as the single search/filter input for `tests_list` and `runs_list`
+- **CLI-style Tools** - One tool per entity; all operations are the `command` argument (`tests` + `command: "list"` instead of the old `tests_list`). Unknown commands return an error listing the valid ones
+- **Run Status** - Use `runs` with `command: "update"` and `status_event` for transitions (finish, launch, rerun, etc.)
+- **Search/Filter** - No dedicated `/search` endpoints; filtering is done via the `list` command (`tql` for tests and runs, OpenAPI-aligned filters for other entities)
+- **Slim List Responses** - List commands request compact API responses by default and omit heavy entity fields and null values. Pass `verbose: true` to return full objects, or `fields: ["id", "title", "description"]` to return only selected fields. Both options disable the backend `slim=true` request so heavy fields remain available when requested.
+- **TQL** - Use `tql` as the single search/filter input for `tests`/`runs` with `command: "list"`
 - **TQL Syntax** - For user-facing syntax details and more examples, see the official TQL docs: https://docs.testomat.io/advanced/tql/
 - **TQL Scope** - TQL parameter descriptions keep the documented field whitelist in-band; call `tql_help` for syntax details and additional examples
-- **Issue Linking** - Scoped helpers available: `{entity}_issues_link/unlink`
-- **Attachments** - Scoped helpers available for tests, suites, and testruns: `{entity}_attachments_list/upload/delete`. Upload sends one local file path as multipart field `file`.
+- **Issue Linking** - Scoped commands available on each entity: `command: "issues_link"` / `"issues_unlink"`
+- **Attachments** - Scoped commands available on tests, suites, and testruns: `command: "attachments_list" | "attachments_upload" | "attachments_delete"`. Upload sends one local file path as multipart field `files`.
 - **Enterprise Package** - Analytics tools are intentionally exposed only by `@testomatio/mcp-enterprise`, not by the standard `@testomatio/mcp` package
 - **API Sessions** - The server automatically starts a Testomat.io session before the first `POST`, `PUT`, or `DELETE` request, sends the returned session hash as `X-Session-Hash` on later mutating requests, and stops the session when the MCP server shuts down. `GET` requests do not start or use sessions.
 

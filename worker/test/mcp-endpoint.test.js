@@ -63,10 +63,9 @@ describe('POST /mcp/<project_id>', () => {
     expect(client.getServerVersion()?.name).toBe('testomatio-mcp-server');
 
     const { tools } = await client.listTools();
-    expect(tools.length).toBeGreaterThan(50);
-    expect(tools.map((tool) => tool.name)).toContain('tests_list');
+    expect(tools.map((tool) => tool.name)).toContain('tests');
 
-    const result = await client.callTool({ name: 'tests_list', arguments: { page: 1, per_page: 2 } });
+    const result = await client.callTool({ name: 'tests', arguments: { command: 'list', page: 1, per_page: 2 } });
     const payload = JSON.parse(result.content[0].text);
     expect(payload.data.map((test) => test.id)).toEqual(['1', '2']);
     expect(payload.data.map((test) => test.attributes.title)).toEqual(
@@ -94,7 +93,7 @@ describe('POST /mcp/<project_id>', () => {
     const client = new Client({ name: 'worker-e2e', version: '1.0.0' });
 
     await client.connect(transport);
-    await client.callTool({ name: 'suites_list', arguments: {} });
+    await client.callTool({ name: 'suites', arguments: { command: 'list' } });
 
     expect(calls[0]).toBe('/api/v2/other-project/suites');
   });
@@ -122,8 +121,8 @@ describe('POST /mcp/<project_id>', () => {
     const { client, transport } = connect();
     await client.connect(transport);
     await client.callTool({
-      name: 'tests_create',
-      arguments: { title: 'Session cleanup', suite_id: 'suite-1' },
+      name: 'tests',
+      arguments: { command: 'create', title: 'Session cleanup', suite_id: 'suite-1' },
     });
 
     expect(calls).toEqual([
