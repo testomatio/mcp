@@ -1367,6 +1367,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
               "string",
             ],
           },
+          "order": {
+            "description": "Sort direction. Defaults to asc.",
+            "enum": [
+              "asc",
+              "desc",
+            ],
+            "type": "string",
+          },
           "page": {
             "minimum": 1,
             "type": "integer",
@@ -1387,6 +1395,16 @@ exports[`tools/list > returns the full tool catalog 1`] = `
               "array",
               "string",
             ],
+          },
+          "sort": {
+            "description": "Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first.",
+            "enum": [
+              "created_at",
+              "suite",
+              "testcase",
+              "failure",
+            ],
+            "type": "string",
           },
           "tags": {
             "items": {

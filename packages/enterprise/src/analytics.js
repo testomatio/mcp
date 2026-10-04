@@ -150,6 +150,18 @@ export const ANALYTICS_TOOLS = withListOptions([
           description: ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
         },
         ...commonAnalyticsProperties,
+        page: {
+          type: 'integer',
+          minimum: 1,
+          description:
+            'Page number. Applies only to runs-summary and milestone-runs, which are always paginated (defaults page=1, per_page=30) — check meta.total/meta.total_pages to fetch the rest. Ignored by other kinds.',
+        },
+        per_page: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 100,
+          description: 'Rows per page (default 30). Applies only to runs-summary and milestone-runs.',
+        },
         milestone: {
           type: 'string',
           description:
@@ -327,7 +339,7 @@ function analyticsTests({
   });
 }
 
-function analyticsStats({ kind, q, days, from, to, envs, milestone } = {}) {
+function analyticsStats({ kind, q, days, from, to, envs, milestone, page, per_page: perPage } = {}) {
   return this.apiClient.list(`analytics/stats/${this.pickRequiredArg({ kind }, 'kind')}`, {
     q,
     days,
@@ -335,6 +347,8 @@ function analyticsStats({ kind, q, days, from, to, envs, milestone } = {}) {
     to,
     milestone,
     envs,
+    page,
+    per_page: perPage,
   });
 }
 

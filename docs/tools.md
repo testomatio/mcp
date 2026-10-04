@@ -769,6 +769,8 @@ List test runs (individual test results within a run).
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
 | run_id | string | No | Filter by parent run ID |
+| sort | string | No | `created_at`, `suite`, `testcase`, or `failure`. Default order is oldest-first — use `created_at` with `order=desc` for the most recent executions |
+| order | string | No | `asc` (default) or `desc` |
 | test_ids | array\|string | No | Test IDs; arrays are sent as comma-separated values |
 | filter_status | string | No | `passed`, `failed`, `skipped`, `pending` |
 | filter_kind | string | No | `manual` or `automated` |
@@ -1853,6 +1855,8 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
 | envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
 | milestone | string | No | Milestone slug (`id` from `milestones_list`). Required for `milestone-*` kinds — without it they return an empty result, not an error. Unknown slug returns 422 |
+| page | integer | No | Page number. Only for `runs-summary` and `milestone-runs`, which are always paginated (default `page=1`, `per_page=30`; `meta.total`/`meta.total_pages` always present). Ignored by other kinds |
+| per_page | integer | No | Rows per page (default 30, max 100). Only for `runs-summary` and `milestone-runs` |
 
 **Kinds:**
 - Trend series (one row per day): `success-rate-by-date`, `automation-rate-by-date`, `automation-by-date`, `testruns-by-date`, `priority-by-date`

@@ -17,6 +17,24 @@ export const TESTRUNS_TOOLS = [
         "run_id": {
           "type": "string"
         },
+        "sort": {
+          "type": "string",
+          "enum": [
+            "created_at",
+            "suite",
+            "testcase",
+            "failure"
+          ],
+          "description": "Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first."
+        },
+        "order": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "description": "Sort direction. Defaults to asc."
+        },
         "test_ids": {
           "type": [
             "array",
