@@ -165,7 +165,7 @@ export const ANALYTICS_TOOLS = withListOptions([
         milestone: {
           type: 'string',
           description:
-            'Milestone slug (the `id` returned by milestones_list). Required for milestone-* kinds: without it they return an empty result, not an error. An unknown slug returns 422. Ignored by other kinds.',
+            'Milestone slug (the `id` returned by the `milestones` tool, `list` command). Required for milestone-* kinds: without it they return an empty result, not an error. An unknown slug returns 422. Ignored by other kinds.',
         },
       },
       required: ['kind'],

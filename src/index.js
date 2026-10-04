@@ -3,9 +3,11 @@ import { loadConfig } from './config/load-config.js';
 import { ConfigurationError } from './core/errors.js';
 import { createLogger } from './core/logger.js';
 import { TestomatioMCPServer } from './mcp/server.js';
-import { TOOL_DEFINITIONS } from './mcp/tool-definitions.js';
+import { ENTITY_TOOL_SPECS, TOOL_DEFINITIONS } from './mcp/tool-definitions.js';
 import { backendSlimQuery, slimList, withListOptions } from './mcp/list-projection.js';
 import { selectTools } from './mcp/tool-profiles.js';
+import { ENTITY_COMMANDS } from './mcp/entity-commands.js';
+import { buildEntityTool } from './mcp/definitions/entity-tool.js';
 import {
   ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
   ANALYTICS_STATS_TQL_REFERENCE,
@@ -21,6 +23,9 @@ export {
   ANALYTICS_TESTS_TQL_REFERENCE,
   ConfigurationError,
   TOOL_DEFINITIONS,
+  ENTITY_TOOL_SPECS,
+  ENTITY_COMMANDS,
+  buildEntityTool,
   slimList,
   backendSlimQuery,
   withListOptions,

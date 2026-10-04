@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ToolRegistry } from '../src/mcp/tool-registry.js';
-import { isToolInProfile } from '../src/mcp/tool-profiles.js';
+import { selectTools } from '../src/mcp/tool-profiles.js';
+import { RUNS_TOOL } from '../src/mcp/definitions/runs.js';
 
 const silentLogger = {
   error() {},
@@ -23,11 +24,12 @@ function createRegistry() {
   return { registry, apiClient };
 }
 
-describe('runs_stats', () => {
+describe('runs stats command', () => {
   it('fetches the breakdown for a run dimension', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const response = await registry.execute('runs_stats', {
+    const response = await registry.execute('runs', {
+      command: 'stats',
       run_id: '2042ea84',
       dimension: 'suites',
       page: 2,
@@ -46,6 +48,12 @@ describe('runs_stats', () => {
   });
 
   it('is available in the read profile', () => {
-    expect(isToolInProfile('runs_stats', 'read')).toBe(true);
+    const [tool] = selectTools([RUNS_TOOL], 'read');
+    const { properties } = tool.inputSchema;
+
+    expect(properties.command.enum).toContain('stats');
+    expect(properties.dimension).toBeDefined();
+    expect(properties.sort_field).toBeDefined();
+    expect(properties.sort_direction).toBeDefined();
   });
 });

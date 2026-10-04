@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TestomatioMCPServer } from '../src/mcp/server.js';
 import { TOOL_DEFINITIONS } from '../src/mcp/tool-definitions.js';
+import { ENTITY_COMMANDS } from '../src/mcp/entity-commands.js';
 
 const silentLogger = {
   error() {},
@@ -75,6 +76,18 @@ describe('tools/list', () => {
     expect(response.error).toBeUndefined();
     expect(response.result.tools).toHaveLength(TOOL_DEFINITIONS.length);
     expect(response.result).toMatchSnapshot();
+
+    for (const tool of response.result.tools) {
+      const commands = ENTITY_COMMANDS[tool.name];
+      if (!commands) continue;
+      expect(tool.inputSchema.required, tool.name).toEqual(['command']);
+      expect(tool.inputSchema.additionalProperties, tool.name).toBe(false);
+      expect(tool.inputSchema.properties.command.enum, tool.name).toEqual(commands);
+      for (const [param, schema] of Object.entries(tool.inputSchema.properties)) {
+        if (param === 'command') continue;
+        expect(schema.description, `${tool.name}.${param}`).toMatch(/^\([a-z_|]+\)/);
+      }
+    }
   });
 
   it('advertises tool capability on initialize', async () => {

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ToolRegistry } from '../src/mcp/tool-registry.js';
 import { selectTools } from '../src/mcp/tool-profiles.js';
-import { SHARES_TOOLS } from '../src/mcp/definitions/shares.js';
+import { TESTS_TOOL } from '../src/mcp/definitions/tests.js';
+import { SUITES_TOOL } from '../src/mcp/definitions/suites.js';
+import { SYSTEM_TOOLS } from '../src/mcp/definitions/system.js';
 
 const silentLogger = {
   error() {},
@@ -30,11 +32,12 @@ async function resultOf(registry, name, args) {
   return JSON.parse(response.content[0].text);
 }
 
-describe('tests_share', () => {
+describe('tests share command', () => {
   it('shares tests by ids', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const result = await resultOf(registry, 'tests_share', {
+    const result = await resultOf(registry, 'tests', {
+      command: 'share',
       test_ids: ['be779025', 'sgqat108'],
       target_project_id: 'sugar-king',
       target_suite_id: 'e73d559c',
@@ -51,7 +54,8 @@ describe('tests_share', () => {
   it('shares tests by labels and combines with ids', async () => {
     const { registry, apiClient } = createRegistry();
 
-    await resultOf(registry, 'tests_share', {
+    await resultOf(registry, 'tests', {
+      command: 'share',
       test_ids: ['sgqat104'],
       labels: ['pre-cert'],
       target_project_id: 'sugar-king',
@@ -69,7 +73,8 @@ describe('tests_share', () => {
   it('shares tests by labels only', async () => {
     const { registry, apiClient } = createRegistry();
 
-    await resultOf(registry, 'tests_share', {
+    await resultOf(registry, 'tests', {
+      command: 'share',
       labels: ['pre-cert'],
       target_project_id: 'sugar-king',
       target_suite_id: 'e73d559c',
@@ -85,7 +90,8 @@ describe('tests_share', () => {
   it('requires a selection', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const result = await resultOf(registry, 'tests_share', {
+    const result = await resultOf(registry, 'tests', {
+      command: 'share',
       target_project_id: 'sugar-king',
       target_suite_id: 'e73d559c',
     });
@@ -97,7 +103,8 @@ describe('tests_share', () => {
   it('requires target_suite_id and target_project_id', async () => {
     const { registry } = createRegistry();
 
-    const result = await resultOf(registry, 'tests_share', {
+    const result = await resultOf(registry, 'tests', {
+      command: 'share',
       test_ids: ['be779025'],
       target_project_id: 'sugar-king',
     });
@@ -106,11 +113,12 @@ describe('tests_share', () => {
   });
 });
 
-describe('suites_share', () => {
+describe('suites share command', () => {
   it('shares suites into multiple target projects', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const result = await resultOf(registry, 'suites_share', {
+    const result = await resultOf(registry, 'suites', {
+      command: 'share',
       suite_ids: ['e73d559c'],
       target_project_ids: ['sugar-king', 'game-qa'],
     });
@@ -125,7 +133,8 @@ describe('suites_share', () => {
   it('passes destination_folder_id through', async () => {
     const { registry, apiClient } = createRegistry();
 
-    await resultOf(registry, 'suites_share', {
+    await resultOf(registry, 'suites', {
+      command: 'share',
       labels: ['localisation'],
       target_project_ids: ['sugar-king'],
       destination_folder_id: 'folder123',
@@ -141,7 +150,8 @@ describe('suites_share', () => {
   it('requires a selection', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const result = await resultOf(registry, 'suites_share', {
+    const result = await resultOf(registry, 'suites', {
+      command: 'share',
       target_project_ids: ['sugar-king'],
     });
 
@@ -150,11 +160,11 @@ describe('suites_share', () => {
   });
 });
 
-describe('unshare', () => {
+describe('unshare command', () => {
   it('unshares a test copy', async () => {
     const { registry, apiClient } = createRegistry();
 
-    await resultOf(registry, 'tests_unshare', { test_id: 'shared1' });
+    await resultOf(registry, 'tests', { command: 'unshare', test_id: 'shared1' });
 
     expect(apiClient.delete).toHaveBeenCalledWith('shares/tests', 'shared1');
   });
@@ -162,7 +172,7 @@ describe('unshare', () => {
   it('unshares a suite copy', async () => {
     const { registry, apiClient } = createRegistry();
 
-    await resultOf(registry, 'suites_unshare', { suite_id: 'shared2' });
+    await resultOf(registry, 'suites', { command: 'unshare', suite_id: 'shared2' });
 
     expect(apiClient.delete).toHaveBeenCalledWith('shares/suites', 'shared2');
   });
@@ -170,7 +180,7 @@ describe('unshare', () => {
   it('requires the id', async () => {
     const { registry, apiClient } = createRegistry();
 
-    const result = await resultOf(registry, 'tests_unshare', {});
+    const result = await resultOf(registry, 'tests', { command: 'unshare' });
 
     expect(result.error).toContain('test_id');
     expect(apiClient.delete).not.toHaveBeenCalled();
@@ -178,15 +188,31 @@ describe('unshare', () => {
 });
 
 describe('tool profiles', () => {
-  it('includes share tools in the core profile but not read', () => {
-    const names = selectTools(SHARES_TOOLS, 'core').map((tool) => tool.name);
-    expect(names).toEqual([
-      'tests_share',
-      'suites_share',
-      'tests_unshare',
-      'suites_unshare',
-    ]);
+  it('keeps the full command surface in the core profile', () => {
+    const [tool] = selectTools([TESTS_TOOL], 'core');
+    expect(tool.name).toBe('tests');
+    expect(tool.inputSchema.properties.command.enum).toEqual(TESTS_TOOL.inputSchema.properties.command.enum);
+  });
 
-    expect(selectTools(SHARES_TOOLS, 'read')).toEqual([]);
+  it('restricts the tests tool to read-only commands in the read profile', () => {
+    const [tool] = selectTools([TESTS_TOOL], 'read');
+    expect(tool.name).toBe('tests');
+    expect(tool.inputSchema.properties.command.enum).toEqual([
+      'list',
+      'get',
+      'issues_list',
+      'attachments_list',
+    ]);
+    expect(tool.inputSchema.properties.title).toBeUndefined();
+    expect(tool.inputSchema.properties.test_ids).toBeUndefined();
+    expect(tool.inputSchema.properties.test_id).toBeDefined();
+  });
+
+  it('returns the tool unchanged in the full profile', () => {
+    expect(selectTools([TESTS_TOOL, SUITES_TOOL], 'full')).toEqual([TESTS_TOOL, SUITES_TOOL]);
+  });
+
+  it('passes command-less singletons through the read profile', () => {
+    expect(selectTools(SYSTEM_TOOLS, 'read')).toEqual(SYSTEM_TOOLS);
   });
 });

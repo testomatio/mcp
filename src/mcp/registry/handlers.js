@@ -131,6 +131,7 @@ export const handlerMethods = {
       return this.asText(slimList(await this.listTags(listArgs), { ...args, entity: 'tags' }));
     };
     handlers.tags_get = async ({ tag_id: tagId }) => this.asText(await this.getTagByTitle(tagId));
+    handlers.tags_search = async (args = {}) => this.asText(await this.searchTags(args));
 
     handlers.milestones_list = async (args = {}) => {
       const { verbose, fields, ...listArgs } = args;

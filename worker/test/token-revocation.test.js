@@ -33,7 +33,7 @@ async function callTool() {
       jsonrpc: '2.0',
       id: 1,
       method: 'tools/call',
-      params: { name: 'tests_list', arguments: {} },
+      params: { name: 'tests', arguments: { command: 'list' } },
     }),
   });
 }

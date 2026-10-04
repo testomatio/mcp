@@ -2,40 +2,58 @@
 
 Complete reference for the MCP tools available in the Testomat.io MCP Server.
 
+## Calling Convention
+
+Every entity is exposed as **one CLI-style tool** named after the entity (`tests`, `suites`, `runs`, ...). All operations are passed as the required `command` argument, and command params are passed as flat properties next to it:
+
+```json
+{
+  "name": "tests",
+  "arguments": {
+    "command": "list",
+    "tql": "priority == 'high'"
+  }
+}
+```
+
+- Each param in the tool schema is prefixed with the commands it applies to, e.g. `(get|update|delete) Test ID`.
+- An unknown or missing `command` returns an error listing the valid commands for the tool.
+- Command-specific required params are validated at runtime with descriptive errors (a flat JSON schema cannot express per-command `required`).
+- Command-less singleton tools (`system_ping`, `tql_help`, `project_info`) take no arguments.
+
 ## Table of Contents
 
 - [Tool Surface Profiles](#tool-surface-profiles)
 - [System Tools](#system-tools)
 - [Project Tools](#project-tools)
-- [Test Management](#test-management)
-- [Suite Management](#suite-management)
-- [Share Management](#share-management)
-- [Run Management](#run-management)
-- [TestRun Management](#testrun-management)
-- [Plan Management](#plan-management)
-- [RunGroup Management](#rungroup-management)
-- [Step Management](#step-management)
-- [Snippet Management](#snippet-management)
-- [Label Management](#label-management)
-- [Tag Management](#tag-management)
-- [Milestone Management](#milestone-management)
-- [Issue Management](#issue-management-global)
-- [Attachment Management](#attachment-management)
-- [Requirement Management](#requirement-management)
-- [Branch Management](#branch-management)
+- [tests](#tests)
+- [suites](#suites)
+- [runs](#runs)
+- [testruns](#testruns)
+- [plans](#plans)
+- [rungroups](#rungroups)
+- [steps](#steps)
+- [snippets](#snippets)
+- [labels](#labels)
+- [tags](#tags)
+- [milestones](#milestones)
+- [issues](#issues)
+- [requirements](#requirements)
+- [branches](#branches)
+- [Common Patterns](#common-patterns)
 - [Enterprise Analytics](#enterprise-analytics)
 
 ---
 
 ## Tool Surface Profiles
 
-Every exposed tool's schema is sent to the model on each call, so the full tool set has a significant token cost. Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
+Every exposed tool's schema is sent to the model on each call, so the tool set has a significant token cost. Use the `--tools` flag to expose only a subset — useful for long, token-sensitive sessions.
 
 | Profile | Description |
 |---------|-------------|
-| `full` (default) | All tools |
-| `core` | Core entities + CRUD. Excludes steps, snippets, labels, rungroups, attachments |
-| `read` | Core entities, read-only (list/get) |
+| `full` (default) | All tools with all commands |
+| `core` | Core entities with all commands. Excludes the `steps`, `snippets`, `labels`, `rungroups` tools |
+| `read` | Core entities restricted to read-only commands (`list`, `get`, `search`, `stats`, `issues_list`, `attachments_list`) |
 
 ```bash
 testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
@@ -95,1603 +113,453 @@ enabled features, and CI profiles.
 
 ---
 
-## Test Management
+## tests
 
-### tests_list
+Manage tests. `/api/v2/{project_id}/tests`
 
-List all tests in the project with filtering.
+**Commands:**
 
-Use `tql` for search/filtering.
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax such as `==`, `!=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
-For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List tests (tql filter, pagination) | — |
+| `get` | Get test by ID | `test_id` |
+| `create` | Create test | `title`, `suite_id` |
+| `update` | Update test | `test_id` |
+| `delete` | Delete test | `test_id` |
+| `share` | Share tests into a suite of another project | `target_project_id`, `target_suite_id`, plus a selection (`test_ids` and/or `labels`) |
+| `unshare` | Remove a test's share (converts the shared copy back into a regular test) | `test_id` |
+| `issues_list` | List linked issues for a test | `test_id` |
+| `issues_link` | Link issue to a test | `test_id`, plus exactly one of `url`/`jira_id` |
+| `issues_unlink` | Unlink issue from a test | `issue_id`, `type` |
+| `attachments_list` | List attachments for a test | `test_id` |
+| `attachments_upload` | Upload one attachment to a test | `test_id`, `file_path` |
+| `attachments_delete` | Delete attachment from a test | `test_id`, `attachment_id` |
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number (min: 1) |
-| per_page | integer | No | Items per page (min: 1, max: 100) |
-| tql | string | No | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
 
-**Example:**
+| Name | Type | Commands | Description |
+|------|------|----------|-------------|
+| test_id | string | get, update, delete, unshare, issues_*, attachments_* | Test ID (for `unshare`: ID of the shared test copy to unlink) |
+| title | string | create, update | Test title |
+| suite_id | string | create, update | Suite to place the test in |
+| description | string | create, update | Test description |
+| emoji | string | create, update | Emoji icon |
+| priority | string | create, update | `low`, `normal`, `important`, `high`, `critical` |
+| assigned_to | string | create, update | Assignee |
+| code | string | create, update | Test code |
+| state | string | create, update | `manual`, `detached`, `automated` |
+| sync | boolean | update | Sync flags |
+| link | array | create, update | Link actions, see [Link Parameter Structure](#link-parameter-structure) |
+| tql | string | list | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
+| branch | string | list, get, create, update, delete | Branch slug, see [Branch Scoping](#branch-scoping) |
+| page / per_page | integer | list, issues_list | Pagination |
+| source | string | issues_list | Filter issues by source (e.g. `jira`) |
+| url | string | issues_link | Issue URL to link |
+| jira_id | string | issues_link | Jira issue key to link (alternative to `url`) |
+| issue_id | integer | issues_unlink | ID of the linked issue to remove |
+| type | string | issues_unlink | `issue` or `jira_issue` |
+| file_path | string | attachments_upload | Local path to the file sent as multipart field `files` |
+| attachment_id | string | attachments_delete | ID of the attachment to delete |
+| test_ids | string[] | share | Test IDs to share. Max 1000 per request |
+| labels | string[] | share | Label slugs/titles; every test carrying any of these labels is shared, in addition to test_ids |
+| target_project_id | string | share | Project ID (slug) of the destination project |
+| target_suite_id | string | share | Suite ID in the target project (must be a file-type suite) |
+
+**Sharing semantics:** the source project stays the single source of truth; shared copies in the target project are read-only until unlinked. Re-sharing into the same target project does not duplicate. Requests are processed asynchronously — status `queued` means accepted, not completed. Matched tests that are themselves shared copies are skipped and listed in `skipped_test_ids`. Source and target projects must be of the same type (Classic/BDD).
+
+**Examples:**
 ```json
 {
-  "name": "tests_list",
-  "arguments": {
-    "page": 1,
-    "per_page": 50,
-    "tql": "priority == 'high'"
-  }
+  "name": "tests",
+  "arguments": { "command": "list", "page": 1, "per_page": 50, "tql": "priority == 'high'" }
 }
 ```
 
-**API Endpoint:** `GET /api/v2/{project_id}/tests`
-
----
-
-### tests_get
-
-Get a specific test by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Example:**
 ```json
 {
-  "name": "tests_get",
+  "name": "tests",
   "arguments": {
-    "test_id": "12345"
-  }
-}
-```
-
-**API Endpoint:** `GET /api/v2/{project_id}/tests/{id}`
-
----
-
-### tests_create
-
-Create a new test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Test title |
-| suite_id | string | Yes | Parent suite ID |
-| description | string | No | Test description |
-| emoji | string | No | Test emoji icon |
-| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
-| assigned_to | string | No | Assignee ID |
-| code | string | No | Test code/automation reference |
-| state | string | No | One of: `manual`, `detached`, `automated` |
-| link | array | No | Links to labels, tags, milestones, issues, or jira |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Link Array Format:**
-```json
-{
-  "link": [
-    {
-      "action": "add|remove",
-      "type": "label|custom_field|tag|milestone|issue|jira|requirement",
-      "value": "identifier"
-    }
-  ]
-}
-```
-
-**Example:**
-```json
-{
-  "name": "tests_create",
-  "arguments": {
+    "command": "create",
     "title": "User login test",
     "suite_id": "123",
-    "priority": "high",
-    "link": [
-      { "action": "add", "type": "label", "value": "smoke" },
-      { "action": "add", "type": "tag", "value": "auth" }
-    ]
+    "priority": "high"
   }
 }
 ```
 
-**API Endpoint:** `POST /api/v2/{project_id}/tests`
-
----
-
-### tests_update
-
-Update an existing test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| title | string | No | New test title |
-| suite_id | string | No | New parent suite ID |
-| description | string | No | Updated description |
-| emoji | string | No | Test emoji |
-| priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
-| assigned_to | string | No | Assignee ID |
-| code | string | No | Test code |
-| state | string | No | One of: `manual`, `detached`, `automated` |
-| sync | boolean | No | Sync with automation |
-| link | array | No | Link updates |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Example:**
 ```json
 {
-  "name": "tests_update",
+  "name": "tests",
   "arguments": {
-    "test_id": "12345",
-    "title": "Updated test title",
-    "priority": "critical"
-  }
-}
-```
-
-**API Endpoint:** `PUT /api/v2/{project_id}/tests/{id}`
-
----
-
-### tests_delete
-
-Delete a test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Example:**
-```json
-{
-  "name": "tests_delete",
-  "arguments": {
-    "test_id": "12345"
-  }
-}
-```
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/tests/{id}`
-
----
-
-### tests_issues_list
-
-List linked issues for a test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| source | string | No | Filter by issue source |
-
-**Example:**
-```json
-{
-  "name": "tests_issues_list",
-  "arguments": {
-    "test_id": "12345"
-  }
-}
-```
-
-**API Endpoint:** `GET /api/v2/{project_id}/issues?test_id=...`
-
----
-
-### tests_issues_link
-
-Link an issue to a test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| url | string | No* | Issue URL |
-| jira_id | string | No* | Jira issue ID |
-
-*Either url or jira_id required
-
-**Example (Generic Issue):**
-```json
-{
-  "name": "tests_issues_link",
-  "arguments": {
-    "test_id": "12345",
-    "url": "https://jira.example.com/TEST-123"
-  }
-}
-```
-
-**Example (Jira):**
-```json
-{
-  "name": "tests_issues_link",
-  "arguments": {
-    "test_id": "12345",
-    "jira_id": "TEST-123"
-  }
-}
-```
-
-**API Endpoint:** `POST /api/v2/{project_id}/issues`
-
----
-
-### tests_issues_unlink
-
-Unlink an issue from a test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| issue_id | integer | Yes | Issue ID |
-| type | string | Yes | "issue" or "jira_issue" |
-
-**Example:**
-```json
-{
-  "name": "tests_issues_unlink",
-  "arguments": {
-    "issue_id": 123,
-    "type": "issue"
-  }
-}
-```
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/issues/{id}`
-
----
-
-## Suite Management
-
-### suites_list
-
-List suites as a tree structure.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| file_type | string | No | "file" or "folder" |
-| tag | string | No | Filter by tag |
-| labels | string | No | Filter by labels |
-| search_text | string | No | Search text |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `GET /api/v2/{project_id}/suites`
-
----
-
-### suites_get
-
-Get a specific suite by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `GET /api/v2/{project_id}/suites/{id}`
-
----
-
-### suites_create
-
-Create a new suite.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Suite title |
-| description | string | No | Suite description |
-| emoji | string | No | Suite emoji |
-| parent_id | string | No | Parent suite ID |
-| file_type | string | No | One of: `file`, `folder` |
-| assigned_to | string | No | Assignee ID |
-| file | string | No | File reference |
-| children | array | No | Child suites |
-| link | array | No | Links to labels, tags, milestones, issues, jira, or requirements |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `POST /api/v2/{project_id}/suites`
-
----
-
-### suites_update
-
-Update an existing suite.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| emoji | string | No | Emoji |
-| parent_id | string | No | Parent suite ID |
-| file_type | string | No | One of: `file`, `folder` |
-| assigned_to | string | No | Assignee ID |
-| file | string | No | File reference |
-| children | array | No | Child suites |
-| link | array | No | Link updates for labels, tags, milestones, issues, jira, or requirements |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/suites/{id}`
-
----
-
-### suites_delete
-
-Delete a suite.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/suites/{id}`
-
----
-
-### Suite Issue Operations
-
-**suites_issues_list**, **suites_issues_link**, **suites_issues_unlink**
-
-Same pattern as test issue operations, but for suites.
-
----
-
-## Share Management
-
-Share tests and suites into other projects. The source project stays the single source of truth: shared copies in target projects are read-only and stay in sync until unlinked. Source and target projects must be of the same type (Classic/BDD). Share requests are queued and processed asynchronously — `status: "queued"` only confirms the request was accepted, not that sharing has completed.
-
-### tests_share
-
-Share one or more tests into a suite of another project. Tests are selected by `test_ids`, by `labels`, or both (the two sets are combined); at least one is required, max 1000 tests per request. Re-sharing a test into a target project that already has it does not create a duplicate. A matched test that is itself a shared copy is skipped and listed in `skipped_test_ids` — share from the original test's project instead.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_ids | string[] | No* | Test IDs to share |
-| labels | string[] | No* | Label slugs or titles; every test carrying any of these labels is shared, in addition to test_ids |
-| target_project_id | string | Yes | Project ID (slug) of the destination project |
-| target_suite_id | string | Yes | Suite ID in the target project; must be a file-type suite, not a folder |
-
-*At least one of test_ids/labels is required
-
-**Example (bulk by IDs):**
-```json
-{
-  "name": "tests_share",
-  "arguments": {
-    "test_ids": ["be779025", "sgqat108", "sgqat104"],
+    "command": "share",
+    "test_ids": ["be779025", "sgqat108"],
     "target_project_id": "sugar-king",
     "target_suite_id": "e73d559c"
   }
 }
 ```
 
-**Example (by label):**
+---
+
+## suites
+
+Manage suites as a tree. `/api/v2/{project_id}/suites`
+
+**Commands:**
+
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List suites as tree (file_type, tag, labels, search_text filters) | — |
+| `get` | Get suite by ID | `suite_id` |
+| `create` | Create suite | `title` |
+| `update` | Update suite | `suite_id` |
+| `delete` | Delete suite | `suite_id` |
+| `share` | Share suites (with their tests) into one or more other projects | `target_project_ids`, plus a selection (`suite_ids` and/or `labels`) |
+| `unshare` | Remove a suite's share (converts the shared copy back into a regular suite) | `suite_id` |
+| `issues_list` / `issues_link` / `issues_unlink` | Scoped issue operations | as on `tests` |
+| `attachments_list` / `attachments_upload` / `attachments_delete` | Scoped attachment operations | as on `tests` |
+
+**Parameters:**
+
+| Name | Type | Commands | Description |
+|------|------|----------|-------------|
+| suite_id | string | get, update, delete, unshare, issues_*, attachments_* | Suite ID (for `unshare`: ID of the shared suite copy to unlink) |
+| title | string | create, update | Suite title |
+| description | string | create, update | Suite description |
+| emoji | string | create, update | Emoji icon |
+| parent_id | string | create, update | Parent suite ID |
+| file_type | string | list, create, update | `file` or `folder` |
+| assigned_to | string | create, update | Assignee |
+| file | string | create, update | File reference |
+| children | array | create, update | Child items |
+| link | array | create, update | Link actions (supports `requirement` type), see [Link Parameter Structure](#link-parameter-structure) |
+| tag | string | list | Filter by tag title |
+| labels | string \| string[] | list, share | list: filter by labels; share: label selection for sharing |
+| search_text | string | list | Text search |
+| branch | string | list, get, create, update, delete | Branch slug, see [Branch Scoping](#branch-scoping) |
+| page / per_page | integer | list, issues_list | Pagination |
+| suite_ids | string[] | share | Suite IDs to share. Max 200 per request |
+| target_project_ids | string[] | share | Project IDs (slugs) of the destination projects |
+| destination_folder_id | string | share | Folder suite ID in the target project (only allowed when sharing to a single target project) |
+
+**Sharing semantics:** file-type suites are linked (read-only copies that stay in sync); folder suites are deep-copied as regular editable copies. Re-sharing a linked suite into a project that already has it does not duplicate. Suites that are themselves shared copies link to their original source. Omit `destination_folder_id` to share into the root of the target project(s). Requests are processed asynchronously; projects must be of the same type (Classic/BDD).
+
+---
+
+## runs
+
+Manage runs. `/api/v2/{project_id}/runs`
+
+**Commands:**
+
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List runs (tql filter, pagination) | — |
+| `get` | Get run by ID | `run_id` |
+| `create` | Create run | `title` |
+| `update` | Update run (status transitions via `status_event`) | `run_id` |
+| `delete` | Delete run | `run_id` |
+| `stats` | Break down one run's testruns by a dimension (`GET /api/v2/{project_id}/runs/{id}/stats/{dimension}`) | `run_id`, `dimension` |
+| `issues_list` / `issues_link` / `issues_unlink` | Scoped issue operations | as on `tests` (with `run_id`) |
+
+**Parameters:**
+
+| Name | Type | Commands | Description |
+|------|------|----------|-------------|
+| run_id | string | get, update, delete, stats, issues_list, issues_link | Run ID |
+| dimension | string | stats | `suites`, `tags`, `labels`, `assignees`, or `priorities` |
+| sort_field | string | stats | Column to sort by, e.g. `failed_count` |
+| sort_direction | string | stats | `asc` or `desc` |
+| title | string | create, update | Run title |
+| description | string | create, update | Run description |
+| plan_ids | string[] | create | Plans to include |
+| kind | string | create, update | `manual`, `automated`, `mixed` |
+| rungroup_id | string | create, update | Run group |
+| env | string | create, update | Environment |
+| status_event | string | update | `finish`, `finish_manual`, `launch`, `rerun`, `scheduled`, `terminate` |
+| assigned_to | string | create, update | Assignee |
+| assign_strategy | string | create, update | `test`, `random`, `none` |
+| test_ids | string[] | create, update | Tests to include |
+| suite_ids | string[] | create, update | Suites to include |
+| envs | string[] | create | Environments |
+| link | array | create, update | Link actions, see [Link Parameter Structure](#link-parameter-structure) |
+| tql | string | list | TQL filter for runs |
+| branch | string | list, get, create, update, delete | Branch slug, see [Branch Scoping](#branch-scoping) |
+| page / per_page | integer | list, issues_list | Pagination |
+| page | integer | stats | Page number (`stats` has a fixed page size, no `per_page`) |
+
+`stats` rows carry `passed_count`, `failed_count`, `skipped_count`, `pending_count` for their group — answers "which areas/owners are affected by this run's failures". `meta` uses `page`/`perPage`/`totalCount`/`totalPages`.
+
+**Example — finish a run:**
 ```json
 {
-  "name": "tests_share",
-  "arguments": {
-    "labels": ["pre-cert"],
-    "target_project_id": "sugar-king",
-    "target_suite_id": "e73d559c"
-  }
+  "name": "runs",
+  "arguments": { "command": "update", "run_id": "456", "status_event": "finish" }
 }
 ```
 
-**Returns:**
-```json
-{
-  "data": {
-    "status": "queued",
-    "target_project_id": "sugar-king",
-    "target_suite_id": "e73d559c",
-    "test_ids": ["be779025", "sgqat108", "sgqat104"],
-    "skipped_test_ids": []
-  }
-}
-```
-
-**API Endpoint:** `POST /api/v2/{project_id}/shares/tests`
-
----
-
-### suites_share
-
-Share one or more suites (with their tests) into one or more other projects. Suites are selected by `suite_ids`, by `labels`, or both (the two sets are combined); at least one is required, max 200 suites per request. File-type suites are linked (read-only copies that stay in sync); folder suites are deep-copied as regular editable copies. Re-sharing a linked suite into a project that already has it does not duplicate — checked per target project. Omit `destination_folder_id` to share into the root of the target project(s).
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_ids | string[] | No* | Suite IDs to share |
-| labels | string[] | No* | Label slugs or titles; every suite carrying any of these labels is shared, in addition to suite_ids |
-| target_project_ids | string[] | Yes | Project IDs (slugs) of the destination projects |
-| destination_folder_id | string | No | Folder suite ID in the target project to place the shared suites into; only allowed when sharing to a single target project |
-
-*At least one of suite_ids/labels is required
-
-**Example:**
-```json
-{
-  "name": "suites_share",
-  "arguments": {
-    "suite_ids": ["e73d559c"],
-    "target_project_ids": ["sugar-king", "game-qa"]
-  }
-}
-```
-
-**Returns:**
-```json
-{
-  "data": {
-    "status": "queued",
-    "target_project_ids": ["sugar-king", "game-qa"],
-    "destination_folder_id": null,
-    "suite_ids": ["e73d559c"]
-  }
-}
-```
-
-**API Endpoint:** `POST /api/v2/{project_id}/shares/suites`
-
----
-
-### tests_unshare
-
-Remove a test's share, converting the shared copy back into a regular, editable test. Only the shared copy can be targeted — the original source test is untouched. Must be called against the project that holds the shared copy.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | ID of the shared test copy to unlink |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/shares/tests/{id}`
-
----
-
-### suites_unshare
-
-Remove a suite's share, converting the shared copy back into a regular, editable suite. Only the shared (linked) copy can be targeted — the original source suite is untouched. Must be called against the project that holds the shared copy.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | ID of the shared suite copy to unlink |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/shares/suites/{id}`
-
----
-
-## Run Management
-
-### runs_list
-
-List all test runs.
-
-Use `tql` for search/filtering.
-TQL means `Testomat.io Query Language`.
-Use standard TQL syntax such as `==`, `!=`, `>`, `<`, `>=`, `<=`, `in [...]`, `%`, `and`, `or`, `not`, and parentheses.
-For the full syntax and field reference, see the official docs: https://docs.testomat.io/advanced/tql/
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| tql | string | No | TQL filter for runs. Examples: `title % 'Manual tests'`, `plan == '{PLAN_ID}'`, `finished and with_defect` |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Example:**
-```json
-{
-  "name": "runs_list",
-  "arguments": {
-    "page": 1,
-    "per_page": 10,
-    "tql": "failed and has_test_tag == 'regression'"
-  }
-}
-```
-
-**API Endpoint:** `GET /api/v2/{project_id}/runs`
-
----
-
-### runs_get
-
-Get a specific run by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| run_id | string | Yes | Run ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `GET /api/v2/{project_id}/runs/{id}`
-
----
-
-### runs_stats
-
-Break down one run's testruns by a dimension. Each row carries `passed_count`, `failed_count`, `skipped_count`, `pending_count` for its group — answers "which areas/owners are affected by this run's failures". Paginated with a fixed page size; `meta` uses `page`/`perPage`/`totalCount`/`totalPages`.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| run_id | string | Yes | Run ID |
-| dimension | string | Yes | `suites`, `tags`, `labels`, `assignees`, or `priorities` |
-| page | integer | No | Page number |
-| sort_field | string | No | Column to sort by, e.g. `failed_count` |
-| sort_direction | string | No | `asc` or `desc` |
-
-**API Endpoint:** `GET /api/v2/{project_id}/runs/{id}/stats/{dimension}`
-
----
-
-### runs_create
-
-Create a new test run.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Run title |
-| description | string | No | Run description |
-| plan_ids | array | No | List of plan public UIDs to include in the run |
-| kind | string | No | "manual", "automated", or "mixed" |
-| rungroup_id | string | No | Run group ID |
-| env | string | No | Environment name |
-| assigned_to | string | No | Assignee ID |
-| assign_strategy | string | No | "test", "random", or "none" |
-| test_ids | array | No | Array of test public UIDs to include (use ["*"] for all tests) |
-| suite_ids | array | No | Array of suite public UIDs whose tests to include |
-| envs | array | No | Array of environment names |
-| link | array | No | Links to labels, tags, milestones, issues, or jira |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Example:**
-```json
-{
-  "name": "runs_create",
-  "arguments": {
-    "title": "Smoke tests - Prod",
-    "kind": "automated",
-    "env": "production",
-    "test_ids": ["123", "456", "789"]
-  }
-}
-```
-
-**Example with suites:**
-```json
-{
-  "name": "runs_create",
-  "arguments": {
-    "title": "Auth Suite Tests",
-    "kind": "automated",
-    "suite_ids": ["suite1", "suite2"]
-  }
-}
-```
-
-**API Endpoint:** `POST /api/v2/{project_id}/runs`
-
----
-
-### runs_update
-
-Update an existing run.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| run_id | string | Yes | Run ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| kind | string | No | Run type |
-| rungroup_id | string | No | Run group ID |
-| env | string | No | Environment |
-| **status_event** | string | No | **"finish"\|"finish_manual"\|"launch"\|"rerun"\|"scheduled"\|"terminate"** |
-| assigned_to | string | No | Assignee ID |
-| assign_strategy | string | No | Assignment strategy |
-| test_ids | array | No | Test public UIDs |
-| suite_ids | array | No | Suite public UIDs whose tests to include |
-| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**Status Event Example:**
-```json
-{
-  "name": "runs_update",
-  "arguments": {
-    "run_id": "12345",
-    "status_event": "finish"
-  }
-}
-```
-
-**API Endpoint:** `PUT /api/v2/{project_id}/runs/{id}`
-
----
-
-### runs_delete
-
-Delete a run.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| run_id | string | Yes | Run ID |
-| branch | string | No | Branch slug to scope the operation to (omit or `main` for the main branch). See [Branch Scoping](#branch-scoping) |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/runs/{id}`
-
----
-
-### Run Issue Operations
-
-**runs_issues_list**, **runs_issues_link**, **runs_issues_unlink**
-
-Same pattern as test issue operations, but for runs.
-
----
-
-## TestRun Management
-
-### testruns_list
-
-List test runs (individual test results within a run).
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| run_id | string | No | Filter by parent run ID |
-| sort | string | No | `created_at`, `suite`, `testcase`, or `failure`. Default order is oldest-first — use `created_at` with `order=desc` for the most recent executions |
-| order | string | No | `asc` (default) or `desc` |
-| test_ids | array\|string | No | Test IDs; arrays are sent as comma-separated values |
-| filter_status | string | No | `passed`, `failed`, `skipped`, `pending` |
-| filter_kind | string | No | `manual` or `automated` |
-| filter_user | integer\|string | No | Assigned user ID |
-| filter_priority | string | No | One of: `low`, `normal`, `important`, `high`, `critical` |
-| filter_substatus | string | No | Custom substatus filter |
-| filter_search | string | No | Text search across test title |
-| filter_message | boolean | No | Only testruns with a message |
-| filter_link | boolean | No | Only testruns with linked issues |
-| filter_finished_at_date_range | string | No | ISO date range, comma-separated |
-| tags | array\|string | No | Test tags, comma-separated when sent to API |
-| labels | array\|string | No | Run labels, comma-separated when sent to API |
-| envs | array\|string | No | Run environments, comma-separated when sent to API |
-| rungroups | array\|string | No | Rungroup IDs, comma-separated when sent to API |
-| defects | string | No | `has_defects` or `without_defects` |
-
-**API Endpoint:** `GET /api/v2/{project_id}/testruns`
-
----
-
-### testruns_get
-
-Get a specific test run by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| testrun_id | integer | Yes | Test run ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/testruns/{id}`
-
----
-
-### testruns_create
-
-Create a new test run result.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| run_id | string | Yes | Parent run ID |
-| test_id | string | No | Test ID |
-| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
-| message | string | No | Status message |
-| run_time | number | No | Execution time in seconds |
-| assigned_to | string | No | Assignee ID |
-| test_title | string | No | Test title |
-| automated | boolean | No | Is automated test |
-
-**Example:**
-```json
-{
-  "name": "testruns_create",
-  "arguments": {
-    "run_id": "12345",
-    "test_id": "67890",
-    "status": "passed",
-    "run_time": 2.5
-  }
-}
-```
-
-**API Endpoint:** `POST /api/v2/{project_id}/testruns`
-
----
-
-### testruns_update
-
-Update a test run.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| testrun_id | integer | Yes | Test run ID |
-| run_id | string | No | Parent run ID |
-| test_id | string | No | Test ID |
-| status | string | No | One of: `passed`, `failed`, `skipped`, `pending` |
-| message | string | No | Status message |
-| run_time | number | No | Execution time |
-| assigned_to | string | No | Assignee ID |
-| test_title | string | No | Test title |
-| automated | boolean | No | Is automated |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/testruns/{id}`
-
----
-
-### testruns_delete
-
-Delete a test run.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| testrun_id | integer | Yes | Test run ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/testruns/{id}`
-
----
-
-### TestRun Issue Operations
-
-**testruns_issues_list**, **testruns_issues_link**, **testruns_issues_unlink**
-
-Same pattern as test issue operations, but for testruns.
-
----
-
-## Plan Management
-
-### plans_list
-
-List test plans.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| kind | string | No | `manual`, `automated`, `mixed` |
-| hidden | boolean | No | Filter hidden vs visible plans |
-| labels | array | No | Filter by labels (OR logic) |
-| search_text | string | No | Plain text search across plan titles |
-
-**API Endpoint:** `GET /api/v2/{project_id}/plans`
-
----
-
-### plans_get
-
-Get a specific plan by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| plan_id | string | Yes | Plan ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/plans/{id}`
-
----
-
-### plans_create
-
-Create a new test plan.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Plan title |
-| description | string | No | Plan description |
-| kind | string | No | "manual", "automated", or "mixed" |
-| hidden | boolean | No | Hide plan |
-| as_manual | boolean | No | Treat as manual |
-| test_ids | array | No | List of test IDs (8-char) to include |
-| suite_ids | array | No | List of suite IDs (8-char) to include |
-| tql | string | No | TQL query expression to filter tests for the plan |
-| link | array | No | Links to labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `POST /api/v2/{project_id}/plans`
-
----
-
-### plans_update
-
-Update an existing plan.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| plan_id | string | Yes | Plan ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| kind | string | No | Plan type |
-| hidden | boolean | No | Hidden flag |
-| as_manual | boolean | No | Manual flag |
-| test_ids | array | No | List of test IDs (8-char) to include |
-| suite_ids | array | No | List of suite IDs (8-char) to include |
-| tql | string | No | TQL query expression to filter tests for the plan |
-| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/plans/{id}`
-
----
-
-### plans_delete
-
-Delete a plan.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| plan_id | string | Yes | Plan ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/plans/{id}`
-
----
-
-### Plan Issue Operations
-
-**plans_issues_list**, **plans_issues_link**, **plans_issues_unlink**
-
-Same pattern as test issue operations, but for plans.
-
----
-
-## RunGroup Management
-
-### rungroups_list
-
-List run groups as a tree.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-
-**API Endpoint:** `GET /api/v2/{project_id}/rungroups`
-
----
-
-### rungroups_get
-
-Get a specific run group by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| rungroup_id | string | Yes | Run group ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/rungroups/{id}`
-
----
-
-### rungroups_create
-
-Create a new run group.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Group title |
-| description | string | No | Description |
-| emoji | string | No | Emoji icon |
-| kind | string | No | Group kind |
-| pin | boolean | No | Pin group |
-| status | string | No | Group status |
-| parent_id | string | No | Parent group ID |
-| children | array | No | Child groups |
-
-**API Endpoint:** `POST /api/v2/{project_id}/rungroups`
-
----
-
-### rungroups_update
-
-Update an existing run group.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| rungroup_id | string | Yes | Run group ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| emoji | string | No | Emoji |
-| kind | string | No | Kind |
-| pin | boolean | No | Pin flag |
-| status | string | No | Status |
-| parent_id | string | No | Parent ID |
-| children | array | No | Children |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/rungroups/{id}`
-
----
-
-### rungroups_delete
-
-Delete a run group.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| rungroup_id | string | Yes | Run group ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/rungroups/{id}`
-
----
-
-## Step Management
-
-### steps_list
-
-List test steps.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-
-**API Endpoint:** `GET /api/v2/{project_id}/steps`
-
----
-
-### steps_get
-
-Get a specific step by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| step_id | integer | Yes | Step ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/steps/{id}`
-
----
-
-### steps_create
-
-Create a new step.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Step title |
-| description | string | No | Step description |
-| link | array | No | Links to labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `POST /api/v2/{project_id}/steps`
-
----
-
-### steps_update
-
-Update an existing step.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| step_id | integer | Yes | Step ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/steps/{id}`
-
----
-
-### steps_delete
-
-Delete a step.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| step_id | integer | Yes | Step ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/steps/{id}`
-
----
-
-## Snippet Management
-
-### snippets_list
-
-List code snippets.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-
-**API Endpoint:** `GET /api/v2/{project_id}/snippets`
-
----
-
-### snippets_get
-
-Get a specific snippet by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| snippet_id | integer | Yes | Snippet ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/snippets/{id}`
-
----
-
-### snippets_create
-
-Create a new snippet.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Snippet title |
-| description | string | No | Description |
-| link | array | No | Links to labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `POST /api/v2/{project_id}/snippets`
-
----
-
-### snippets_update
-
-Update an existing snippet.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| snippet_id | integer | Yes | Snippet ID |
-| title | string | No | New title |
-| description | string | No | Description |
-| link | array | No | Link updates for labels, tags, milestones, issues, or jira |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/snippets/{id}`
-
----
-
-### snippets_delete
-
-Delete a snippet.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| snippet_id | integer | Yes | Snippet ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/snippets/{id}`
-
----
-
-## Label Management
-
-### labels_list
-
-List labels.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-
-**API Endpoint:** `GET /api/v2/{project_id}/labels`
-
----
-
-### labels_get
-
-Get a specific label by slug.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| label_id | string | Yes | Label ID/slug |
-
-**API Endpoint:** `GET /api/v2/{project_id}/labels/{id}`
-
 ---
 
-### labels_create
+## testruns
 
-Create a new label.
+Manage individual test runs (result records inside a run). `/api/v2/{project_id}/testruns`
 
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Label title |
-| color | string | No | Label color (hex) |
-| visibility | array | No | ["filter", "list"] |
-| scope | array | No | ["tests", "suites", "runs", "plans", "steps", "templates"] |
-| field | object | No | Field configuration |
-
-**API Endpoint:** `POST /api/v2/{project_id}/labels`
+**Commands:**
 
----
-
-### labels_update
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List testruns (rich filters) | — |
+| `get` | Get testrun by ID | `testrun_id` |
+| `create` | Create testrun in a run | `run_id` |
+| `update` | Update testrun | `testrun_id` |
+| `delete` | Delete testrun | `testrun_id` |
+| `issues_list` / `issues_link` / `issues_unlink` | Scoped issue operations | as on `tests` (with `testrun_id`) |
+| `attachments_list` / `attachments_upload` / `attachments_delete` | Scoped attachment operations | as on `tests` (with `testrun_id`) |
 
-Update an existing label.
-
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| label_id | string | Yes | Label ID |
-| title | string | No | New title |
-| color | string | No | Color |
-| visibility | array | No | Visibility options |
-| scope | array | No | Label scope |
-| field | object | No | Field config |
-
-**API Endpoint:** `PUT /api/v2/{project_id}/labels/{id}`
 
----
-
-### labels_delete
-
-Delete a label.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| label_id | string | Yes | Label ID |
+| testrun_id | integer | get, update, delete, issues_*, attachments_* | TestRun ID |
+| run_id | string | list, create, update | list: filter by run; create/update: the owning run |
+| test_id | string | create, update | Test reference |
+| test_ids | string \| string[] | list | Filter by tests |
+| sort | string | list | `created_at`, `suite`, `testcase`, or `failure`. Default order is oldest-first — use `created_at` with `order=desc` for the most recent executions |
+| order | string | list | `asc` (default) or `desc` |
+| status | string | create, update | `passed`, `failed`, `skipped`, `pending` |
+| message | string | create, update | Result message |
+| run_time | number | create, update | Execution time |
+| assigned_to | string | create, update | Assignee |
+| test_title | string | create, update | Title override |
+| automated | boolean | create, update | Automated flag |
+| filter_status | string | list | `passed`, `failed`, `skipped`, `pending` |
+| filter_kind | string | list | `manual`, `automated` |
+| filter_user | integer \| string | list | Filter by user |
+| filter_priority | string | list | `low` … `critical` |
+| filter_substatus | string | list | Filter by substatus |
+| filter_search | string | list | Text search |
+| filter_message | boolean | list | Has message |
+| filter_link | boolean | list | Has link |
+| filter_finished_at_date_range | string | list | Date range filter |
+| tags / labels / envs / rungroups | string \| string[] | list | Filter lists (comma-joined) |
+| defects | string | list | `has_defects` / `without_defects` |
+| page / per_page | integer | list, issues_list | Pagination |
 
-**API Endpoint:** `DELETE /api/v2/{project_id}/labels/{id}`
-
 ---
-
-## Tag Management (Read-Only)
 
-### tags_list
+## plans
 
-List all tags with counts.
+Manage test plans. `/api/v2/{project_id}/plans`
 
-**Parameters:** None
+**Commands:**
 
-**API Endpoint:** `GET /api/v2/{project_id}/tags`
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List plans (kind, hidden, labels, search_text filters) | — |
+| `get` | Get plan by ID | `plan_id` |
+| `create` | Create plan | `title` |
+| `update` | Update plan | `plan_id` |
+| `delete` | Delete plan | `plan_id` |
+| `issues_list` / `issues_link` / `issues_unlink` | Scoped issue operations | as on `tests` (with `plan_id`) |
 
----
-
-### tags_get
-
-Get tests by tag title.
-
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| tag_id | string | Yes | Tag title/ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/tags/{id}`
-
----
-
-### tags_search
-
-Search by tag title (delegates to tags_get).
 
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| tag_id | string | No | Tag ID |
-| query | string | No | Search query |
+| plan_id | string | get, update, delete, issues_list, issues_link | Plan ID |
+| title | string | create, update | Plan title |
+| description | string | create, update | Plan description |
+| kind | string | list, create, update | `manual`, `automated`, `mixed` |
+| hidden | boolean | list, create, update | list: include hidden; create/update: set flag |
+| as_manual | boolean | create, update | Create manual testruns |
+| labels | string[] | list | Filter by labels |
+| search_text | string | list | Text search |
+| test_ids | string[] | create, update | Test IDs to include (if omitted, all tests matching the plan kind) |
+| suite_ids | string[] | create, update | Suite IDs to include (if omitted, all suites considered) |
+| tql | string | create, update | TQL filter selecting plan contents |
+| link | array | create, update | Link actions |
+| page / per_page | integer | list, issues_list | Pagination |
 
 ---
 
-## Milestone Management
+## rungroups
 
-### milestones_list
+Manage run groups as a tree. `/api/v2/{project_id}/rungroups`
 
-List milestones.
+**Commands:** `list`, `get`, `create` (`title`), `update` (`rungroup_id`), `delete` (`rungroup_id`)
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| type | string | No | Filter by milestone type title, e.g. `Sprint` or `Release` |
-| status | string | No | `created`, `active`, or `closed` |
-
-**API Endpoint:** `GET /api/v2/{project_id}/milestones`
-
----
-
-### milestones_get
-
-Get a milestone by ID.
 
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| milestone_id | string | Yes | Milestone slug |
+| rungroup_id | string | get, update, delete | Run group ID |
+| title | string | create, update | Title |
+| description | string | create, update | Description |
+| emoji | string | create, update | Emoji icon |
+| kind | string | create, update | Group kind |
+| pin | boolean | create, update | Pinned flag |
+| status | string | create, update | Status |
+| parent_id | string | create, update | Parent group |
+| children | array | create, update | Child items |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `GET /api/v2/{project_id}/milestones/{id}`
-
 ---
-
-## Issue Management (Global)
 
-### issues_list
+## steps
 
-List linked issues (global or filtered by resource).
+Manage test steps. `/api/v2/{project_id}/steps`
 
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| test_id | string | No | Filter by test |
-| suite_id | string | No | Filter by suite |
-| run_id | string | No | Filter by run |
-| testrun_id | integer | No | Filter by testrun |
-| plan_id | string | No | Filter by plan |
-| source | string | No | Filter by source |
-
-**API Endpoint:** `GET /api/v2/{project_id}/issues`
-
----
-
-### issues_create
+**Commands:** `list`, `get` (`step_id`), `create` (`title`), `update` (`step_id`), `delete` (`step_id`)
 
-Link an issue to a resource.
-
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | No* | Link to test |
-| suite_id | string | No* | Link to suite |
-| run_id | string | No* | Link to run |
-| testrun_id | integer | No* | Link to testrun |
-| plan_id | string | No* | Link to plan |
-| url | string | No** | Issue URL |
-| jira_id | string | No** | Jira issue ID |
-
-*At least one resource ID required
-**Either url or jira_id required
-
-**API Endpoint:** `POST /api/v2/{project_id}/issues`
 
----
-
-### issues_delete
-
-Unlink an issue.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| issue_id | integer | Yes | Issue ID |
-| type | string | Yes | "issue" or "jira_issue" |
+| step_id | integer | get, update, delete | Step ID |
+| title | string | create, update | Step title |
+| description | string | create, update | Step description |
+| link | array | create, update | Link actions |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `DELETE /api/v2/{project_id}/issues/{id}`
-
 ---
-
-## Attachment Management
-
-Attachments are scoped to tests, suites, and testruns. Each operation requires exactly one entity ID through the matching scoped tool.
-
-### tests_attachments_list
-
-List attachments for a test.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-
-**API Endpoint:** `GET /api/v2/{project_id}/attachments?test_id=...`
 
----
+## snippets
 
-### tests_attachments_upload
+Manage code snippets. `/api/v2/{project_id}/snippets`
 
-Upload one attachment to a test.
+**Commands:** `list`, `get` (`snippet_id`), `create` (`title`), `update` (`snippet_id`), `delete` (`snippet_id`)
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| file_path | string | Yes | Local path to the file readable by the MCP server |
-
-**API Endpoint:** `POST /api/v2/{project_id}/attachments?test_id=...`
-
----
-
-### tests_attachments_delete
-
-Delete an attachment from a test.
 
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| test_id | string | Yes | Test ID |
-| attachment_id | string | Yes | Attachment ID |
+| snippet_id | integer | get, update, delete | Snippet ID |
+| title | string | create, update | Snippet title |
+| description | string | create, update | Snippet code/description |
+| link | array | create, update | Link actions |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?test_id=...`
-
 ---
-
-### suites_attachments_list
-
-List attachments for a suite.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
 
-**API Endpoint:** `GET /api/v2/{project_id}/attachments?suite_id=...`
+## labels
 
----
+Manage labels. `/api/v2/{project_id}/labels`
 
-### suites_attachments_upload
+**Commands:** `list`, `get` (`label_id`), `create` (`title`), `update` (`label_id`), `delete` (`label_id`)
 
-Upload one attachment to a suite.
-
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
-| file_path | string | Yes | Local path to the file readable by the MCP server |
-
-**API Endpoint:** `POST /api/v2/{project_id}/attachments?suite_id=...`
-
----
-
-### suites_attachments_delete
 
-Delete an attachment from a suite.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| suite_id | string | Yes | Suite ID |
-| attachment_id | string | Yes | Attachment ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?suite_id=...`
+| label_id | string | get, update, delete | Label slug |
+| title | string | create, update | Label title |
+| color | string | create, update | Color |
+| visibility | string[] | create, update | `filter`, `list` |
+| scope | string[] | create, update | `tests`, `suites`, `runs`, `plans`, `steps`, `templates` |
+| field | object | create, update | Custom field definition |
+| page / per_page | integer | list | Pagination |
 
 ---
-
-### testruns_attachments_list
-
-List attachments for a testrun.
-
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| testrun_id | integer | Yes | TestRun ID |
 
-**API Endpoint:** `GET /api/v2/{project_id}/attachments?testrun_id=...`
-
----
+## tags
 
-### testruns_attachments_upload
+Read-only tag access with counts. `/api/v2/{project_id}/tags`
 
-Upload one attachment to a testrun.
+**Commands:** `list`, `get` (`tag_id`), `search` (`tag_id` or `query`; delegates to `get`)
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| testrun_id | integer | Yes | TestRun ID |
-| file_path | string | Yes | Local path to the file readable by the MCP server |
-
-**API Endpoint:** `POST /api/v2/{project_id}/attachments?testrun_id=...`
-
----
-
-### testruns_attachments_delete
-
-Delete an attachment from a testrun.
 
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| testrun_id | integer | Yes | TestRun ID |
-| attachment_id | string | Yes | Attachment ID |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/attachments/{attachment_id}?testrun_id=...`
+| tag_id | string | get, search | Tag title to look up |
+| query | string | search | Search text |
 
 ---
 
-## Requirement Management
+## milestones
 
-### requirements_list
+Read-only milestone access. `/api/v2/{project_id}/milestones`
 
-List requirements with optional filters.
+**Commands:** `list`, `get` (`milestone_id`)
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number |
-| per_page | integer | No | Items per page |
-| source | string | No | Filter by source type: `jira`, `confluence`, `file`, `text` |
-| scope | string | No | Filter by scope: `global`, `attached`, `detached`, `without_suites` |
-
-**API Endpoint:** `GET /api/v2/{project_id}/requirements`
 
----
-
-### requirements_get
-
-Get a requirement by ID.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| requirement_id | string | Yes | Requirement ID (8-char) |
+| milestone_id | string | get | Milestone slug |
+| type | string | list | Filter by milestone type title, e.g. `Sprint` or `Release` |
+| status | string | list | `created`, `active`, or `closed` |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `GET /api/v2/{project_id}/requirements/{id}`
-
 ---
-
-### requirements_create
 
-Create a requirement.
+## issues
 
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Requirement title |
-| source_type | string | Yes | `jira`, `confluence`, `file`, or `text` |
-| description | string | No | Required for text requirements; must be at least 500 characters |
-| details | string | No | Extended details or raw content |
-| active | boolean | No | Active flag |
-| global | boolean | No | Project-level requirement flag |
-| confluence_url | string | No | Required for confluence requirements |
-| files | array | No | Local file paths to upload for file requirements |
-
-**API Endpoint:** `POST /api/v2/{project_id}/requirements`
-
----
+Global issue operations across resources. `/api/v2/{project_id}/issues`
 
-### requirements_update
+**Commands:**
 
-Update a requirement.
+| Command | Description | Runtime-required params |
+|---------|-------------|------------------------|
+| `list` | List linked issues (scope by one resource id, filter by source) | — |
+| `create` | Link issue to a resource | exactly one resource id, plus exactly one of `url`/`jira_id` |
+| `delete` | Unlink issue | `issue_id`, `type` |
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| requirement_id | string | Yes | Requirement ID (8-char) |
-| title | string | No | New title |
-| description | string | No | Text requirement description |
-| details | string | No | Extended details or raw content |
-| active | boolean | No | Active flag |
-| global | boolean | No | Project-level requirement flag |
-| files | array | No | Local file paths to upload for file requirements |
-
-**API Endpoint:** `PATCH /api/v2/{project_id}/requirements/{id}`
-
----
 
-### requirements_delete
-
-Delete a requirement.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| requirement_id | string | Yes | Requirement ID (8-char) |
+| test_id / suite_id / run_id / plan_id | string | list, create | Resource scope (one at a time) |
+| testrun_id | integer | list, create | Resource scope (one at a time) |
+| source | string | list | Filter by source |
+| url | string | create | Issue URL |
+| jira_id | string | create | Jira issue ID |
+| issue_id | integer | delete | Issue ID |
+| type | string | delete | `issue` or `jira_issue` |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `DELETE /api/v2/{project_id}/requirements/{id}`
-
 ---
-
-## Branch Management
 
-Requires the `branches` subscription feature (enterprise plan). Branches are identified by slug.
+## requirements
 
-### branches_list
+Manage requirements, including file uploads. `/api/v2/{project_id}/requirements`
 
-List project branches.
+**Commands:** `list`, `get` (`requirement_id`), `create` (`title`, `source_type`), `update` (`requirement_id`), `delete` (`requirement_id`)
 
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| page | integer | No | Page number (min: 1) |
-| per_page | integer | No | Items per page (min: 1, max: 100) |
-| filter_state | string | No | Filter by state: `active`, `merged` |
-| filter_title | string | No | Filter by title (partial substring match) |
-| count | boolean | No | Return only total counts |
-| group_by | string | No | Aggregate counts by field (use with count=true) |
-
-**API Endpoint:** `GET /api/v2/{project_id}/branches`
-
----
-
-### branches_get
-
-Get a branch by slug.
 
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| branch_id | string | Yes | Branch slug |
-
-**Returns:** Branch slug, title, state (`active`/`merged`), tests_count, suites_count.
+| requirement_id | string | get, update, delete | Requirement ID |
+| title | string | create, update | Requirement title |
+| source_type | string | create | `jira`, `confluence`, `file`, `text` |
+| source | string | list | Filter by source: `jira`, `confluence`, `file`, `text` |
+| scope | string | list | `global`, `attached`, `detached`, `without_suites` |
+| description | string | create, update | Required for text requirements (min 500 chars on create); only applied for text requirements on update |
+| details | string | create, update | Details |
+| active | boolean | create, update | Active flag |
+| global | boolean | create, update | Global flag |
+| confluence_url | string | create | Required for confluence requirements |
+| files | string[] | create, update | Local file paths to upload for file requirements |
+| page / per_page | integer | list | Pagination |
 
-**API Endpoint:** `GET /api/v2/{project_id}/branches/{slug}`
-
 ---
-
-### branches_create
 
-Create a branch.
+## branches
 
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| title | string | Yes | Branch title; a slug is generated from it |
-
-**API Endpoint:** `POST /api/v2/{project_id}/branches`
+Manage project branches. Requires the branches feature (enterprise plan). `/api/v2/{project_id}/branches`
 
----
-
-### branches_update
+**Commands:** `list`, `get` (`branch_id`), `create` (`title`), `update` (`branch_id`), `delete` (`branch_id`)
 
-Update a branch title.
-
 **Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| branch_id | string | Yes | Branch slug |
-| title | string | No | New branch title |
 
-**API Endpoint:** `PUT /api/v2/{project_id}/branches/{slug}`
-
----
-
-### branches_delete
-
-Delete a branch.
-
-**Parameters:**
-| Name | Type | Required | Description |
+| Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| branch_id | string | Yes | Branch slug |
-
-**API Endpoint:** `DELETE /api/v2/{project_id}/branches/{slug}`
+| branch_id | string | get, update, delete | Branch slug |
+| title | string | create, update | Branch title; a slug is generated from it |
+| filter_state | string | list | `active` or `merged` |
+| filter_title | string | list | Partial substring match on title |
+| page / per_page | integer | list | Pagination |
 
 ---
 
@@ -1699,7 +567,7 @@ Delete a branch.
 
 ### Branch Scoping
 
-Tests, suites, and runs CRUD tools accept an optional `branch` parameter (branch slug).
+The `tests`, `suites`, and `runs` tools accept an optional `branch` parameter (branch slug) on their CRUD commands.
 Omit it (or pass `main`) to operate on the main branch.
 
 - For **tests** and **suites**: a matching branch-local record is used when it exists, falling back to main; updating or deleting a main-only record creates an isolated branch-local copy rather than mutating main.
@@ -1707,8 +575,9 @@ Omit it (or pass `main`) to operate on the main branch.
 
 ```json
 {
-  "name": "tests_list",
+  "name": "tests",
   "arguments": {
+    "command": "list",
     "branch": "feature-login",
     "tql": "priority == 'high'"
   }
@@ -1739,13 +608,13 @@ Most entities support linking via the `link` parameter:
 
 ### Pagination
 
-All list operations support:
+All list commands support:
 - `page` (integer, min: 1)
 - `per_page` (integer, min: 1, max: 100)
 
 ### List Response Projection
 
-List operations request slim responses from the API by default. Heavy entity fields such as `description` and `code`, duplicate title fields, and null values are omitted from the result.
+List commands request slim responses from the API by default. Heavy entity fields such as `description` and `code`, duplicate title fields, and null values are omitted from the result.
 
 - `verbose: true` disables the backend slim request and returns full objects.
 - `fields: ["id", "title", "description"]` disables the backend slim request and returns only the selected non-null fields.
@@ -1755,7 +624,7 @@ The backend `slim` parameter is managed internally by MCP; callers should use `v
 
 ### Counts & Aggregation
 
-List operations accept `count` (and `group_by`) to fetch totals and aggregated breakdowns without transferring the entity list — useful for "how many" questions instead of pulling full pages. Available on every list tool except the scoped `*_issues_list` / `*_attachments_list`.
+The primary `list` command of each entity accepts `count` (and `group_by`) to fetch totals and aggregated breakdowns without transferring the entity list — useful for "how many" questions instead of pulling full pages. Scoped list commands (`issues_list`, `attachments_list`) do not support aggregation.
 
 - `count: true` returns only `meta` with `total` (no `data`). Example response:
   ```json
@@ -1778,7 +647,7 @@ Two ways to link issues:
 
 ### Attachments
 
-Attachment uploads use local file paths readable by the MCP server process and send one multipart/form-data field named `file`. Multiple files per request are not supported by the Public API v2 endpoint.
+Attachment uploads use local file paths readable by the MCP server process and send one multipart/form-data field named `files`. Multiple files per request are not supported by the Public API v2 endpoint.
 
 ### Search
 
@@ -1854,7 +723,7 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
 | envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
-| milestone | string | No | Milestone slug (`id` from `milestones_list`). Required for `milestone-*` kinds — without it they return an empty result, not an error. Unknown slug returns 422 |
+| milestone | string | No | Milestone slug (`id` from the `milestones` tool, `list` command). Required for `milestone-*` kinds — without it they return an empty result, not an error. Unknown slug returns 422 |
 | page | integer | No | Page number. Only for `runs-summary` and `milestone-runs`, which are always paginated (default `page=1`, `per_page=30`; `meta.total`/`meta.total_pages` always present). Ignored by other kinds |
 | per_page | integer | No | Rows per page (default 30, max 100). Only for `runs-summary` and `milestone-runs` |
 

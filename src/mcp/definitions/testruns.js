@@ -1,336 +1,92 @@
-export const TESTRUNS_TOOLS = [
-  {
-    "name": "testruns_list",
-    "description": "List testruns (/api/v2/{project_id}/testruns)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "run_id": {
-          "type": "string"
-        },
-        "sort": {
-          "type": "string",
-          "enum": [
-            "created_at",
-            "suite",
-            "testcase",
-            "failure"
-          ],
-          "description": "Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first."
-        },
-        "order": {
-          "type": "string",
-          "enum": [
-            "asc",
-            "desc"
-          ],
-          "description": "Sort direction. Defaults to asc."
-        },
-        "test_ids": {
-          "type": [
-            "array",
-            "string"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "filter_status": {
-          "type": "string",
-          "enum": [
-            "passed",
-            "failed",
-            "skipped",
-            "pending"
-          ]
-        },
-        "filter_kind": {
-          "type": "string",
-          "enum": [
-            "manual",
-            "automated"
-          ]
-        },
-        "filter_user": {
-          "type": [
-            "integer",
-            "string"
-          ]
-        },
-        "filter_priority": {
-          "type": "string",
-          "enum": [
-            "low",
-            "normal",
-            "important",
-            "high",
-            "critical"
-          ]
-        },
-        "filter_substatus": {
-          "type": "string"
-        },
-        "filter_search": {
-          "type": "string"
-        },
-        "filter_message": {
-          "type": "boolean"
-        },
-        "filter_link": {
-          "type": "boolean"
-        },
-        "filter_finished_at_date_range": {
-          "type": "string"
-        },
-        "tags": {
-          "type": [
-            "array",
-            "string"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "labels": {
-          "type": [
-            "array",
-            "string"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "envs": {
-          "type": [
-            "array",
-            "string"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "rungroups": {
-          "type": [
-            "array",
-            "string"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "defects": {
-          "type": "string",
-          "enum": [
-            "has_defects",
-            "without_defects"
-          ]
-        }
-      },
-      "additionalProperties": false
-    }
+import { buildEntityTool } from './entity-tool.js';
+import {
+  attachmentParams,
+  issuesLinkParams,
+  issuesSourceParam,
+  issuesUnlinkParams,
+  paginationParams,
+} from './params.js';
+
+const arrayOrString = { type: ['array', 'string'], items: { type: 'string' } };
+
+export const TESTRUNS_TOOL_SPEC = {
+  name: 'testruns',
+  summary: 'Manage individual test runs (/api/v2/{project_id}/testruns)',
+  commands: {
+    list: 'List testruns (rich filters: filter_status, filter_kind, tags, labels, envs, rungroups, defects, ...)',
+    get: 'Get testrun by ID',
+    create: 'Create testrun in a run (run_id required)',
+    update: 'Update testrun by ID',
+    delete: 'Delete testrun by ID',
+    issues_list: 'List linked issues for a testrun',
+    issues_link: 'Link issue to a testrun (url or jira_id)',
+    issues_unlink: 'Unlink issue from a testrun',
+    attachments_list: 'List attachments for a testrun',
+    attachments_upload: 'Upload one attachment to a testrun',
+    attachments_delete: 'Delete attachment from a testrun',
   },
-  {
-    "name": "testruns_get",
-    "description": "Get testrun by ID",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "testrun_id": {
-          "type": "integer"
-        }
-      },
-      "required": [
-        "testrun_id"
-      ],
-      "additionalProperties": false
-    }
+  params: {
+    testrun_id: {
+      commands: ['get', 'update', 'delete', 'issues_list', 'issues_link', 'attachments_list', 'attachments_upload', 'attachments_delete'],
+      type: 'integer',
+    },
+    run_id: {
+      commands: ['list', 'create', 'update'],
+      type: 'string',
+      description: 'list: filter by run; create/update: the run the testrun belongs to',
+    },
+    test_id: { commands: ['create', 'update'], type: 'string' },
+    test_ids: { commands: ['list'], ...arrayOrString },
+    sort: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['created_at', 'suite', 'testcase', 'failure'],
+      description: 'Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first.',
+    },
+    order: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['asc', 'desc'],
+      description: 'Sort direction. Defaults to asc.',
+    },
+    status: {
+      commands: ['create', 'update'],
+      type: 'string',
+      enum: ['passed', 'failed', 'skipped', 'pending'],
+    },
+    message: { commands: ['create', 'update'], type: 'string' },
+    run_time: { commands: ['create', 'update'], type: 'number' },
+    assigned_to: { commands: ['create', 'update'], type: 'string' },
+    test_title: { commands: ['create', 'update'], type: 'string' },
+    automated: { commands: ['create', 'update'], type: 'boolean' },
+    filter_status: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['passed', 'failed', 'skipped', 'pending'],
+    },
+    filter_kind: { commands: ['list'], type: 'string', enum: ['manual', 'automated'] },
+    filter_user: { commands: ['list'], type: ['integer', 'string'] },
+    filter_priority: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['low', 'normal', 'important', 'high', 'critical'],
+    },
+    filter_substatus: { commands: ['list'], type: 'string' },
+    filter_search: { commands: ['list'], type: 'string' },
+    filter_message: { commands: ['list'], type: 'boolean' },
+    filter_link: { commands: ['list'], type: 'boolean' },
+    filter_finished_at_date_range: { commands: ['list'], type: 'string' },
+    tags: { commands: ['list'], ...arrayOrString },
+    labels: { commands: ['list'], ...arrayOrString },
+    envs: { commands: ['list'], ...arrayOrString },
+    rungroups: { commands: ['list'], ...arrayOrString },
+    defects: { commands: ['list'], type: 'string', enum: ['has_defects', 'without_defects'] },
+    ...paginationParams(['list', 'issues_list']),
+    ...issuesSourceParam(['issues_list']),
+    ...issuesLinkParams(['issues_link']),
+    ...issuesUnlinkParams(['issues_unlink']),
+    ...attachmentParams(),
   },
-  {
-    "name": "testruns_create",
-    "description": "Create testrun (/api/v2/{project_id}/testruns)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "run_id": {
-          "type": "string"
-        },
-        "test_id": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string",
-          "enum": [
-            "passed",
-            "failed",
-            "skipped",
-            "pending"
-          ]
-        },
-        "message": {
-          "type": "string"
-        },
-        "run_time": {
-          "type": "number"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "test_title": {
-          "type": "string"
-        },
-        "automated": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "run_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "testruns_update",
-    "description": "Update testrun (/api/v2/{project_id}/testruns/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "testrun_id": {
-          "type": "integer"
-        },
-        "run_id": {
-          "type": "string"
-        },
-        "test_id": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string",
-          "enum": [
-            "passed",
-            "failed",
-            "skipped",
-            "pending"
-          ]
-        },
-        "message": {
-          "type": "string"
-        },
-        "run_time": {
-          "type": "number"
-        },
-        "assigned_to": {
-          "type": "string"
-        },
-        "test_title": {
-          "type": "string"
-        },
-        "automated": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "testrun_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "testruns_delete",
-    "description": "Delete testrun (/api/v2/{project_id}/testruns/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "testrun_id": {
-          "type": "integer"
-        }
-      },
-      "required": [
-        "testrun_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "testruns_issues_list",
-    "description": "List linked issues for a testrun (/api/v2/{project_id}/issues?testrun_id=...)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "testrun_id": {
-          "type": "integer"
-        },
-        "page": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "per_page": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "source": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "testrun_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "testruns_issues_link",
-    "description": "Link issue to a testrun (/api/v2/{project_id}/issues)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "testrun_id": {
-          "type": "integer"
-        },
-        "url": {
-          "type": "string"
-        },
-        "jira_id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "testrun_id"
-      ],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "testruns_issues_unlink",
-    "description": "Unlink issue from a testrun (/api/v2/{project_id}/issues/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "issue_id": {
-          "type": "integer"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "issue",
-            "jira_issue"
-          ]
-        }
-      },
-      "required": [
-        "issue_id",
-        "type"
-      ],
-      "additionalProperties": false
-    }
-  }
-];
+};
+
+export const TESTRUNS_TOOL = buildEntityTool(TESTRUNS_TOOL_SPEC);

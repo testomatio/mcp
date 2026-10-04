@@ -1,43 +1,21 @@
-export const TAGS_TOOLS = [
-  {
-    "name": "tags_list",
-    "description": "List tags with counts (/api/v2/{project_id}/tags)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": false
-    }
+import { buildEntityTool } from './entity-tool.js';
+
+export const TAGS_TOOL_SPEC = {
+  name: 'tags',
+  summary: 'Tags: list with counts and get tests by tag (/api/v2/{project_id}/tags)',
+  commands: {
+    list: 'List tags with counts',
+    get: 'Get tests by tag title (tag_id)',
+    search: 'Search by tag title (delegates to get)',
   },
-  {
-    "name": "tags_get",
-    "description": "Get tests by tag title (/api/v2/{project_id}/tags/{id})",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "tag_id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "tag_id"
-      ],
-      "additionalProperties": false
-    }
+  params: {
+    tag_id: {
+      commands: ['get', 'search'],
+      type: 'string',
+      description: 'Tag title to look up',
+    },
+    query: { commands: ['search'], type: 'string' },
   },
-  {
-    "name": "tags_search",
-    "description": "Search by tag title (delegates to tags_get)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "tag_id": {
-          "type": "string"
-        },
-        "query": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    }
-  }
-];
+};
+
+export const TAGS_TOOL = buildEntityTool(TAGS_TOOL_SPEC);
