@@ -1785,14 +1785,17 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | days | integer | No | Lookback window in days |
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
-| envs | string | No | Comma-separated execution environments |
+| envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| min | number | No | Flaky rate lower bound, only for `flaky` |
-| max | number | No | Flaky rate upper bound, only for `flaky` |
+| min | number | No | Pass rate lower bound (0-1, default 0.1), only for `flaky` |
+| max | number | No | Pass rate upper bound (0-1, default 0.9), only for `flaky` |
+| order_by | string | No | `flakiness` (default, closest to 50/50 first) or `pass_rate` (lowest pass rate first), only for `flaky` |
 | threshold_ms | integer | No | Duration threshold, only for `slow` |
 | maturity_days | integer | No | Minimum test age, only for `never-executed` |
 | run | string | No | Scope to one run UID, only for `flaky` and `slow` |
+
+For `flaky`, each row includes `pass_rate` (0-1, same scale as `min`/`max`) and `flakiness` (0-1, peaks at 1.0 for an even pass/fail split). `flaky_rate` is deprecated (raw 2-3 scale).
 
 **Example:**
 ```json
@@ -1826,7 +1829,7 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | days | integer | No | Lookback window in days |
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
-| envs | string | No | Comma-separated execution environments |
+| envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
 
 **Example:**
 ```json

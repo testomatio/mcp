@@ -46,7 +46,8 @@ const commonAnalyticsProperties = {
   },
   envs: {
     type: 'string',
-    description: 'Comma-separated execution environments, for example: staging,production.',
+    description:
+      'Comma-separated execution environments, for example: staging,production. Values must exactly match (case-sensitive) the project environments returned by `project_info`; an unknown value returns 422 with the valid list in `known_environments`.',
   },
 };
 
@@ -54,7 +55,7 @@ export const ANALYTICS_TOOLS = withListOptions([
   {
     name: 'analytics_tests',
     description:
-      `Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. ${ANALYTICS_TESTS_TQL_REFERENCE}`,
+      `Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. For kind=flaky, each row has \`pass_rate\` (0-1, share of passed executions; same scale as min/max) and \`flakiness\` (0-1, 1.0 = even pass/fail split, 0 = always passing or always failing); \`flaky_rate\` is deprecated (raw 2-3 scale), ignore it. ${ANALYTICS_TESTS_TQL_REFERENCE}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -81,13 +82,19 @@ export const ANALYTICS_TOOLS = withListOptions([
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: 'Flaky rate lower bound. Applies only to kind=flaky.',
+          description: 'Pass rate lower bound (0-1, default 0.1). Applies only to kind=flaky.',
         },
         max: {
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: 'Flaky rate upper bound. Applies only to kind=flaky.',
+          description: 'Pass rate upper bound (0-1, default 0.9). Applies only to kind=flaky.',
+        },
+        order_by: {
+          type: 'string',
+          enum: ['flakiness', 'pass_rate'],
+          description:
+            'Sort order for kind=flaky. `flakiness` (default) ranks tests closest to a 50/50 pass/fail split first; `pass_rate` ranks lowest pass rate first (mostly broken tests on top). Applies only to kind=flaky.',
         },
         threshold_ms: {
           type: 'integer',
@@ -271,6 +278,7 @@ function analyticsTests({
   per_page: perPage,
   min,
   max,
+  order_by: orderBy,
   threshold_ms: thresholdMs,
   maturity_days: maturityDays,
   run,
@@ -286,6 +294,7 @@ function analyticsTests({
     per_page: perPage,
     min,
     max,
+    order_by: orderBy,
     threshold_ms: thresholdMs,
     maturity_days: maturityDays,
     run,
