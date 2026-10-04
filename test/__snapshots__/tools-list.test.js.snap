@@ -912,6 +912,48 @@ exports[`tools/list > returns the full tool catalog 1`] = `
       "name": "runs_get",
     },
     {
+      "description": "Break down one run's testruns by suite, tag, label, assignee, or priority (/api/v2/{project_id}/runs/{id}/stats/{dimension}). Each row has passed_count, failed_count, skipped_count, pending_count for its group — answers "which areas/owners are affected by this run's failures". Paginated with a fixed page size; meta uses page/perPage/totalCount/totalPages.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dimension": {
+            "enum": [
+              "suites",
+              "tags",
+              "labels",
+              "assignees",
+              "priorities",
+            ],
+            "type": "string",
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+          },
+          "run_id": {
+            "type": "string",
+          },
+          "sort_direction": {
+            "enum": [
+              "asc",
+              "desc",
+            ],
+            "type": "string",
+          },
+          "sort_field": {
+            "description": "Column to sort by, e.g. failed_count.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "run_id",
+          "dimension",
+        ],
+        "type": "object",
+      },
+      "name": "runs_stats",
+    },
+    {
       "description": "Create run (/api/v2/{project_id}/runs)",
       "inputSchema": {
         "additionalProperties": false,

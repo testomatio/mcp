@@ -632,6 +632,23 @@ Get a specific run by ID.
 
 ---
 
+### runs_stats
+
+Break down one run's testruns by a dimension. Each row carries `passed_count`, `failed_count`, `skipped_count`, `pending_count` for its group — answers "which areas/owners are affected by this run's failures". Paginated with a fixed page size; `meta` uses `page`/`perPage`/`totalCount`/`totalPages`.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| run_id | string | Yes | Run ID |
+| dimension | string | Yes | `suites`, `tags`, `labels`, `assignees`, or `priorities` |
+| page | integer | No | Page number |
+| sort_field | string | No | Column to sort by, e.g. `failed_count` |
+| sort_direction | string | No | `asc` or `desc` |
+
+**API Endpoint:** `GET /api/v2/{project_id}/runs/{id}/stats/{dimension}`
+
+---
+
 ### runs_create
 
 Create a new test run.
@@ -1794,8 +1811,13 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | threshold_ms | integer | No | Duration threshold, only for `slow` |
 | maturity_days | integer | No | Minimum test age, only for `never-executed` |
 | run | string | No | Scope to one run UID, only for `flaky` and `slow` |
+| group_by | string | No | `suite`, `priority`, `tag`, `label`, `env`, or `test` — return aggregate counts instead of a test list. Only for `failing`, `skipped`, `flaky`, `slow`, `never-executed` (`env` not supported for `never-executed`; `test` only for `slow`); other combinations return 422 |
 
 For `flaky`, each row includes `pass_rate` (0-1, same scale as `min`/`max`) and `flakiness` (0-1, peaks at 1.0 for an even pass/fail split). `flaky_rate` is deprecated (raw 2-3 scale).
+
+With `group_by`, the response is `{ data: [{ key, label, test_count }], meta: { group_by, kind, total_groups } }`, sorted by `test_count` descending and not paginated. `key` is the suite UID for `suite` (with `label` = suite title); for the other dimensions `key` and `label` are the value itself.
+
+`group_by=test` (only for `slow`) returns per-test time stats instead of counts: `key` (test UID), `label` (title), `executions`, `avg_run_time`, `max_run_time`, `p95_run_time`, `total_run_time`, sorted by `total_run_time` descending. Stats cover every execution in the period that meets `threshold_ms`, not just the latest one.
 
 **Example:**
 ```json
@@ -1824,12 +1846,19 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| kind | string | Yes | One of: `project-summary`, `runs-summary`, `success-rate-by-date`, `automation-rate-by-date`, `testruns-by-date`, `priority-by-date` |
+| kind | string | Yes | See kinds below |
 | q | string | No | TQL filter, for example `tag IN ['@smoke']` |
 | days | integer | No | Lookback window in days |
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
 | envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
+| milestone | string | No | Milestone slug (`id` from `milestones_list`). Required for `milestone-*` kinds — without it they return an empty result, not an error. Unknown slug returns 422 |
+
+**Kinds:**
+- Trend series (one row per day): `success-rate-by-date`, `automation-rate-by-date`, `automation-by-date`, `testruns-by-date`, `priority-by-date`
+- Priority breakdowns: `failed-runs-by-priority`, `run-results-by-priority-status`, and their `latest-*` variants (`latest-failed-runs-by-priority`, `latest-run-results-by-priority-status` — most recent run only)
+- Summaries: `project-summary`, `runs-summary`
+- Sprint/release reporting (require `milestone`): `milestone-completion`, `milestone-tests`, `milestone-runs`, `milestone-plans`, `milestone-requirements`, `milestone-users`
 
 **Example:**
 ```json

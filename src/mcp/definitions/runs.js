@@ -44,6 +44,48 @@ export const RUNS_TOOLS = [
     }
   },
   {
+    "name": "runs_stats",
+    "description": "Break down one run's testruns by suite, tag, label, assignee, or priority (/api/v2/{project_id}/runs/{id}/stats/{dimension}). Each row has passed_count, failed_count, skipped_count, pending_count for its group — answers \"which areas/owners are affected by this run's failures\". Paginated with a fixed page size; meta uses page/perPage/totalCount/totalPages.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string",
+          "enum": [
+            "suites",
+            "tags",
+            "labels",
+            "assignees",
+            "priorities"
+          ]
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sort_field": {
+          "type": "string",
+          "description": "Column to sort by, e.g. failed_count."
+        },
+        "sort_direction": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        }
+      },
+      "required": [
+        "run_id",
+        "dimension"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "runs_create",
     "description": "Create run (/api/v2/{project_id}/runs)",
     "inputSchema": {

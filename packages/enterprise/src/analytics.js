@@ -26,8 +26,19 @@ const ANALYTICS_STATS_KINDS = [
   'runs-summary',
   'success-rate-by-date',
   'automation-rate-by-date',
+  'automation-by-date',
   'testruns-by-date',
   'priority-by-date',
+  'failed-runs-by-priority',
+  'latest-failed-runs-by-priority',
+  'run-results-by-priority-status',
+  'latest-run-results-by-priority-status',
+  'milestone-completion',
+  'milestone-tests',
+  'milestone-runs',
+  'milestone-plans',
+  'milestone-requirements',
+  'milestone-users',
 ];
 
 const commonAnalyticsProperties = {
@@ -110,6 +121,12 @@ export const ANALYTICS_TOOLS = withListOptions([
           type: 'string',
           description: 'Scope results to one run UID. Applies only to kind=flaky or kind=slow.',
         },
+        group_by: {
+          type: 'string',
+          enum: ['suite', 'priority', 'tag', 'label', 'env', 'test'],
+          description:
+            'Return aggregate counts instead of a test list: rows of {key, label, test_count} sorted by test_count descending, not paginated. `key` is the suite UID for suite (label = suite title); the value itself for priority/tag/label/env. Supported only for kind=failing, skipped, flaky, slow, never-executed (`env` not supported for never-executed); other combinations return 422. `test` is supported only for kind=slow: rows of {key (test UID), label (title), executions, avg_run_time, max_run_time, p95_run_time, total_run_time} sorted by total_run_time descending (biggest CI-time consumers first), aggregated over every execution in the period that meets threshold_ms.',
+        },
       },
       required: ['kind'],
       additionalProperties: false,
@@ -125,13 +142,19 @@ export const ANALYTICS_TOOLS = withListOptions([
         kind: {
           type: 'string',
           enum: ANALYTICS_STATS_KINDS,
-          description: 'Aggregated analytics report kind.',
+          description:
+            'Aggregated analytics report kind. Trend series (one row per day): success-rate-by-date, automation-rate-by-date, automation-by-date, testruns-by-date, priority-by-date. Priority breakdowns: failed-runs-by-priority, run-results-by-priority-status, and their latest-* variants (most recent run only). Summaries: project-summary, runs-summary. Sprint/release reporting: milestone-completion, milestone-tests, milestone-runs, milestone-plans, milestone-requirements, milestone-users (require `milestone`).',
         },
         q: {
           type: 'string',
           description: ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
         },
         ...commonAnalyticsProperties,
+        milestone: {
+          type: 'string',
+          description:
+            'Milestone slug (the `id` returned by milestones_list). Required for milestone-* kinds: without it they return an empty result, not an error. An unknown slug returns 422. Ignored by other kinds.',
+        },
       },
       required: ['kind'],
       additionalProperties: false,
@@ -282,6 +305,7 @@ function analyticsTests({
   threshold_ms: thresholdMs,
   maturity_days: maturityDays,
   run,
+  group_by: groupBy,
   slim,
 } = {}) {
   return this.apiClient.list(`analytics/tests/${this.pickRequiredArg({ kind }, 'kind')}`, {
@@ -298,16 +322,18 @@ function analyticsTests({
     threshold_ms: thresholdMs,
     maturity_days: maturityDays,
     run,
+    group_by: groupBy,
     slim,
   });
 }
 
-function analyticsStats({ kind, q, days, from, to, envs } = {}) {
+function analyticsStats({ kind, q, days, from, to, envs, milestone } = {}) {
   return this.apiClient.list(`analytics/stats/${this.pickRequiredArg({ kind }, 'kind')}`, {
     q,
     days,
     from,
     to,
+    milestone,
     envs,
   });
 }
