@@ -26,8 +26,19 @@ const ANALYTICS_STATS_KINDS = [
   'runs-summary',
   'success-rate-by-date',
   'automation-rate-by-date',
+  'automation-by-date',
   'testruns-by-date',
   'priority-by-date',
+  'failed-runs-by-priority',
+  'latest-failed-runs-by-priority',
+  'run-results-by-priority-status',
+  'latest-run-results-by-priority-status',
+  'milestone-completion',
+  'milestone-tests',
+  'milestone-runs',
+  'milestone-plans',
+  'milestone-requirements',
+  'milestone-users',
 ];
 
 const commonAnalyticsProperties = {
@@ -46,7 +57,8 @@ const commonAnalyticsProperties = {
   },
   envs: {
     type: 'string',
-    description: 'Comma-separated execution environments, for example: staging,production.',
+    description:
+      'Comma-separated execution environments, for example: staging,production. Values must exactly match (case-sensitive) the project environments returned by `project_info`; an unknown value returns 422 with the valid list in `known_environments`.',
   },
 };
 
@@ -54,7 +66,7 @@ export const ANALYTICS_TOOLS = withListOptions([
   {
     name: 'analytics_tests',
     description:
-      `Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. ${ANALYTICS_TESTS_TQL_REFERENCE}`,
+      `Enterprise analytics: list tests matching an analytics report (/api/v2/{project_id}/analytics/tests/{kind}). Requires api_analytics subscription feature. For kind=flaky, each row has \`pass_rate\` (0-1, share of passed executions; same scale as min/max) and \`flakiness\` (0-1, 1.0 = even pass/fail split, 0 = always passing or always failing); \`flaky_rate\` is deprecated (raw 2-3 scale), ignore it. ${ANALYTICS_TESTS_TQL_REFERENCE}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -81,13 +93,19 @@ export const ANALYTICS_TOOLS = withListOptions([
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: 'Flaky rate lower bound. Applies only to kind=flaky.',
+          description: 'Pass rate lower bound (0-1, default 0.1). Applies only to kind=flaky.',
         },
         max: {
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: 'Flaky rate upper bound. Applies only to kind=flaky.',
+          description: 'Pass rate upper bound (0-1, default 0.9). Applies only to kind=flaky.',
+        },
+        order_by: {
+          type: 'string',
+          enum: ['flakiness', 'pass_rate'],
+          description:
+            'Sort order for kind=flaky. `flakiness` (default) ranks tests closest to a 50/50 pass/fail split first; `pass_rate` ranks lowest pass rate first (mostly broken tests on top). Applies only to kind=flaky.',
         },
         threshold_ms: {
           type: 'integer',
@@ -102,6 +120,12 @@ export const ANALYTICS_TOOLS = withListOptions([
         run: {
           type: 'string',
           description: 'Scope results to one run UID. Applies only to kind=flaky or kind=slow.',
+        },
+        group_by: {
+          type: 'string',
+          enum: ['suite', 'priority', 'tag', 'label', 'env', 'test'],
+          description:
+            'Return aggregate counts instead of a test list: rows of {key, label, test_count} sorted by test_count descending, not paginated. `key` is the suite UID for suite (label = suite title); the value itself for priority/tag/label/env. Supported only for kind=failing, skipped, flaky, slow, never-executed (`env` not supported for never-executed); other combinations return 422. `test` is supported only for kind=slow: rows of {key (test UID), label (title), executions, avg_run_time, max_run_time, p95_run_time, total_run_time} sorted by total_run_time descending (biggest CI-time consumers first), aggregated over every execution in the period that meets threshold_ms.',
         },
       },
       required: ['kind'],
@@ -118,13 +142,31 @@ export const ANALYTICS_TOOLS = withListOptions([
         kind: {
           type: 'string',
           enum: ANALYTICS_STATS_KINDS,
-          description: 'Aggregated analytics report kind.',
+          description:
+            'Aggregated analytics report kind. Trend series (one row per day): success-rate-by-date, automation-rate-by-date, automation-by-date, testruns-by-date, priority-by-date. Priority breakdowns: failed-runs-by-priority, run-results-by-priority-status, and their latest-* variants (most recent run only). Summaries: project-summary, runs-summary. Sprint/release reporting: milestone-completion, milestone-tests, milestone-runs, milestone-plans, milestone-requirements, milestone-users (require `milestone`).',
         },
         q: {
           type: 'string',
           description: ANALYTICS_STATS_TQL_INPUT_DESCRIPTION,
         },
         ...commonAnalyticsProperties,
+        page: {
+          type: 'integer',
+          minimum: 1,
+          description:
+            'Page number. Applies only to runs-summary and milestone-runs, which are always paginated (defaults page=1, per_page=30) — check meta.total/meta.total_pages to fetch the rest. Ignored by other kinds.',
+        },
+        per_page: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 100,
+          description: 'Rows per page (default 30). Applies only to runs-summary and milestone-runs.',
+        },
+        milestone: {
+          type: 'string',
+          description:
+            'Milestone slug (the `id` returned by the `milestones` tool, `list` command). Required for milestone-* kinds: without it they return an empty result, not an error. An unknown slug returns 422. Ignored by other kinds.',
+        },
       },
       required: ['kind'],
       additionalProperties: false,
@@ -271,9 +313,11 @@ function analyticsTests({
   per_page: perPage,
   min,
   max,
+  order_by: orderBy,
   threshold_ms: thresholdMs,
   maturity_days: maturityDays,
   run,
+  group_by: groupBy,
   slim,
 } = {}) {
   return this.apiClient.list(`analytics/tests/${this.pickRequiredArg({ kind }, 'kind')}`, {
@@ -286,20 +330,25 @@ function analyticsTests({
     per_page: perPage,
     min,
     max,
+    order_by: orderBy,
     threshold_ms: thresholdMs,
     maturity_days: maturityDays,
     run,
+    group_by: groupBy,
     slim,
   });
 }
 
-function analyticsStats({ kind, q, days, from, to, envs } = {}) {
+function analyticsStats({ kind, q, days, from, to, envs, milestone, page, per_page: perPage } = {}) {
   return this.apiClient.list(`analytics/stats/${this.pickRequiredArg({ kind }, 'kind')}`, {
     q,
     days,
     from,
     to,
+    milestone,
     envs,
+    page,
+    per_page: perPage,
   });
 }
 

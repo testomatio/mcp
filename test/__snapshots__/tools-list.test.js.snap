@@ -477,13 +477,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "string",
           },
           "command": {
-            "description": "CLI-style operation to perform. list: List runs (tql filter, pagination) | get: Get run by ID | create: Create run (title required) | update: Update run by ID | delete: Delete run by ID | issues_list: List linked issues for a run | issues_link: Link issue to a run (url or jira_id) | issues_unlink: Unlink issue from a run",
+            "description": "CLI-style operation to perform. list: List runs (tql filter, pagination) | get: Get run by ID | create: Create run (title required) | update: Update run by ID | delete: Delete run by ID | stats: Break down one run's testruns by suite, tag, label, assignee, or priority (/api/v2/{project_id}/runs/{id}/stats/{dimension}). Each row has passed_count, failed_count, skipped_count, pending_count for its group — answers "which areas/owners are affected by this run's failures". Paginated with a fixed page size; meta uses page/perPage/totalCount/totalPages | issues_list: List linked issues for a run | issues_link: Link issue to a run (url or jira_id) | issues_unlink: Unlink issue from a run",
             "enum": [
               "list",
               "get",
               "create",
               "update",
               "delete",
+              "stats",
               "issues_list",
               "issues_link",
               "issues_unlink",
@@ -496,6 +497,17 @@ exports[`tools/list > returns the full tool catalog 1`] = `
           },
           "description": {
             "description": "(create|update)",
+            "type": "string",
+          },
+          "dimension": {
+            "description": "(stats)",
+            "enum": [
+              "suites",
+              "tags",
+              "labels",
+              "assignees",
+              "priorities",
+            ],
             "type": "string",
           },
           "env": {
@@ -574,7 +586,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "array",
           },
           "page": {
-            "description": "(list|issues_list)",
+            "description": "(list|issues_list|stats)",
             "minimum": 1,
             "type": "integer",
           },
@@ -592,11 +604,23 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "array",
           },
           "run_id": {
-            "description": "(get|update|delete|issues_list|issues_link)",
+            "description": "(get|update|delete|stats|issues_list|issues_link)",
             "type": "string",
           },
           "rungroup_id": {
             "description": "(create|update)",
+            "type": "string",
+          },
+          "sort_direction": {
+            "description": "(stats)",
+            "enum": [
+              "asc",
+              "desc",
+            ],
+            "type": "string",
+          },
+          "sort_field": {
+            "description": "(stats) Column to sort by, e.g. failed_count.",
             "type": "string",
           },
           "source": {
@@ -811,6 +835,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "description": "(create|update)",
             "type": "string",
           },
+          "order": {
+            "description": "(list) Sort direction. Defaults to asc.",
+            "enum": [
+              "asc",
+              "desc",
+            ],
+            "type": "string",
+          },
           "page": {
             "description": "(list|issues_list)",
             "minimum": 1,
@@ -839,6 +871,16 @@ exports[`tools/list > returns the full tool catalog 1`] = `
               "array",
               "string",
             ],
+          },
+          "sort": {
+            "description": "(list) Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first.",
+            "enum": [
+              "created_at",
+              "suite",
+              "testcase",
+              "failure",
+            ],
+            "type": "string",
           },
           "source": {
             "description": "(issues_list) Filter issues by source (e.g. jira)",

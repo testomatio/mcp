@@ -37,6 +37,18 @@ export const TESTRUNS_TOOL_SPEC = {
     },
     test_id: { commands: ['create', 'update'], type: 'string' },
     test_ids: { commands: ['list'], ...arrayOrString },
+    sort: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['created_at', 'suite', 'testcase', 'failure'],
+      description: 'Sort field. Default order is oldest-first — use created_at with order=desc to get the most recent executions first.',
+    },
+    order: {
+      commands: ['list'],
+      type: 'string',
+      enum: ['asc', 'desc'],
+      description: 'Sort direction. Defaults to asc.',
+    },
     status: {
       commands: ['create', 'update'],
       type: 'string',

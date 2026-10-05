@@ -2,6 +2,7 @@ import { ENTITY_CRUD_CONFIGS } from '../configs/entity-crud-config.js';
 import { ATTACHMENT_SCOPED_TOOL_CONFIGS } from '../configs/attachments-config.js';
 import { ISSUE_SCOPED_TOOL_CONFIGS } from '../configs/issues-config.js';
 import { backendSlimQuery, slimList } from '../list-projection.js';
+import { encodePathParameter } from '../../core/path-segment.js';
 
 export const handlerMethods = {
   registerEntityCrudHandlers(handlers) {
@@ -111,6 +112,18 @@ export const handlerMethods = {
 
   registerGlobalHandlers(handlers) {
     handlers.project_info = async () => this.asText(await this.apiClient.get('info'));
+
+    handlers.runs_stats = async (args = {}) => {
+      const runId = encodePathParameter(this.pickRequiredArg(args, 'run_id'), 'Run ID');
+      const dimension = encodePathParameter(this.pickRequiredArg(args, 'dimension'), 'Dimension');
+      return this.asText(
+        await this.apiClient.list(`runs/${runId}/stats/${dimension}`, {
+          page: args.page,
+          sort_field: args.sort_field,
+          sort_direction: args.sort_direction,
+        })
+      );
+    };
 
     handlers.tags_list = async (args = {}) => {
       const { verbose, fields, ...listArgs } = args;

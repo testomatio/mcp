@@ -53,7 +53,7 @@ Every exposed tool's schema is sent to the model on each call, so the tool set h
 |---------|-------------|
 | `full` (default) | All tools with all commands |
 | `core` | Core entities with all commands. Excludes the `steps`, `snippets`, `labels`, `rungroups` tools |
-| `read` | Core entities restricted to read-only commands (`list`, `get`, `search`, `issues_list`, `attachments_list`) |
+| `read` | Core entities restricted to read-only commands (`list`, `get`, `search`, `stats`, `issues_list`, `attachments_list`) |
 
 ```bash
 testomatio-mcp --token <PROJECT_TOKEN> --project <PROJECT_ID> --tools core
@@ -259,13 +259,17 @@ Manage runs. `/api/v2/{project_id}/runs`
 | `create` | Create run | `title` |
 | `update` | Update run (status transitions via `status_event`) | `run_id` |
 | `delete` | Delete run | `run_id` |
+| `stats` | Break down one run's testruns by a dimension (`GET /api/v2/{project_id}/runs/{id}/stats/{dimension}`) | `run_id`, `dimension` |
 | `issues_list` / `issues_link` / `issues_unlink` | Scoped issue operations | as on `tests` (with `run_id`) |
 
 **Parameters:**
 
 | Name | Type | Commands | Description |
 |------|------|----------|-------------|
-| run_id | string | get, update, delete, issues_list, issues_link | Run ID |
+| run_id | string | get, update, delete, stats, issues_list, issues_link | Run ID |
+| dimension | string | stats | `suites`, `tags`, `labels`, `assignees`, or `priorities` |
+| sort_field | string | stats | Column to sort by, e.g. `failed_count` |
+| sort_direction | string | stats | `asc` or `desc` |
 | title | string | create, update | Run title |
 | description | string | create, update | Run description |
 | plan_ids | string[] | create | Plans to include |
@@ -282,6 +286,9 @@ Manage runs. `/api/v2/{project_id}/runs`
 | tql | string | list | TQL filter for runs |
 | branch | string | list, get, create, update, delete | Branch slug, see [Branch Scoping](#branch-scoping) |
 | page / per_page | integer | list, issues_list | Pagination |
+| page | integer | stats | Page number (`stats` has a fixed page size, no `per_page`) |
+
+`stats` rows carry `passed_count`, `failed_count`, `skipped_count`, `pending_count` for their group — answers "which areas/owners are affected by this run's failures". `meta` uses `page`/`perPage`/`totalCount`/`totalPages`.
 
 **Example — finish a run:**
 ```json
@@ -317,6 +324,8 @@ Manage individual test runs (result records inside a run). `/api/v2/{project_id}
 | run_id | string | list, create, update | list: filter by run; create/update: the owning run |
 | test_id | string | create, update | Test reference |
 | test_ids | string \| string[] | list | Filter by tests |
+| sort | string | list | `created_at`, `suite`, `testcase`, or `failure`. Default order is oldest-first — use `created_at` with `order=desc` for the most recent executions |
+| order | string | list | `asc` (default) or `desc` |
 | status | string | create, update | `passed`, `failed`, `skipped`, `pending` |
 | message | string | create, update | Result message |
 | run_time | number | create, update | Execution time |
@@ -664,14 +673,22 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 | days | integer | No | Lookback window in days |
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
-| envs | string | No | Comma-separated execution environments |
+| envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
 | page | integer | No | Page number |
 | per_page | integer | No | Items per page |
-| min | number | No | Flaky rate lower bound, only for `flaky` |
-| max | number | No | Flaky rate upper bound, only for `flaky` |
+| min | number | No | Pass rate lower bound (0-1, default 0.1), only for `flaky` |
+| max | number | No | Pass rate upper bound (0-1, default 0.9), only for `flaky` |
+| order_by | string | No | `flakiness` (default, closest to 50/50 first) or `pass_rate` (lowest pass rate first), only for `flaky` |
 | threshold_ms | integer | No | Duration threshold, only for `slow` |
 | maturity_days | integer | No | Minimum test age, only for `never-executed` |
 | run | string | No | Scope to one run UID, only for `flaky` and `slow` |
+| group_by | string | No | `suite`, `priority`, `tag`, `label`, `env`, or `test` — return aggregate counts instead of a test list. Only for `failing`, `skipped`, `flaky`, `slow`, `never-executed` (`env` not supported for `never-executed`; `test` only for `slow`); other combinations return 422 |
+
+For `flaky`, each row includes `pass_rate` (0-1, same scale as `min`/`max`) and `flakiness` (0-1, peaks at 1.0 for an even pass/fail split). `flaky_rate` is deprecated (raw 2-3 scale).
+
+With `group_by`, the response is `{ data: [{ key, label, test_count }], meta: { group_by, kind, total_groups } }`, sorted by `test_count` descending and not paginated. `key` is the suite UID for `suite` (with `label` = suite title); for the other dimensions `key` and `label` are the value itself.
+
+`group_by=test` (only for `slow`) returns per-test time stats instead of counts: `key` (test UID), `label` (title), `executions`, `avg_run_time`, `max_run_time`, `p95_run_time`, `total_run_time`, sorted by `total_run_time` descending. Stats cover every execution in the period that meets `threshold_ms`, not just the latest one.
 
 **Example:**
 ```json
@@ -700,12 +717,21 @@ Use `q` as the TQL filter parameter. The API parameter name is `q`, not `tql`.
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| kind | string | Yes | One of: `project-summary`, `runs-summary`, `success-rate-by-date`, `automation-rate-by-date`, `testruns-by-date`, `priority-by-date` |
+| kind | string | Yes | See kinds below |
 | q | string | No | TQL filter, for example `tag IN ['@smoke']` |
 | days | integer | No | Lookback window in days |
 | from | string | No | Inclusive start date in YYYY-MM-DD format |
 | to | string | No | Inclusive end date in YYYY-MM-DD format |
-| envs | string | No | Comma-separated execution environments |
+| envs | string | No | Comma-separated execution environments; must exactly match `project_info` environments (422 with `known_environments` otherwise) |
+| milestone | string | No | Milestone slug (`id` from the `milestones` tool, `list` command). Required for `milestone-*` kinds — without it they return an empty result, not an error. Unknown slug returns 422 |
+| page | integer | No | Page number. Only for `runs-summary` and `milestone-runs`, which are always paginated (default `page=1`, `per_page=30`; `meta.total`/`meta.total_pages` always present). Ignored by other kinds |
+| per_page | integer | No | Rows per page (default 30, max 100). Only for `runs-summary` and `milestone-runs` |
+
+**Kinds:**
+- Trend series (one row per day): `success-rate-by-date`, `automation-rate-by-date`, `automation-by-date`, `testruns-by-date`, `priority-by-date`
+- Priority breakdowns: `failed-runs-by-priority`, `run-results-by-priority-status`, and their `latest-*` variants (`latest-failed-runs-by-priority`, `latest-run-results-by-priority-status` — most recent run only)
+- Summaries: `project-summary`, `runs-summary`
+- Sprint/release reporting (require `milestone`): `milestone-completion`, `milestone-tests`, `milestone-runs`, `milestone-plans`, `milestone-requirements`, `milestone-users`
 
 **Example:**
 ```json

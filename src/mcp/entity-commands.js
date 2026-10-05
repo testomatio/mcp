@@ -5,7 +5,7 @@ const ATTACHMENT_COMMANDS = ['attachments_list', 'attachments_upload', 'attachme
 export const ENTITY_COMMANDS = {
   tests: [...CRUD_COMMANDS, 'share', 'unshare', ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
   suites: [...CRUD_COMMANDS, 'share', 'unshare', ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
-  runs: [...CRUD_COMMANDS, ...ISSUE_COMMANDS],
+  runs: [...CRUD_COMMANDS, 'stats', ...ISSUE_COMMANDS],
   testruns: [...CRUD_COMMANDS, ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
   plans: [...CRUD_COMMANDS, ...ISSUE_COMMANDS],
   rungroups: [...CRUD_COMMANDS],
@@ -23,6 +23,7 @@ export const READ_ONLY_COMMANDS = new Set([
   'list',
   'get',
   'search',
+  'stats',
   'issues_list',
   'attachments_list',
 ]);
