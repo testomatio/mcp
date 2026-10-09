@@ -3,7 +3,7 @@ const ISSUE_COMMANDS = ['issues_list', 'issues_link', 'issues_unlink'];
 const ATTACHMENT_COMMANDS = ['attachments_list', 'attachments_upload', 'attachments_delete'];
 
 export const ENTITY_COMMANDS = {
-  tests: [...CRUD_COMMANDS, 'share', 'unshare', ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
+  tests: [...CRUD_COMMANDS, 'bulk_upsert', 'share', 'unshare', ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
   suites: [...CRUD_COMMANDS, 'share', 'unshare', ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],
   runs: [...CRUD_COMMANDS, 'stats', ...ISSUE_COMMANDS],
   testruns: [...CRUD_COMMANDS, ...ISSUE_COMMANDS, ...ATTACHMENT_COMMANDS],

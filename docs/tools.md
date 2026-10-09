@@ -126,6 +126,7 @@ Manage tests. `/api/v2/{project_id}/tests`
 | `create` | Create test | `title`, `suite_id` |
 | `update` | Update test | `test_id` |
 | `delete` | Delete test | `test_id` |
+| `bulk_upsert` | Bulk create/update tests from a [classical tests markdown](https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/) document | `markdown` |
 | `share` | Share tests into a suite of another project | `target_project_id`, `target_suite_id`, plus a selection (`test_ids` and/or `labels`) |
 | `unshare` | Remove a test's share (converts the shared copy back into a regular test) | `test_id` |
 | `issues_list` | List linked issues for a test | `test_id` |
@@ -151,7 +152,10 @@ Manage tests. `/api/v2/{project_id}/tests`
 | sync | boolean | update | Sync flags |
 | link | array | create, update | Link actions, see [Link Parameter Structure](#link-parameter-structure) |
 | tql | string | list | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
-| branch | string | list, get, create, update, delete | Branch slug, see [Branch Scoping](#branch-scoping) |
+| markdown | string | bulk_upsert | Markdown document in the testomat.io classical tests format: suite blocks (`<!-- suite ... -->`) containing test blocks (`<!-- test ... -->`), each followed by a title heading and a description |
+| dry_run | boolean | bulk_upsert | Parse the document and report the planned actions without writing anything (default: false) |
+| create_missing_suites | boolean | bulk_upsert | Create suites that cannot be resolved by id or title (default: true). When false, tests of unresolved suites are reported as errors |
+| branch | string | list, get, create, update, delete, bulk_upsert | Branch slug, see [Branch Scoping](#branch-scoping) |
 | page / per_page | integer | list, issues_list | Pagination |
 | source | string | issues_list | Filter issues by source (e.g. `jira`) |
 | url | string | issues_link | Issue URL to link |
@@ -198,6 +202,20 @@ Manage tests. `/api/v2/{project_id}/tests`
   }
 }
 ```
+
+```json
+{
+  "name": "tests",
+  "arguments": {
+    "command": "bulk_upsert",
+    "markdown": "<!-- suite\nid: @S380c64db\n-->\n# Login Functionality\n<!-- test\nid: @T12345678\npriority: high\n-->\n# Successful Login\n## Steps\n* Navigate to the login page\n  *Expected*: Login form is displayed\n<!-- test -->\n# Failed Login\n## Steps\n* Enter invalid credentials\n  *Expected*: Error message is displayed"
+  }
+}
+```
+
+**Bulk upsert semantics:** tests with an `id: @T...` in their metadata are updated, tests without an id are created. Suites are resolved by `id: @S...` or title, and created when missing (`create_missing_suites`). Limits are 100 tests and 25 suites per call; documents are sent to the backend in batches of 50. `tags`/`labels` from the markdown are parsed but not applied — the bulk endpoint does not support them; affected calls return a `warnings` list. Per-test failures do not stop the batch: the response contains `stats` (suites created/reused, tests created/updated, errors), `created`/`updated` lists, per-test `errors`, and `warnings`. With `dry_run: true` the document is only parsed and the planned actions reported.
+
+**API Endpoint:** `POST /api/v2/{project_id}/tests/bulk`
 
 ---
 

@@ -6,6 +6,7 @@ import { TOOL_DEFINITIONS } from './tool-definitions.js';
 import { TQL_FULL_REFERENCE } from './definitions/tql-reference.js';
 import { handlerMethods } from './registry/handlers.js';
 import { attachmentMethods } from './registry/attachments.js';
+import { bulkMethods } from './registry/bulk-upsert.js';
 import { issueMethods } from './registry/issues.js';
 import { listingMethods } from './registry/listings.js';
 import { payloadMethods } from './registry/payloads.js';
@@ -76,6 +77,7 @@ export class ToolRegistry {
     this.registerScopedAttachmentHandlers(ops);
     this.registerGlobalHandlers(ops);
     this.registerShareHandlers(ops);
+    this.registerBulkHandlers(ops);
     for (const registerHandlers of this.handlerRegistrars) {
       registerHandlers.call(this, ops);
     }
@@ -140,5 +142,6 @@ Object.assign(
   listingMethods,
   issueMethods,
   payloadMethods,
-  shareMethods
+  shareMethods,
+  bulkMethods
 );

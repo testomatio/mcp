@@ -250,6 +250,19 @@ Every entity tool works like a CLI: pass `command` plus the params that command 
 }
 ```
 
+**Bulk create/update tests from markdown:**
+```json
+{
+  "name": "tests",
+  "arguments": {
+    "command": "bulk_upsert",
+    "markdown": "<!-- suite\nid: @S380c64db\n-->\n# Login Functionality\n<!-- test\nid: @T12345678\npriority: high\n-->\n# Successful Login\n<!-- test -->\n# Failed Login"
+  }
+}
+```
+
+Tests with an `id: @T...` are updated, tests without one are created; suites are resolved by `id: @S...` or title and created when missing. Up to 100 tests per call. See [docs/tools.md](./docs/tools.md) for the full semantics.
+
 ## Documentation
 
 Complete tool reference: [docs/tools.md](./docs/tools.md)
