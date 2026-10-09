@@ -42,7 +42,7 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "string",
           },
           "branch": {
-            "description": "(list|get|create|update|delete) Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
+            "description": "(list|get|create|update|delete|bulk_upsert) Branch slug to scope the request to (omit or main for the main branch). For tests and suites, a branch-local record is used when it exists, falling back to main; updating/deleting a main-only record forks an isolated copy into the branch. Runs are tagged with the branch (only reachable with the same branch afterwards). Requires the branches feature.",
             "type": "string",
           },
           "code": {
@@ -50,13 +50,14 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "type": "string",
           },
           "command": {
-            "description": "CLI-style operation to perform. list: List tests (tql filter, pagination) | get: Get test by ID | create: Create test (title and suite_id required) | update: Update test by ID | delete: Delete test by ID | share: Share tests into a suite of another project. Select by test_ids, labels, or both. Source project stays the single source of truth; shared copies are read-only until unlinked; re-sharing does not duplicate; processed asynchronously ("queued" = accepted); skipped shared copies are listed in skipped_test_ids; projects must be of the same type (Classic/BDD). | unshare: Remove a test's share, converting the shared copy back into a regular, editable test. Only the shared copy can be targeted — the original source test is untouched. Must be called against the project that holds the shared copy. | issues_list: List linked issues for a test | issues_link: Link issue to a test (url or jira_id) | issues_unlink: Unlink issue from a test | attachments_list: List attachments for a test | attachments_upload: Upload one attachment to a test | attachments_delete: Delete attachment from a test",
+            "description": "CLI-style operation to perform. list: List tests (tql filter, pagination) | get: Get test by ID | create: Create test (title and suite_id required) | update: Update test by ID | delete: Delete test by ID | bulk_upsert: Bulk create/update tests from a testomat.io classical tests markdown document. Tests with an id (@T...) in their metadata are updated, tests without id are created. Suites are resolved by id (@S...) or title, and created when missing. Up to 100 tests and 25 suites per call, sent in batches of 50. tags/labels in the markdown are parsed but not applied. | share: Share tests into a suite of another project. Select by test_ids, labels, or both. Source project stays the single source of truth; shared copies are read-only until unlinked; re-sharing does not duplicate; processed asynchronously ("queued" = accepted); skipped shared copies are listed in skipped_test_ids; projects must be of the same type (Classic/BDD). | unshare: Remove a test's share, converting the shared copy back into a regular, editable test. Only the shared copy can be targeted — the original source test is untouched. Must be called against the project that holds the shared copy. | issues_list: List linked issues for a test | issues_link: Link issue to a test (url or jira_id) | issues_unlink: Unlink issue from a test | attachments_list: List attachments for a test | attachments_upload: Upload one attachment to a test | attachments_delete: Delete attachment from a test",
             "enum": [
               "list",
               "get",
               "create",
               "update",
               "delete",
+              "bulk_upsert",
               "share",
               "unshare",
               "issues_list",
@@ -72,9 +73,19 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "description": "(list) Return only metadata with total counts instead of the entity list. Pair with group_by for an aggregated breakdown.",
             "type": "boolean",
           },
+          "create_missing_suites": {
+            "default": true,
+            "description": "(bulk_upsert) Create suites that cannot be resolved by id or title. When false, tests of unresolved suites are reported as errors",
+            "type": "boolean",
+          },
           "description": {
             "description": "(create|update)",
             "type": "string",
+          },
+          "dry_run": {
+            "default": false,
+            "description": "(bulk_upsert) Parse the document and report the planned actions without writing anything",
+            "type": "boolean",
           },
           "emoji": {
             "description": "(create|update)",
@@ -145,6 +156,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
               "type": "object",
             },
             "type": "array",
+          },
+          "markdown": {
+            "description": "(bulk_upsert) Required for bulk_upsert. Markdown document in the testomat.io classical tests format: suite blocks (<!-- suite ... -->) containing test blocks (<!-- test ... -->), each followed by a title heading and a description. See https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/",
+            "type": "string",
           },
           "page": {
             "description": "(list|issues_list)",

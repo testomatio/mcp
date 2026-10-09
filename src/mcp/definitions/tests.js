@@ -33,6 +33,8 @@ export const TESTS_TOOL_SPEC = {
     create: 'Create test (title and suite_id required)',
     update: 'Update test by ID',
     delete: 'Delete test by ID',
+    bulk_upsert:
+      'Bulk create/update tests from a testomat.io classical tests markdown document. Tests with an id (@T...) in their metadata are updated, tests without id are created. Suites are resolved by id (@S...) or title, and created when missing. Up to 100 tests and 25 suites per call, sent in batches of 50. tags/labels in the markdown are parsed but not applied.',
     share:
       'Share tests into a suite of another project. Select by test_ids, labels, or both. Source project stays the single source of truth; shared copies are read-only until unlinked; re-sharing does not duplicate; processed asynchronously ("queued" = accepted); skipped shared copies are listed in skipped_test_ids; projects must be of the same type (Classic/BDD).',
     unshare:
@@ -69,7 +71,26 @@ export const TESTS_TOOL_SPEC = {
     sync: { commands: ['update'], type: 'boolean' },
     link: linkActionParam(['create', 'update']),
     tql: { commands: ['list'], type: 'string', description: TESTS_TQL_INPUT_DESCRIPTION },
-    ...branchParam(['list', 'get', 'create', 'update', 'delete']),
+    markdown: {
+      commands: ['bulk_upsert'],
+      type: 'string',
+      description:
+        'Required for bulk_upsert. Markdown document in the testomat.io classical tests format: suite blocks (<!-- suite ... -->) containing test blocks (<!-- test ... -->), each followed by a title heading and a description. See https://docs.testomat.io/project/import-export/export-tests/classical-tests-markdown-format/',
+    },
+    dry_run: {
+      commands: ['bulk_upsert'],
+      type: 'boolean',
+      default: false,
+      description: 'Parse the document and report the planned actions without writing anything',
+    },
+    create_missing_suites: {
+      commands: ['bulk_upsert'],
+      type: 'boolean',
+      default: true,
+      description:
+        'Create suites that cannot be resolved by id or title. When false, tests of unresolved suites are reported as errors',
+    },
+    ...branchParam(['list', 'get', 'create', 'update', 'delete', 'bulk_upsert']),
     ...paginationParams(['list', 'issues_list']),
     ...issuesSourceParam(['issues_list']),
     ...issuesLinkParams(['issues_link']),
