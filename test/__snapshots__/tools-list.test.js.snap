@@ -248,6 +248,10 @@ exports[`tools/list > returns the full tool catalog 1`] = `
             "description": "(attachments_list) Return full response bodies. Default strips entity-specific heavy fields and null values; set true when you need those.",
             "type": "boolean",
           },
+          "with_examples": {
+            "description": "(get) Include example rows of a parametrized test in \`examples\` (each row is a list of parameter values)",
+            "type": "boolean",
+          },
         },
         "required": [
           "command",

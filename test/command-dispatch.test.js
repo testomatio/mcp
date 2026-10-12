@@ -56,6 +56,14 @@ describe('command dispatch', () => {
     expect(apiClient.get).toHaveBeenCalledWith('tests', 'be779025', {});
   });
 
+  it('passes with_examples as a query param when getting a test', async () => {
+    const { registry, apiClient } = createRegistry();
+
+    await resultOf(registry, 'tests', { command: 'get', test_id: 'be779025', with_examples: true });
+
+    expect(apiClient.get).toHaveBeenCalledWith('tests', 'be779025', { with_examples: true });
+  });
+
   it('routes a scoped issues command', async () => {
     const apiClientOverrides = {
       createWithQuery: vi.fn().mockResolvedValue({ data: { id: 'issue1' } }),

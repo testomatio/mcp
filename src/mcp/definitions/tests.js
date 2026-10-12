@@ -69,6 +69,12 @@ export const TESTS_TOOL_SPEC = {
       enum: ['manual', 'detached', 'automated'],
     },
     sync: { commands: ['update'], type: 'boolean' },
+    with_examples: {
+      commands: ['get'],
+      type: 'boolean',
+      description:
+        'Include example rows of a parametrized test in `examples` (each row is a list of parameter values)',
+    },
     link: linkActionParam(['create', 'update']),
     tql: { commands: ['list'], type: 'string', description: TESTS_TQL_INPUT_DESCRIPTION },
     markdown: {
