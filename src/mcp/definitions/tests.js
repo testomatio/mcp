@@ -73,7 +73,7 @@ export const TESTS_TOOL_SPEC = {
       commands: ['get'],
       type: 'boolean',
       description:
-        'Include example rows of a parametrized test in `examples` (each row is a list of parameter values)',
+        'Include up to 100 example rows of a parametrized test in `examples`; each row is { title, data }, where title is the Gherkin Examples block name and data is the list of parameter values',
     },
     link: linkActionParam(['create', 'update']),
     tql: { commands: ['list'], type: 'string', description: TESTS_TQL_INPUT_DESCRIPTION },
