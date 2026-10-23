@@ -150,6 +150,7 @@ Manage tests. `/api/v2/{project_id}/tests`
 | code | string | create, update | Test code |
 | state | string | create, update | `manual`, `detached`, `automated` |
 | sync | boolean | update | Sync flags |
+| with_examples | boolean | get | Include up to 100 example rows of a parametrized test in `examples`; each row is `{ title, data }`, where `title` is the Gherkin Examples block name and `data` is the list of parameter values |
 | link | array | create, update | Link actions, see [Link Parameter Structure](#link-parameter-structure) |
 | tql | string | list | TQL filter for tests. Examples: `priority == 'high'`, `state == 'automated'`, `suite % 'Checkout'` |
 | markdown | string | bulk_upsert | Markdown document in the testomat.io classical tests format: suite blocks (`<!-- suite ... -->`) containing test blocks (`<!-- test ... -->`), each followed by a title heading and a description |

@@ -8,7 +8,7 @@ export const ENTITY_CRUD_CONFIGS = [
     wrapperKey: 'test',
     createMode: 'wrapped',
     updateMode: 'wrapped',
-    queryArgs: ['branch'],
+    queryArgs: ['branch', 'with_examples'],
   },
   {
     toolPrefix: 'suites',
