@@ -1,0 +1,59 @@
+name: Deploy Cloudflare Worker on release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-worker-${{ github.event.release.prerelease || contains(github.event.release.tag_name, 'beta') }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm test
+
+      # The worker reports package.json's version to MCP clients; align it with the release tag.
+      - name: Set package version if needed
+        run: |
+          RELEASE_VERSION="${{ github.event.release.tag_name }}"
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$CURRENT_VERSION" = "${RELEASE_VERSION#v}" ]; then
+            echo "package.json already at version $CURRENT_VERSION"
+          else
+            npm version "$RELEASE_VERSION" --no-git-tag-version
+          fi
+
+      - name: Determine target environment
+        id: target
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if echo "$TAG" | grep -qi "beta" || [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            echo "env_flag=--env beta" >> "$GITHUB_OUTPUT"
+            echo "Deploying $TAG to beta (mcp-beta.testomat.io)"
+          else
+            echo "env_flag=" >> "$GITHUB_OUTPUT"
+            echo "Deploying $TAG to production (mcp.testomat.io)"
+          fi
+
+      - name: Deploy worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: >
+          npx wrangler deploy -c worker/wrangler.jsonc ${{ steps.target.outputs.env_flag }}
+          --message "Release ${{ github.event.release.tag_name }}"
