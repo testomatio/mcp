@@ -1,45 +1,47 @@
 {
-  "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "testomatio-mcp",
-  "main": "src/index.js",
-  "compatibility_date": "2026-08-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true
-  },
-  "vars": {
-    "TESTOMATIO_BASE_URL": "https://app.testomat.io"
-  },
-  "routes": [
-    {
-      "pattern": "mcp.testomat.io",
-      "custom_domain": true
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "OAUTH_KV",
-      "id": "replace-with-your-kv-namespace-id"
-    }
-  ],
-  "env": {
-    "beta": {
-      "name": "testomatio-mcp-beta",
-      "vars": {
-        "TESTOMATIO_BASE_URL": "https://beta.testomat.io"
-      },
-      "routes": [
-        {
-          "pattern": "mcp-beta.testomat.io",
-          "custom_domain": true
-        }
-      ],
-      "kv_namespaces": [
-        {
-          "binding": "OAUTH_KV",
-          "id": "replace-with-your-beta-kv-namespace-id"
-        }
-      ]
-    }
-  }
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"name": "testomatio-mcp",
+	"main": "src/index.js",
+	"compatibility_date": "2026-08-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"TESTOMATIO_BASE_URL": "https://app.testomat.io"
+	},
+	"routes": [
+		{
+			"pattern": "mcp.testomat.io",
+			"custom_domain": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "OAUTH_KV",
+			"id": "fc0d2e42749c4928948f6f8d7a491f71"
+		}
+	],
+	"env": {
+		"beta": {
+			"name": "testomatio-mcp-beta",
+			"vars": {
+				"TESTOMATIO_BASE_URL": "https://beta.testomat.io"
+			},
+			"routes": [
+				{
+					"pattern": "mcp-beta.testomat.io",
+					"custom_domain": true
+				}
+			],
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "24fd520a362c42afa9238b182c7c9103"
+				}
+			]
+		}
+	}
 }
