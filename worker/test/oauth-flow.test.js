@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const CLIENT_REDIRECT = 'https://claude.test/api/mcp/callback';
 const MCP_RESOURCE = 'https://mcp.testomat.test/mcp/demo-project';
+const ACCOUNT_RESOURCE = 'https://mcp.testomat.test/mcp';
 
 async function registerClient(redirectUri = CLIENT_REDIRECT) {
   const response = await SELF.fetch('https://mcp.testomat.test/register', {
@@ -76,6 +77,9 @@ describe('oauth authorize', () => {
 
   it.each([
     ['a missing resource', ''],
+    ['the account resource with a trailing slash', 'https://mcp.testomat.test/mcp/'],
+    ['the account resource with an empty query', 'https://mcp.testomat.test/mcp?'],
+    ['the account resource with an empty fragment', 'https://mcp.testomat.test/mcp#'],
     ['an unsafe project id', 'https://mcp.testomat.test/mcp/demo%2F..%2F..%2Fadmin'],
     ['a resource on another origin', 'https://attacker.test/mcp/demo-project'],
     ['multiple resources', [MCP_RESOURCE, 'https://mcp.testomat.test/mcp/other-project']],
@@ -147,68 +151,82 @@ describe('oauth authorize', () => {
   });
 });
 
+async function authorizeGrant(client, resource, redirectUri = CLIENT_REDIRECT) {
+  const authorize = await startAuthorization(client.client_id, resource, redirectUri);
+  expect(authorize.status).toBe(302);
+  const state = new URL(authorize.headers.get('Location')).searchParams.get('state');
+  const callback = await SELF.fetch(
+    `https://mcp.testomat.test/callback?code=opaque-code&state=${state}`,
+    { redirect: 'manual' }
+  );
+  expect(callback.status).toBe(302);
+  const code = new URL(callback.headers.get('Location')).searchParams.get('code');
+  const response = await SELF.fetch('https://mcp.testomat.test/token', {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: client.client_id,
+      redirect_uri: redirectUri,
+      code,
+      code_verifier: 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+      resource,
+    }),
+  });
+  expect(response.status).toBe(200);
+  return response.json();
+}
+
+function stubConsentExchange() {
+  const realFetch = globalThis.fetch;
+  vi.stubGlobal('fetch', (input, init) => {
+    const url = new URL(typeof input === 'string' ? input : input.url);
+    if (url.hostname === 'api.testomat.test') {
+      return Promise.resolve(new Response(
+        JSON.stringify({ token: 'testomat_granted', user_id: 42 }),
+        { headers: { 'Content-Type': 'application/json' } }
+      ));
+    }
+    return realFetch(input, init);
+  });
+}
+
+async function listTools(resource, token) {
+  return SELF.fetch(resource, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json, text/event-stream',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+  });
+}
+
+async function refreshGrant(client, refreshToken, resource) {
+  const response = await SELF.fetch('https://mcp.testomat.test/token', {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: client.client_id,
+      refresh_token: refreshToken,
+      resource,
+    }),
+  });
+  expect(response.status).toBe(200);
+  return response.json();
+}
+
 describe('concurrent project OAuth grants', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  async function authorizeProject(client, resource, redirectUri = CLIENT_REDIRECT) {
-    const authorize = await startAuthorization(client.client_id, resource, redirectUri);
-    expect(authorize.status).toBe(302);
-    const state = new URL(authorize.headers.get('Location')).searchParams.get('state');
-    const callback = await SELF.fetch(
-      `https://mcp.testomat.test/callback?code=opaque-code&state=${state}`,
-      { redirect: 'manual' }
-    );
-    expect(callback.status).toBe(302);
-    const code = new URL(callback.headers.get('Location')).searchParams.get('code');
-    const response = await SELF.fetch('https://mcp.testomat.test/token', {
-      method: 'POST',
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: client.client_id,
-        redirect_uri: redirectUri,
-        code,
-        code_verifier: 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
-        resource,
-      }),
-    });
-    expect(response.status).toBe(200);
-    return response.json();
-  }
-
-  function stubConsentExchange() {
-    const realFetch = globalThis.fetch;
-    vi.stubGlobal('fetch', (input, init) => {
-      const url = new URL(typeof input === 'string' ? input : input.url);
-      if (url.hostname === 'api.testomat.test') {
-        return Promise.resolve(new Response(
-          JSON.stringify({ token: 'testomat_granted', user_id: 42 }),
-          { headers: { 'Content-Type': 'application/json' } }
-        ));
-      }
-      return realFetch(input, init);
-    });
-  }
-
-  async function listTools(resource, token) {
-    return SELF.fetch(resource, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
-    });
-  }
-
   it('keeps an earlier project grant usable after the same client authorizes another project', async () => {
     stubConsentExchange();
     const client = await registerClient();
-    const first = await authorizeProject(client, MCP_RESOURCE);
+    const first = await authorizeGrant(client, MCP_RESOURCE);
     const otherResource = 'https://mcp.testomat.test/mcp/other-project';
-    const second = await authorizeProject(client, otherResource);
+    const second = await authorizeGrant(client, otherResource);
 
     expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
     expect((await listTools(otherResource, second.access_token)).status).toBe(200);
@@ -231,10 +249,10 @@ describe('concurrent project OAuth grants', () => {
   it('replaces an earlier grant for the same project without revoking another project', async () => {
     stubConsentExchange();
     const client = await registerClient();
-    const first = await authorizeProject(client, MCP_RESOURCE);
+    const first = await authorizeGrant(client, MCP_RESOURCE);
     const otherResource = 'https://mcp.testomat.test/mcp/other-project';
-    const other = await authorizeProject(client, otherResource);
-    const replacement = await authorizeProject(client, MCP_RESOURCE);
+    const other = await authorizeGrant(client, otherResource);
+    const replacement = await authorizeGrant(client, MCP_RESOURCE);
 
     expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(401);
     expect((await listTools(MCP_RESOURCE, replacement.access_token)).status).toBe(200);
@@ -244,9 +262,9 @@ describe('concurrent project OAuth grants', () => {
   it('replaces a native client grant when its loopback callback port changes', async () => {
     stubConsentExchange();
     const client = await registerClient('http://127.0.0.1/callback');
-    const first = await authorizeProject(client, MCP_RESOURCE, 'http://127.0.0.1:3001/callback');
+    const first = await authorizeGrant(client, MCP_RESOURCE, 'http://127.0.0.1:3001/callback');
     expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
-    const replacement = await authorizeProject(client, MCP_RESOURCE, 'http://127.0.0.1:3002/callback');
+    const replacement = await authorizeGrant(client, MCP_RESOURCE, 'http://127.0.0.1:3002/callback');
 
     expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(401);
     expect((await listTools(MCP_RESOURCE, replacement.access_token)).status).toBe(200);
@@ -255,14 +273,96 @@ describe('concurrent project OAuth grants', () => {
   it('keeps concurrent grants bound to their own project resources', async () => {
     stubConsentExchange();
     const client = await registerClient();
-    const first = await authorizeProject(client, MCP_RESOURCE);
+    const first = await authorizeGrant(client, MCP_RESOURCE);
     const otherResource = 'https://mcp.testomat.test/mcp/other-project';
-    const second = await authorizeProject(client, otherResource);
+    const second = await authorizeGrant(client, otherResource);
 
     expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
     expect((await listTools(otherResource, second.access_token)).status).toBe(200);
     expect((await listTools(otherResource, first.access_token)).status).toBe(401);
     expect((await listTools(MCP_RESOURCE, second.access_token)).status).toBe(401);
+  });
+
+});
+
+describe('account-wide OAuth grants', () => {
+  const OTHER_RESOURCE = 'https://mcp.testomat.test/mcp/other-project';
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // Grants written before project metadata existed carry only a label.
+  async function makeLegacyGrant(clientId, project) {
+    const { keys } = await env.OAUTH_KV.list({ prefix: 'grant:42:' });
+    for (const { name } of keys) {
+      const grant = JSON.parse(await env.OAUTH_KV.get(name));
+      if (grant.clientId === clientId && grant.metadata?.project === project) {
+        delete grant.metadata.project;
+        await env.OAUTH_KV.put(name, JSON.stringify(grant));
+        return;
+      }
+    }
+    throw new Error(`no grant for ${project}`);
+  }
+
+  it('opens the consent page without a project', async () => {
+    const client = await registerClient();
+    const authorize = await startAuthorization(client.client_id, ACCOUNT_RESOURCE);
+
+    expect(authorize.status).toBe(302);
+    const location = new URL(authorize.headers.get('Location'));
+    expect(location.pathname).toBe('/mcp/authorize');
+    expect(location.searchParams.has('project')).toBe(false);
+  });
+
+  it('accepts an account token at every project URL', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const account = await authorizeGrant(client, ACCOUNT_RESOURCE);
+
+    expect((await listTools(MCP_RESOURCE, account.access_token)).status).toBe(200);
+    expect((await listTools(OTHER_RESOURCE, account.access_token)).status).toBe(200);
+  });
+
+  it('refreshes an account grant for the account resource', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const account = await authorizeGrant(client, ACCOUNT_RESOURCE);
+    const refreshed = await refreshGrant(client, account.refresh_token, ACCOUNT_RESOURCE);
+
+    expect((await listTools(OTHER_RESOURCE, refreshed.access_token)).status).toBe(200);
+  });
+
+  it('replaces the client\'s earlier account grant on re-authorization', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const first = await authorizeGrant(client, ACCOUNT_RESOURCE);
+    const replacement = await authorizeGrant(client, ACCOUNT_RESOURCE);
+
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(401);
+    expect((await listTools(MCP_RESOURCE, replacement.access_token)).status).toBe(200);
+  });
+
+  it('keeps project grants when the account is re-authorized', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const project = await authorizeGrant(client, MCP_RESOURCE);
+    await authorizeGrant(client, ACCOUNT_RESOURCE);
+    await authorizeGrant(client, ACCOUNT_RESOURCE);
+
+    expect((await listTools(MCP_RESOURCE, project.access_token)).status).toBe(200);
+  });
+
+  it('keeps legacy grants when the account is re-authorized', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const legacy = await authorizeGrant(client, MCP_RESOURCE);
+    await makeLegacyGrant(client.client_id, 'demo-project');
+    await authorizeGrant(client, ACCOUNT_RESOURCE);
+    await authorizeGrant(client, ACCOUNT_RESOURCE);
+
+    expect((await listTools(MCP_RESOURCE, legacy.access_token)).status).toBe(200);
   });
 });
 

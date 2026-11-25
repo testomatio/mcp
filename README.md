@@ -183,8 +183,19 @@ same project with the same client replaces its earlier grants without revoking o
 projects, even when a native client's loopback callback port changes. For client metadata
 document registrations, replacement also matches the redirect URI to preserve other
 installations. Legacy grants created without project metadata remain valid
-until revoked or expired. This does not provide account-wide access or combine projects
-into a single authorization.
+until revoked or expired.
+
+To reach every project the user belongs to with one authorization, use the account
+resource `https://mcp.testomat.io/mcp` (no trailing slash) as the OAuth `resource`. The
+consent page is then opened without a project, and the resulting token is accepted at
+every `https://mcp.testomat.io/mcp/<project_id>` URL; the URL still selects the project
+for each request. Re-authorizing the account resource replaces the client's earlier
+account grant and leaves its project grants untouched.
+
+Discovery from a project URL still advertises that project's resource, so a client that
+follows standard discovery keeps authorizing one project at a time. Account-wide access
+is for clients that set the OAuth `resource` themselves, such as gateways serving many
+projects. Send MCP requests to the project URLs; `/mcp` itself serves no MCP endpoint.
 
 The endpoint is POST only; `GET` returns `405`, because the server never initiates
 traffic. Testing with `curl` requires both media types in `Accept`:
