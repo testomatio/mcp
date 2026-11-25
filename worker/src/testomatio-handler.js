@@ -91,7 +91,7 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     const previousGrants = [];
     // Metadata-document client IDs are shared across installations; only those
     // clients scope replacement by redirect URI, matching the provider library.
-    const isMetadataClient = /^https:\/\//i.test(oauthReqInfo.clientId);
+    const isMetadataClient = this.#isMetadataClientId(oauthReqInfo.clientId);
     let cursor;
     do {
       const page = await this.env.OAUTH_PROVIDER.listUserGrants(String(payload.user_id), { cursor });
@@ -147,6 +147,17 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
 
   #randomState() {
     return crypto.randomUUID().replace(/-/g, '');
+  }
+
+  // Mirrors the provider library's isClientMetadataUrl: an HTTPS client ID
+  // with a non-root path identifies a client metadata document registration.
+  #isMetadataClientId(clientId) {
+    try {
+      const url = new URL(String(clientId));
+      return url.protocol === 'https:' && url.pathname !== '/';
+    } catch {
+      return false;
+    }
   }
 
   #projectFromResource(resource, request) {
