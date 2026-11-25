@@ -175,6 +175,17 @@ OAuth 2.1 with PKCE and Dynamic Client Registration against the same URL. Tokens
 starting with `testomat_` or `tstmt_` always bypass OAuth and are passed straight
 through, so IDE clients and CI keep working.
 
+An OAuth client can connect to several project URLs using the same client registration.
+Authorize each project separately and keep its access and refresh tokens associated with
+that project's resource URL. Authorizing another project does not revoke earlier grants,
+and a token for one project cannot be used at another project's URL. Re-authorizing the
+same project with the same client replaces its earlier grants without revoking other
+projects, even when a native client's loopback callback port changes. For client metadata
+document registrations, replacement also matches the redirect URI to preserve other
+installations. Legacy grants created without project metadata remain valid
+until revoked or expired. This does not provide account-wide access or combine projects
+into a single authorization.
+
 The endpoint is POST only; `GET` returns `405`, because the server never initiates
 traffic. Testing with `curl` requires both media types in `Accept`:
 

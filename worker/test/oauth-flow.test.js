@@ -4,13 +4,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const CLIENT_REDIRECT = 'https://claude.test/api/mcp/callback';
 const MCP_RESOURCE = 'https://mcp.testomat.test/mcp/demo-project';
 
-async function registerClient() {
+async function registerClient(redirectUri = CLIENT_REDIRECT) {
   const response = await SELF.fetch('https://mcp.testomat.test/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       client_name: 'Claude',
-      redirect_uris: [CLIENT_REDIRECT],
+      redirect_uris: [redirectUri],
       token_endpoint_auth_method: 'none',
     }),
   });
@@ -19,11 +19,11 @@ async function registerClient() {
   return response.json();
 }
 
-async function startAuthorization(clientId, resource = MCP_RESOURCE) {
+async function startAuthorization(clientId, resource = MCP_RESOURCE, redirectUri = CLIENT_REDIRECT) {
   const url = new URL('https://mcp.testomat.test/authorize');
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', clientId);
-  url.searchParams.set('redirect_uri', CLIENT_REDIRECT);
+  url.searchParams.set('redirect_uri', redirectUri);
   url.searchParams.set('state', 'client-state');
   url.searchParams.set('code_challenge', 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
   url.searchParams.set('code_challenge_method', 'S256');
@@ -144,6 +144,125 @@ describe('oauth authorize', () => {
     });
 
     expect(response.status).toBe(400);
+  });
+});
+
+describe('concurrent project OAuth grants', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function authorizeProject(client, resource, redirectUri = CLIENT_REDIRECT) {
+    const authorize = await startAuthorization(client.client_id, resource, redirectUri);
+    expect(authorize.status).toBe(302);
+    const state = new URL(authorize.headers.get('Location')).searchParams.get('state');
+    const callback = await SELF.fetch(
+      `https://mcp.testomat.test/callback?code=opaque-code&state=${state}`,
+      { redirect: 'manual' }
+    );
+    expect(callback.status).toBe(302);
+    const code = new URL(callback.headers.get('Location')).searchParams.get('code');
+    const response = await SELF.fetch('https://mcp.testomat.test/token', {
+      method: 'POST',
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: client.client_id,
+        redirect_uri: redirectUri,
+        code,
+        code_verifier: 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+        resource,
+      }),
+    });
+    expect(response.status).toBe(200);
+    return response.json();
+  }
+
+  function stubConsentExchange() {
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', (input, init) => {
+      const url = new URL(typeof input === 'string' ? input : input.url);
+      if (url.hostname === 'api.testomat.test') {
+        return Promise.resolve(new Response(
+          JSON.stringify({ token: 'testomat_granted', user_id: 42 }),
+          { headers: { 'Content-Type': 'application/json' } }
+        ));
+      }
+      return realFetch(input, init);
+    });
+  }
+
+  async function listTools(resource, token) {
+    return SELF.fetch(resource, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+    });
+  }
+
+  it('keeps an earlier project grant usable after the same client authorizes another project', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const first = await authorizeProject(client, MCP_RESOURCE);
+    const otherResource = 'https://mcp.testomat.test/mcp/other-project';
+    const second = await authorizeProject(client, otherResource);
+
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
+    expect((await listTools(otherResource, second.access_token)).status).toBe(200);
+
+    const refresh = await SELF.fetch('https://mcp.testomat.test/token', {
+      method: 'POST',
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: client.client_id,
+        refresh_token: first.refresh_token,
+        resource: MCP_RESOURCE,
+      }),
+    });
+    expect(refresh.status).toBe(200);
+    const refreshed = await refresh.json();
+    expect((await listTools(MCP_RESOURCE, refreshed.access_token)).status).toBe(200);
+    expect((await listTools(otherResource, second.access_token)).status).toBe(200);
+  });
+
+  it('replaces an earlier grant for the same project without revoking another project', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const first = await authorizeProject(client, MCP_RESOURCE);
+    const otherResource = 'https://mcp.testomat.test/mcp/other-project';
+    const other = await authorizeProject(client, otherResource);
+    const replacement = await authorizeProject(client, MCP_RESOURCE);
+
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(401);
+    expect((await listTools(MCP_RESOURCE, replacement.access_token)).status).toBe(200);
+    expect((await listTools(otherResource, other.access_token)).status).toBe(200);
+  });
+
+  it('replaces a native client grant when its loopback callback port changes', async () => {
+    stubConsentExchange();
+    const client = await registerClient('http://127.0.0.1/callback');
+    const first = await authorizeProject(client, MCP_RESOURCE, 'http://127.0.0.1:3001/callback');
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
+    const replacement = await authorizeProject(client, MCP_RESOURCE, 'http://127.0.0.1:3002/callback');
+
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(401);
+    expect((await listTools(MCP_RESOURCE, replacement.access_token)).status).toBe(200);
+  });
+
+  it('keeps concurrent grants bound to their own project resources', async () => {
+    stubConsentExchange();
+    const client = await registerClient();
+    const first = await authorizeProject(client, MCP_RESOURCE);
+    const otherResource = 'https://mcp.testomat.test/mcp/other-project';
+    const second = await authorizeProject(client, otherResource);
+
+    expect((await listTools(MCP_RESOURCE, first.access_token)).status).toBe(200);
+    expect((await listTools(otherResource, second.access_token)).status).toBe(200);
+    expect((await listTools(otherResource, first.access_token)).status).toBe(401);
+    expect((await listTools(MCP_RESOURCE, second.access_token)).status).toBe(401);
   });
 });
 

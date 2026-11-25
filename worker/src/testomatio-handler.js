@@ -79,14 +79,43 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     }
 
     const oauthReqInfo = JSON.parse(stored);
+    const project = this.#projectFromResource(oauthReqInfo.resource, request);
+    if (!project) {
+      return new Response('Authorization resource must identify one project on this server', {
+        status: 400,
+      });
+    }
+
+    // Capture older matching grants before creating the replacement, so a failed
+    // authorization never revokes a working grant or matches its own new grant.
+    const previousGrants = [];
+    // Metadata-document client IDs are shared across installations; only those
+    // clients scope replacement by redirect URI, matching the provider library.
+    const isMetadataClient = this.#isMetadataClientId(oauthReqInfo.clientId);
+    let cursor;
+    do {
+      const page = await this.env.OAUTH_PROVIDER.listUserGrants(String(payload.user_id), { cursor });
+      previousGrants.push(...page.items.filter((grant) =>
+        grant.clientId === oauthReqInfo.clientId &&
+        (!isMetadataClient || grant.redirectUri === oauthReqInfo.redirectUri) &&
+        grant.metadata?.project === project
+      ));
+      cursor = page.cursor;
+    } while (cursor);
+
     const { redirectTo } = await this.env.OAUTH_PROVIDER.completeAuthorization({
       request: oauthReqInfo,
       userId: String(payload.user_id),
-      metadata: { label: payload.user_email || String(payload.user_id) },
+      metadata: { label: payload.user_email || String(payload.user_id), project },
       scope: oauthReqInfo.scope,
       props: { testomatioToken: payload.token },
+      // One client can authorize several projects; each grant remains resource-bound.
+      revokeExistingGrants: false,
     });
 
+    await Promise.all(previousGrants.map((grant) =>
+      this.env.OAUTH_PROVIDER.revokeGrant(grant.id, String(payload.user_id))
+    ));
     return Response.redirect(redirectTo, 302);
   }
 
@@ -118,6 +147,17 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
 
   #randomState() {
     return crypto.randomUUID().replace(/-/g, '');
+  }
+
+  // Mirrors the provider library's isClientMetadataUrl: an HTTPS client ID
+  // with a non-root path identifies a client metadata document registration.
+  #isMetadataClientId(clientId) {
+    try {
+      const url = new URL(String(clientId));
+      return url.protocol === 'https:' && url.pathname !== '/';
+    } catch {
+      return false;
+    }
   }
 
   #projectFromResource(resource, request) {
