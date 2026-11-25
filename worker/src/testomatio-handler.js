@@ -4,6 +4,11 @@ import { decodePathParameter } from '../../src/core/path-segment.js';
 
 const AUTH_REQUEST_TTL_SECONDS = 600;
 const RESOURCE_PATH = /^\/mcp\/([^/]+)\/?$/;
+// The provider matches audiences by path prefix, so a grant for `/mcp` is accepted at
+// every `/mcp/<project_id>` URL. A trailing slash would match none of them.
+const ACCOUNT_RESOURCE_PATH = '/mcp';
+const INVALID_RESOURCE_MESSAGE =
+  'Authorization resource must be this server\'s /mcp endpoint or identify one project on it';
 
 export class TestomatioAuthHandler extends WorkerEntrypoint {
   async fetch(request) {
@@ -33,11 +38,9 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     });
 
     const client = await this.env.OAUTH_PROVIDER.lookupClient(oauthReqInfo.clientId).catch(() => null);
-    const project = this.#projectFromResource(oauthReqInfo.resource, request);
-    if (!project) {
-      return new Response('Authorization resource must identify one project on this server', {
-        status: 400,
-      });
+    const target = this.#grantTarget(oauthReqInfo.resource, request);
+    if (!target) {
+      return new Response(INVALID_RESOURCE_MESSAGE, { status: 400 });
     }
 
     const redirect = new URL('/mcp/authorize', `${this.#baseUrl()}/`);
@@ -48,7 +51,9 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
       redirect.searchParams.set('client_name', client.clientName);
     }
 
-    redirect.searchParams.set('project', project);
+    if (target.project) {
+      redirect.searchParams.set('project', target.project);
+    }
 
     return Response.redirect(redirect.toString(), 302);
   }
@@ -79,11 +84,9 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     }
 
     const oauthReqInfo = JSON.parse(stored);
-    const project = this.#projectFromResource(oauthReqInfo.resource, request);
-    if (!project) {
-      return new Response('Authorization resource must identify one project on this server', {
-        status: 400,
-      });
+    const target = this.#grantTarget(oauthReqInfo.resource, request);
+    if (!target) {
+      return new Response(INVALID_RESOURCE_MESSAGE, { status: 400 });
     }
 
     // Capture older matching grants before creating the replacement, so a failed
@@ -98,7 +101,7 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
       previousGrants.push(...page.items.filter((grant) =>
         grant.clientId === oauthReqInfo.clientId &&
         (!isMetadataClient || grant.redirectUri === oauthReqInfo.redirectUri) &&
-        grant.metadata?.project === project
+        this.#sameTarget(grant.metadata, target)
       ));
       cursor = page.cursor;
     } while (cursor);
@@ -106,10 +109,11 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     const { redirectTo } = await this.env.OAUTH_PROVIDER.completeAuthorization({
       request: oauthReqInfo,
       userId: String(payload.user_id),
-      metadata: { label: payload.user_email || String(payload.user_id), project },
+      metadata: { label: payload.user_email || String(payload.user_id), ...target },
       scope: oauthReqInfo.scope,
       props: { testomatioToken: payload.token },
-      // One client can authorize several projects; each grant remains resource-bound.
+      // One client can hold an account grant and several project grants; each grant
+      // remains bound to its own resource.
       revokeExistingGrants: false,
     });
 
@@ -160,22 +164,33 @@ export class TestomatioAuthHandler extends WorkerEntrypoint {
     }
   }
 
-  #projectFromResource(resource, request) {
+  #grantTarget(resource, request) {
     if (!resource || Array.isArray(resource)) {
-      return '';
+      return null;
     }
 
     try {
       const resourceUrl = new URL(String(resource));
       const requestUrl = new URL(request.url);
+      // `href` keeps an empty `?` or `#`, which `search` and `hash` report as empty.
+      if (resourceUrl.href === new URL(ACCOUNT_RESOURCE_PATH, requestUrl.origin).href) {
+        return { account: true };
+      }
+
       if (resourceUrl.origin !== requestUrl.origin || resourceUrl.search || resourceUrl.hash) {
-        return '';
+        return null;
       }
 
       const match = RESOURCE_PATH.exec(resourceUrl.pathname);
-      return match ? decodePathParameter(match[1], 'Project ID') : '';
+      const project = match ? decodePathParameter(match[1], 'Project ID') : '';
+      return project ? { project } : null;
     } catch {
-      return '';
+      return null;
     }
+  }
+
+  // Legacy grants carry neither `account` nor `project`, so no re-authorization replaces them.
+  #sameTarget(metadata, target) {
+    return target.account ? metadata?.account === true : metadata?.project === target.project;
   }
 }
